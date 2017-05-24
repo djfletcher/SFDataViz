@@ -1,9 +1,9 @@
 const path = require('path');
 
 module.exports = {
-  entry: './js/sf_data_viz.jsx',
+  entry: './frontend/entry.jsx',
   output: {
-    path: path.resolve(__dirname, 'js'),
+    path: path.resolve(__dirname, 'frontend'),
     filename: './bundle.js'
   },
   module: {
