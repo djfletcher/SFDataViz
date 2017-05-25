@@ -4,6 +4,11 @@ import mapboxgl from 'mapbox-gl/dist/mapbox-gl';
 class DataMap extends React.Component {
   constructor(props) {
     super(props);
+    this.state = {
+      layers: {
+        crime: 0
+      }
+    };
     this.requestData = this.requestData.bind(this);
     this.convertToGeoJSON = this.convertToGeoJSON.bind(this);
     this.pain = this.paint.bind(this);
@@ -22,27 +27,34 @@ class DataMap extends React.Component {
     this.requestData();
   }
 
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.crimes.length !== this.props.crimes.length) {
+      let crimes = this.convertToGeoJSON(nextProps.crimes);
+      this.paint('crime', crimes);
+    }
+  }
+
   requestData() {
     this.props.requestCrimes();
   }
 
   convertToGeoJSON(dataset) {
     return dataset.map(datum => {
+      let { category, date, location } = datum;
       let geoJSON = {};
       geoJSON['type'] = 'Feature';
       geoJSON['geometry'] = {
         'type': 'Point',
-        'coordinates': [datum.location.longitude, datum.location.latitude]
+        'coordinates': [location.longitude, location.latitude]
       },
-      geoJSON['properties'] = datum;
+      geoJSON['properties'] = { category, date };
       return geoJSON;
     });
   }
 
   paint(layer, dataset) {
-
     this.map.addLayer({
-      "id": layer,
+      "id": `${layer}-${this.state.layers[layer]}`,
       "type": "circle",
       "source": {
         "type": "geojson",
@@ -59,14 +71,28 @@ class DataMap extends React.Component {
         "circle-color": `#e55e5e`
       }
     });
+
+    this.setState({
+      layers: {
+        [layer]: this.state.layers[layer] + 1
+      }
+    });
+  }
+
+  handleToggle(category) {
+
   }
 
   render() {
-    if (this.map && this.props.crimes.length === 5000) {
-      let crimes = this.convertToGeoJSON(this.props.crimes);
-      this.paint('crime', crimes);
-    }
-    return null;
+    const toggleableLayers = (
+      <div className="legend-box">
+        <h1>Click below to show/hide layers</h1>
+        <ul className="legend">
+          <li onClick={ () => this.handleToggle('crime') }>Crime</li>
+        </ul>
+      </div>
+    );
+    return toggleableLayers;
   }
 }
 
