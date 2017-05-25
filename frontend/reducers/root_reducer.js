@@ -1,5 +1,5 @@
 import { combineReducers } from 'redux';
-import CrimeReducer from 'crime_reducer';
+import CrimeReducer from './crime_reducer';
 
 const RootReducer = combineReducers({
   crime: CrimeReducer

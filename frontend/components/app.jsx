@@ -7,7 +7,7 @@ class App extends React.Component {
   render() {
     return (
       <div id="map">
-        <DataMap />
+        <DataMap store={this.props.store} />
       </div>
     );
   }

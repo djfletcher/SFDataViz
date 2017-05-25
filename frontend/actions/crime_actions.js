@@ -3,7 +3,7 @@ import * as ApiUtil from '../util/crime_api_util';
 export const RECEIVE_CRIMES = 'RECEIVE_CRIMES';
 
 export const receiveCrimes = crimes => ({
-  action: RECEIVE_CRIMES,
+  type: RECEIVE_CRIMES,
   crimes
 });
 
