@@ -1,14 +1,16 @@
 import React from 'react';
 import { Provider } from 'react-redux';
-import DataMap from './map/map';
+import DataMapContainer from './map/map_container';
 
 
 class App extends React.Component {
   render() {
     return (
-      <div id="map">
-        <DataMap store={this.props.store} />
-      </div>
+      <Provider store={ this.props.store }>
+        <div id="map">
+          <DataMapContainer />
+        </div>
+      </Provider>
     );
   }
 }
