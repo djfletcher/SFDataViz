@@ -67,6 +67,11 @@ class DataMap extends React.Component {
           className="active"
           onClick={ () => this.handleToggle('crime-layer') }>Crime
         </li>
+        <li
+          id="neighborhoods-layer"
+          className="active"
+          onClick={ () => this.handleToggle('neighborhoods-layer') }>Neighborhoods
+        </li>
       </ul>
     );
     return toggleableLayers;

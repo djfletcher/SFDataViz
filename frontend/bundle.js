@@ -11257,6 +11257,16 @@ var DataMap = function (_React$Component) {
               return _this2.handleToggle('crime-layer');
             } },
           'Crime'
+        ),
+        _react2.default.createElement(
+          'li',
+          {
+            id: 'neighborhoods-layer',
+            className: 'active',
+            onClick: function onClick() {
+              return _this2.handleToggle('neighborhoods-layer');
+            } },
+          'Neighborhoods'
         )
       );
       return toggleableLayers;
