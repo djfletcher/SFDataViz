@@ -82,3 +82,24 @@ const paintProperties = {
 };
 
 export default createLayer;
+
+
+// below is the beginnings of unfinished code to convert neighborhoods from an object
+//  with names as keys back into a feature collection array 
+
+// function createLayer(layerId, dataset) {
+//   switch(layerId) {
+//     case 'crime-layer':
+//       return assembleLayerProperties(layerId, 'circle', dataset);
+//     case 'neighborhoods-layer':
+//       let neighborhoodsArray = [];
+//       for (let hood in dataset) {
+//         let geoJSON = {};
+//         console.log(hood);
+//         neighborhoodsArray.push();
+//       }
+//       return assembleLayerProperties(layerId, 'line', dataset);
+//     default:
+//       console.log('Invalid layer id');
+//   }
+// }

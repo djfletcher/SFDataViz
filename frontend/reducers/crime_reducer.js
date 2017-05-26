@@ -6,14 +6,14 @@ const CrimeReducer = (state = [], action) => {
 
   switch(action.type) {
     case RECEIVE_CRIMES:
-      geoJSON = convertToGeoJSON(action.crimes);
+      geoJSON = convertToGeoJSONArray(action.crimes);
       return state.concat(geoJSON);
     default:
       return state;
   }
 };
 
-function convertToGeoJSON(dataset) {
+function convertToGeoJSONArray(dataset) {
   return dataset.map(datum => {
     let { category, date, location } = datum;
     let geoJSON = {};

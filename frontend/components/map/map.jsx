@@ -17,7 +17,8 @@ class DataMap extends React.Component {
       style: 'mapbox://styles/djfletcher/cj369eru100002rpkokn2981h',
       center: [-122.447303, 37.768874],
       zoom: 12,
-      maxBounds: [[-123.25544479306004, 37.29184114161481], [-121.182195956104, 38.16689599206103]]
+      // maxBounds: [[-122.565169, 37.693269], [-122.171389, 37.859369]]
+      maxBounds: [[-123.255444, 37.291841], [-121.182195, 38.166895]]
     });
 
     window.map = this.map;

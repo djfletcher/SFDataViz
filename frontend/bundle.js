@@ -11195,7 +11195,8 @@ var DataMap = function (_React$Component) {
         style: 'mapbox://styles/djfletcher/cj369eru100002rpkokn2981h',
         center: [-122.447303, 37.768874],
         zoom: 12,
-        maxBounds: [[-123.25544479306004, 37.29184114161481], [-121.182195956104, 38.16689599206103]]
+        // maxBounds: [[-122.565169, 37.693269], [-122.171389, 37.859369]]
+        maxBounds: [[-123.255444, 37.291841], [-121.182195, 38.166895]]
       });
 
       window.map = this.map;
@@ -11381,14 +11382,14 @@ var CrimeReducer = function CrimeReducer() {
 
   switch (action.type) {
     case _crime_actions.RECEIVE_CRIMES:
-      geoJSON = convertToGeoJSON(action.crimes);
+      geoJSON = convertToGeoJSONArray(action.crimes);
       return state.concat(geoJSON);
     default:
       return state;
   }
 };
 
-function convertToGeoJSON(dataset) {
+function convertToGeoJSONArray(dataset) {
   return dataset.map(function (datum) {
     var category = datum.category,
         date = datum.date,
@@ -25354,6 +25355,26 @@ var paintProperties = {
 
 exports.default = createLayer;
 
+// below is the beginnings of unfinished code to convert neighborhoods from an object
+//  with names as keys back into a feature collection array 
+
+// function createLayer(layerId, dataset) {
+//   switch(layerId) {
+//     case 'crime-layer':
+//       return assembleLayerProperties(layerId, 'circle', dataset);
+//     case 'neighborhoods-layer':
+//       let neighborhoodsArray = [];
+//       for (let hood in dataset) {
+//         let geoJSON = {};
+//         console.log(hood);
+//         neighborhoodsArray.push();
+//       }
+//       return assembleLayerProperties(layerId, 'line', dataset);
+//     default:
+//       console.log('Invalid layer id');
+//   }
+// }
+
 /***/ }),
 /* 234 */
 /***/ (function(module, exports, __webpack_require__) {
@@ -25432,6 +25453,36 @@ function convertToGeoJSON(dataset) {
 }
 
 exports.default = NeighborhoodReducer;
+
+// below is code to convert neighborhoods array to an object with name as key
+// so that we can index directly into it in the state by name
+
+// const NeighborhoodReducer = (state = [], action) => {
+//   Object.freeze(state);
+//   let geoJSON;
+//
+//   switch(action.type) {
+//     case RECEIVE_NEIGHBORHOODS:
+//       geoJSON = convertToGeoJSON(action.neighborhoods);
+//       return geoJSON;
+//     default:
+//       return state;
+//   }
+// };
+//
+// // convert neighborhoods to object with name as key, so that we can index directly into them by name
+// function convertToGeoJSON(dataset) {
+//   let neighborhoods = {};
+//   dataset.forEach(datum => {
+//     let { nhood, the_geom } = datum;
+//     let geoJSON = {};
+//     geoJSON['type'] = 'Feature';
+//     geoJSON['geometry'] = the_geom;
+//     neighborhoods[nhood] = geoJSON;
+//   });
+//
+//   return neighborhoods;
+// }
 
 /***/ }),
 /* 236 */
