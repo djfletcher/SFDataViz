@@ -1,8 +1,9 @@
-function createLayer(layerId, dataset) {
-  let geoJSON = convertToGeoJSON(dataset);
+function createLayer(layerId, geoJSON) {
   switch(layerId) {
     case 'crime-layer':
       return assembleLayerProperties(layerId, 'circle', geoJSON);
+    case 'neighborhoods-layer':
+      return assembleLayerProperties(layerId, 'fill', geoJSON);
     default:
       console.log('Invalid layer id');
   }
@@ -25,20 +26,6 @@ function assembleLayerProperties(layerId, type, geoJSON) {
     }
   };
   return properties;
-}
-
-function convertToGeoJSON(dataset) {
-  return dataset.map(datum => {
-    let { category, date, location } = datum;
-    let geoJSON = {};
-    geoJSON['type'] = 'Feature';
-    geoJSON['geometry'] = {
-      'type': 'Point',
-      'coordinates': [location.longitude, location.latitude]
-    },
-    geoJSON['properties'] = { category, date };
-    return geoJSON;
-  });
 }
 
 const paintProperties = {
@@ -69,6 +56,11 @@ const paintProperties = {
     //     ['WEAPON LAWS', 'purple']
     //   ]
     // }
+  },
+  'neighborhoods-layer': {
+    // neighborhoods should have fill color only when hovered
+    'fill-color': 'rgba(0,0,0,0)',
+    'fill-outline-color': 'black'
   }
 };
 

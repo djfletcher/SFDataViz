@@ -11204,8 +11204,13 @@ var DataMap = function (_React$Component) {
   }, {
     key: 'componentWillReceiveProps',
     value: function componentWillReceiveProps(nextProps) {
+      var layer = void 0;
       if (nextProps.crimes.length === 6000) {
-        var layer = (0, _map_layer2.default)('crime-layer', nextProps.crimes);
+        layer = (0, _map_layer2.default)('crime-layer', nextProps.crimes);
+        this.addLayer(layer);
+      }
+      if (nextProps.neighborhoods.length === 41) {
+        layer = (0, _map_layer2.default)('neighborhoods-layer', nextProps.neighborhoods);
         this.addLayer(layer);
       }
     }
@@ -11213,6 +11218,7 @@ var DataMap = function (_React$Component) {
     key: 'requestData',
     value: function requestData() {
       this.props.requestCrimes();
+      this.props.requestNeighborhoodLines();
     }
   }, {
     key: 'addLayer',
@@ -11275,6 +11281,8 @@ var _reactRedux = __webpack_require__(87);
 
 var _crime_actions = __webpack_require__(56);
 
+var _neighborhood_actions = __webpack_require__(234);
+
 var _map = __webpack_require__(100);
 
 var _map2 = _interopRequireDefault(_map);
@@ -11282,9 +11290,11 @@ var _map2 = _interopRequireDefault(_map);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var mapStateToProps = function mapStateToProps(_ref) {
-  var crime = _ref.crime;
+  var crime = _ref.crime,
+      neighborhoods = _ref.neighborhoods;
   return {
-    crimes: crime
+    crimes: crime,
+    neighborhoods: neighborhoods
   };
 };
 
@@ -11292,6 +11302,9 @@ var mapDispatchToProps = function mapDispatchToProps(dispatch) {
   return {
     requestCrimes: function requestCrimes() {
       return dispatch((0, _crime_actions.requestCrimes)());
+    },
+    requestNeighborhoodLines: function requestNeighborhoodLines() {
+      return dispatch((0, _neighborhood_actions.requestNeighborhoods)());
     }
   };
 };
@@ -11352,14 +11365,32 @@ var CrimeReducer = function CrimeReducer() {
   var action = arguments[1];
 
   Object.freeze(state);
+  var geoJSON = void 0;
 
   switch (action.type) {
     case _crime_actions.RECEIVE_CRIMES:
-      return state.concat(action.crimes);
+      geoJSON = convertToGeoJSON(action.crimes);
+      return state.concat(geoJSON);
     default:
       return state;
   }
 };
+
+function convertToGeoJSON(dataset) {
+  return dataset.map(function (datum) {
+    var category = datum.category,
+        date = datum.date,
+        location = datum.location;
+
+    var geoJSON = {};
+    geoJSON['type'] = 'Feature';
+    geoJSON['geometry'] = {
+      'type': 'Point',
+      'coordinates': [location.longitude, location.latitude]
+    }, geoJSON['properties'] = { category: category, date: date };
+    return geoJSON;
+  });
+}
 
 exports.default = CrimeReducer;
 
@@ -25226,11 +25257,12 @@ module.exports = function(module) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-function createLayer(layerId, dataset) {
-  var geoJSON = convertToGeoJSON(dataset);
+function createLayer(layerId, geoJSON) {
   switch (layerId) {
     case 'crime-layer':
       return assembleLayerProperties(layerId, 'circle', geoJSON);
+    case 'neighborhoods-layer':
+      return assembleLayerProperties(layerId, 'fill', geoJSON);
     default:
       console.log('Invalid layer id');
   }
@@ -25253,22 +25285,6 @@ function assembleLayerProperties(layerId, type, geoJSON) {
     }
   };
   return properties;
-}
-
-function convertToGeoJSON(dataset) {
-  return dataset.map(function (datum) {
-    var category = datum.category,
-        date = datum.date,
-        location = datum.location;
-
-    var geoJSON = {};
-    geoJSON['type'] = 'Feature';
-    geoJSON['geometry'] = {
-      'type': 'Point',
-      'coordinates': [location.longitude, location.latitude]
-    }, geoJSON['properties'] = { category: category, date: date };
-    return geoJSON;
-  });
 }
 
 var paintProperties = {
@@ -25299,6 +25315,11 @@ var paintProperties = {
     //     ['WEAPON LAWS', 'purple']
     //   ]
     // }
+  },
+  'neighborhoods-layer': {
+    // neighborhoods should have fill color only when hovered
+    'fill-color': 'rgba(0,0,0,0)',
+    'fill-outline-color': 'black'
   }
 };
 
@@ -25357,14 +25378,29 @@ var NeighborhoodReducer = function NeighborhoodReducer() {
   var action = arguments[1];
 
   Object.freeze(state);
+  var geoJSON = void 0;
 
   switch (action.type) {
     case _neighborhood_actions.RECEIVE_NEIGHBORHOODS:
-      return action.neighborhoods;
+      geoJSON = convertToGeoJSON(action.neighborhoods);
+      return geoJSON;
     default:
       return state;
   }
 };
+
+function convertToGeoJSON(dataset) {
+  return dataset.map(function (datum) {
+    var nhood = datum.nhood,
+        the_geom = datum.the_geom;
+
+    var geoJSON = {};
+    geoJSON['type'] = 'Feature';
+    geoJSON['geometry'] = the_geom;
+    geoJSON['properties'] = { name: nhood };
+    return geoJSON;
+  });
+}
 
 exports.default = NeighborhoodReducer;
 
