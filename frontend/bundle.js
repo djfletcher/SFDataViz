@@ -11192,7 +11192,7 @@ var DataMap = function (_React$Component) {
       _mapboxGl2.default.accessToken = 'pk.eyJ1IjoiZGpmbGV0Y2hlciIsImEiOiJjajMzYzFybjkwMDR3MnFvOXZxZ2V1bmZ1In0.2c-Ohy79yPFGOdmEcLOk7w';
       this.map = new _mapboxGl2.default.Map({
         container: 'map',
-        style: 'mapbox://styles/mapbox/streets-v9',
+        style: 'mapbox://styles/djfletcher/cj369eru100002rpkokn2981h',
         center: [-122.447303, 37.768874],
         zoom: 12,
         maxBounds: [[-123.25544479306004, 37.29184114161481], [-121.182195956104, 38.16689599206103]]
@@ -11223,7 +11223,9 @@ var DataMap = function (_React$Component) {
   }, {
     key: 'addLayer',
     value: function addLayer(layer) {
-      this.map.addLayer(layer);
+      // second argument to addLayer is a layer on the map beneath which to insert the new layer
+      // this ensures that our custom layers don't cover up street names and map labels
+      this.map.addLayer(layer, 'admin-3-4-boundaries-bg');
     }
   }, {
     key: 'handleToggle',
@@ -25262,7 +25264,7 @@ function createLayer(layerId, geoJSON) {
     case 'crime-layer':
       return assembleLayerProperties(layerId, 'circle', geoJSON);
     case 'neighborhoods-layer':
-      return assembleLayerProperties(layerId, 'fill', geoJSON);
+      return assembleLayerProperties(layerId, 'line', geoJSON);
     default:
       console.log('Invalid layer id');
   }
@@ -25280,12 +25282,21 @@ function assembleLayerProperties(layerId, type, geoJSON) {
       }
     },
     "paint": paintProperties[layerId],
-    "layout": {
-      "visibility": "visible"
-    }
+    "layout": layoutProperties[layerId]
   };
   return properties;
 }
+
+var layoutProperties = {
+  'crime-layer': {
+    'visibility': 'visible'
+  },
+  'neighborhoods-layer': {
+    'visibility': 'visible',
+    'line-cap': 'round',
+    'line-join': 'round'
+  }
+};
 
 var paintProperties = {
   'crime-layer': {
@@ -25318,8 +25329,16 @@ var paintProperties = {
   },
   'neighborhoods-layer': {
     // neighborhoods should have fill color only when hovered
-    'fill-color': 'rgba(0,0,0,0)',
-    'fill-outline-color': 'black'
+    // 'fill-color': 'rgba(0,0,0,0)',
+    // 'fill-outline-color': 'black'
+    'line-opacity': 1,
+    'line-color': 'black',
+    'line-width': {
+      'stops': [[12, 3], [22, 1]]
+    },
+    'line-blur': {
+      'stops': [[12, 3], [22, 2]]
+    }
   }
 };
 

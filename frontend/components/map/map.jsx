@@ -14,7 +14,7 @@ class DataMap extends React.Component {
     mapboxgl.accessToken = 'pk.eyJ1IjoiZGpmbGV0Y2hlciIsImEiOiJjajMzYzFybjkwMDR3MnFvOXZxZ2V1bmZ1In0.2c-Ohy79yPFGOdmEcLOk7w';
     this.map = new mapboxgl.Map({
       container: 'map',
-      style: 'mapbox://styles/mapbox/streets-v9',
+      style: 'mapbox://styles/djfletcher/cj369eru100002rpkokn2981h',
       center: [-122.447303, 37.768874],
       zoom: 12,
       maxBounds: [[-123.25544479306004, 37.29184114161481], [-121.182195956104, 38.16689599206103]]
@@ -42,7 +42,9 @@ class DataMap extends React.Component {
   }
 
   addLayer(layer) {
-    this.map.addLayer(layer);
+    // second argument to addLayer is a layer on the map beneath which to insert the new layer
+    // this ensures that our custom layers don't cover up street names and map labels
+    this.map.addLayer(layer, 'admin-3-4-boundaries-bg');
   }
 
   handleToggle(layerId) {
