@@ -11321,7 +11321,11 @@ var _app = __webpack_require__(97);
 
 var _app2 = _interopRequireDefault(_app);
 
+var _neighborhood_actions = __webpack_require__(234);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+window.requestNeighborhoods = _neighborhood_actions.requestNeighborhoods;
 
 window.addEventListener("DOMContentLoaded", function () {
   var root = document.getElementById("root");
@@ -11376,10 +11380,15 @@ var _crime_reducer = __webpack_require__(103);
 
 var _crime_reducer2 = _interopRequireDefault(_crime_reducer);
 
+var _neighborhood_reducer = __webpack_require__(235);
+
+var _neighborhood_reducer2 = _interopRequireDefault(_neighborhood_reducer);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var RootReducer = (0, _redux.combineReducers)({
-  crime: _crime_reducer2.default
+  crime: _crime_reducer2.default,
+  neighborhoods: _neighborhood_reducer2.default
 });
 
 exports.default = RootReducer;
@@ -25294,6 +25303,92 @@ var paintProperties = {
 };
 
 exports.default = createLayer;
+
+/***/ }),
+/* 234 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.requestNeighborhoods = exports.receiveNeighborhoods = exports.RECEIVE_NEIGHBORHOODS = undefined;
+
+var _neighborhood_api_util = __webpack_require__(236);
+
+var ApiUtil = _interopRequireWildcard(_neighborhood_api_util);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+var RECEIVE_NEIGHBORHOODS = exports.RECEIVE_NEIGHBORHOODS = 'RECEIVE_NEIGHBORHOODS';
+
+var receiveNeighborhoods = exports.receiveNeighborhoods = function receiveNeighborhoods(neighborhoods) {
+  return {
+    type: RECEIVE_NEIGHBORHOODS,
+    neighborhoods: neighborhoods
+  };
+};
+
+var requestNeighborhoods = exports.requestNeighborhoods = function requestNeighborhoods() {
+  return function (dispatch) {
+    return ApiUtil.fetchNeighborhoods().then(function (hoods) {
+      return dispatch(receiveNeighborhoods(hoods));
+    });
+  };
+};
+
+/***/ }),
+/* 235 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _neighborhood_actions = __webpack_require__(234);
+
+var NeighborhoodReducer = function NeighborhoodReducer() {
+  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+  var action = arguments[1];
+
+  Object.freeze(state);
+
+  switch (action.type) {
+    case _neighborhood_actions.RECEIVE_NEIGHBORHOODS:
+      return action.neighborhoods;
+    default:
+      return state;
+  }
+};
+
+exports.default = NeighborhoodReducer;
+
+/***/ }),
+/* 236 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+// fetching neighborhood boundary lines
+var fetchNeighborhoods = exports.fetchNeighborhoods = function fetchNeighborhoods() {
+  return $.ajax({
+    url: 'https://data.sfgov.org/resource/xfcw-9evu.json',
+    headers: {
+      'X-App-Token': appToken
+    }
+  });
+};
+
+var appToken = 'Eb5er7pn8pszkiDz2g9g7oQmp';
 
 /***/ })
 /******/ ]);
