@@ -11160,6 +11160,10 @@ var _mapboxGl = __webpack_require__(130);
 
 var _mapboxGl2 = _interopRequireDefault(_mapboxGl);
 
+var _map_layer = __webpack_require__(233);
+
+var _map_layer2 = _interopRequireDefault(_map_layer);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -11177,9 +11181,7 @@ var DataMap = function (_React$Component) {
     var _this = _possibleConstructorReturn(this, (DataMap.__proto__ || Object.getPrototypeOf(DataMap)).call(this, props));
 
     _this.requestData = _this.requestData.bind(_this);
-    _this.convertToGeoJSON = _this.convertToGeoJSON.bind(_this);
     _this.addLayer = _this.addLayer.bind(_this);
-    _this.paintLayer = _this.paintLayer.bind(_this);
     _this.handleToggle = _this.handleToggle.bind(_this);
     return _this;
   }
@@ -11192,7 +11194,8 @@ var DataMap = function (_React$Component) {
         container: 'map',
         style: 'mapbox://styles/mapbox/streets-v9',
         center: [-122.447303, 37.768874],
-        zoom: 12
+        zoom: 12,
+        maxBounds: [[-123.25544479306004, 37.29184114161481], [-121.182195956104, 38.16689599206103]]
       });
 
       window.map = this.map;
@@ -11202,37 +11205,8 @@ var DataMap = function (_React$Component) {
     key: 'componentWillReceiveProps',
     value: function componentWillReceiveProps(nextProps) {
       if (nextProps.crimes.length === 6000) {
-        var crimes = this.convertToGeoJSON(nextProps.crimes);
-        var paintProperties = {
-          'circle-radius': {
-            'base': 1.75,
-            'stops': [[12, 3], [22, 180]]
-          },
-          "circle-color": '#e55e5e'
-          // 'circle-color': {
-          //   'property': 'category',
-          //   'type': 'categorical',
-          //   'default': `#e55e5e`,
-          //   'stops': [
-          //     ['ARSON', 'blue'],
-          //     ['ASSAULT', 'yellow'],
-          //     ['BURGLARY', 'green'],
-          //     ['DRIVING UNDER THE INFLUENCE', 'orange'],
-          //     ['DRUG/NARCOTIC', 'white'],
-          //     ['KIDNAPPING', 'black'],
-          //     ['LARCENY/THEFT', 'purple'],
-          //     ['PROSTITUTION', 'blue'],
-          //     ['ROBBERY', 'yellow'],
-          //     ['SEX OFFENSES, FORCIBLE', 'green'],
-          //     ['SEX OFFENSES, NON FORCIBLE', 'orange'],
-          //     ['STOLEN PROPERTY', 'white'],
-          //     ['VEHICLE THEFT', 'black'],
-          //     ['WEAPON LAWS', 'purple']
-          //   ]
-          // }
-        };
-        this.addLayer('crime-layer', crimes);
-        this.paintLayer('crime-layer', 'paint', paintProperties);
+        var layer = (0, _map_layer2.default)('crime-layer', nextProps.crimes);
+        this.addLayer(layer);
       }
     }
   }, {
@@ -11241,44 +11215,9 @@ var DataMap = function (_React$Component) {
       this.props.requestCrimes();
     }
   }, {
-    key: 'convertToGeoJSON',
-    value: function convertToGeoJSON(dataset) {
-      return dataset.map(function (datum) {
-        var category = datum.category,
-            date = datum.date,
-            location = datum.location;
-
-        var geoJSON = {};
-        geoJSON['type'] = 'Feature';
-        geoJSON['geometry'] = {
-          'type': 'Point',
-          'coordinates': [location.longitude, location.latitude]
-        }, geoJSON['properties'] = { category: category, date: date };
-        return geoJSON;
-      });
-    }
-  }, {
     key: 'addLayer',
-    value: function addLayer(layerId, dataset) {
-      this.map.addLayer({
-        "id": layerId,
-        "type": "circle",
-        "source": {
-          "type": "geojson",
-          "data": {
-            "type": "FeatureCollection",
-            "features": dataset
-          }
-        },
-        "layout": {
-          "visibility": "visible"
-        }
-      });
-    }
-  }, {
-    key: 'paintLayer',
-    value: function paintLayer(layerId, property, value) {
-      this.map.setPaintProperty(layerId, property, value);
+    value: function addLayer(layer) {
+      this.map.addLayer(layer);
     }
   }, {
     key: 'handleToggle',
@@ -25267,6 +25206,94 @@ module.exports = function(module) {
 	return module;
 };
 
+
+/***/ }),
+/* 233 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+function createLayer(layerId, dataset) {
+  var geoJSON = convertToGeoJSON(dataset);
+  switch (layerId) {
+    case 'crime-layer':
+      return assembleLayerProperties(layerId, 'circle', geoJSON);
+    default:
+      console.log('Invalid layer id');
+  }
+}
+
+function assembleLayerProperties(layerId, type, geoJSON) {
+  var properties = {
+    "id": layerId,
+    "type": type,
+    "source": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": geoJSON
+      }
+    },
+    "paint": paintProperties[layerId],
+    "layout": {
+      "visibility": "visible"
+    }
+  };
+  return properties;
+}
+
+function convertToGeoJSON(dataset) {
+  return dataset.map(function (datum) {
+    var category = datum.category,
+        date = datum.date,
+        location = datum.location;
+
+    var geoJSON = {};
+    geoJSON['type'] = 'Feature';
+    geoJSON['geometry'] = {
+      'type': 'Point',
+      'coordinates': [location.longitude, location.latitude]
+    }, geoJSON['properties'] = { category: category, date: date };
+    return geoJSON;
+  });
+}
+
+var paintProperties = {
+  'crime-layer': {
+    'circle-radius': {
+      'base': 1.75,
+      'stops': [[12, 3], [22, 180]]
+    },
+    "circle-color": '#e55e5e'
+    // 'circle-color': {
+    //   'property': 'category',
+    //   'type': 'categorical',
+    //   'default': `#e55e5e`,
+    //   'stops': [
+    //     ['ARSON', 'blue'],
+    //     ['ASSAULT', 'yellow'],
+    //     ['BURGLARY', 'green'],
+    //     ['DRIVING UNDER THE INFLUENCE', 'orange'],
+    //     ['DRUG/NARCOTIC', 'white'],
+    //     ['KIDNAPPING', 'black'],
+    //     ['LARCENY/THEFT', 'purple'],
+    //     ['PROSTITUTION', 'blue'],
+    //     ['ROBBERY', 'yellow'],
+    //     ['SEX OFFENSES, FORCIBLE', 'green'],
+    //     ['SEX OFFENSES, NON FORCIBLE', 'orange'],
+    //     ['STOLEN PROPERTY', 'white'],
+    //     ['VEHICLE THEFT', 'black'],
+    //     ['WEAPON LAWS', 'purple']
+    //   ]
+    // }
+  }
+};
+
+exports.default = createLayer;
 
 /***/ })
 /******/ ]);

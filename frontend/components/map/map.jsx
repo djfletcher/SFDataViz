@@ -1,13 +1,12 @@
 import React from 'react';
 import mapboxgl from 'mapbox-gl/dist/mapbox-gl';
+import createLayer from './map_layer';
 
 class DataMap extends React.Component {
   constructor(props) {
     super(props);
     this.requestData = this.requestData.bind(this);
-    this.convertToGeoJSON = this.convertToGeoJSON.bind(this);
     this.addLayer = this.addLayer.bind(this);
-    this.paintLayer = this.paintLayer.bind(this);
     this.handleToggle = this.handleToggle.bind(this);
   }
 
@@ -17,7 +16,8 @@ class DataMap extends React.Component {
       container: 'map',
       style: 'mapbox://styles/mapbox/streets-v9',
       center: [-122.447303, 37.768874],
-      zoom: 12
+      zoom: 12,
+      maxBounds: [[-123.25544479306004, 37.29184114161481], [-121.182195956104, 38.16689599206103]]
     });
 
     window.map = this.map;
@@ -26,37 +26,8 @@ class DataMap extends React.Component {
 
   componentWillReceiveProps(nextProps) {
     if (nextProps.crimes.length === 6000) {
-      let crimes = this.convertToGeoJSON(nextProps.crimes);
-      let paintProperties = {
-        'circle-radius': {
-          'base': 1.75,
-          'stops': [[12, 3], [22, 180]]
-        },
-        "circle-color": `#e55e5e`
-        // 'circle-color': {
-        //   'property': 'category',
-        //   'type': 'categorical',
-        //   'default': `#e55e5e`,
-        //   'stops': [
-        //     ['ARSON', 'blue'],
-        //     ['ASSAULT', 'yellow'],
-        //     ['BURGLARY', 'green'],
-        //     ['DRIVING UNDER THE INFLUENCE', 'orange'],
-        //     ['DRUG/NARCOTIC', 'white'],
-        //     ['KIDNAPPING', 'black'],
-        //     ['LARCENY/THEFT', 'purple'],
-        //     ['PROSTITUTION', 'blue'],
-        //     ['ROBBERY', 'yellow'],
-        //     ['SEX OFFENSES, FORCIBLE', 'green'],
-        //     ['SEX OFFENSES, NON FORCIBLE', 'orange'],
-        //     ['STOLEN PROPERTY', 'white'],
-        //     ['VEHICLE THEFT', 'black'],
-        //     ['WEAPON LAWS', 'purple']
-        //   ]
-        // }
-      };
-      this.addLayer('crime-layer', crimes);
-      this.paintLayer('crime-layer', 'paint', paintProperties);
+      let layer = createLayer('crime-layer', nextProps.crimes);
+      this.addLayer(layer);
     }
   }
 
@@ -64,39 +35,8 @@ class DataMap extends React.Component {
     this.props.requestCrimes();
   }
 
-  convertToGeoJSON(dataset) {
-    return dataset.map(datum => {
-      let { category, date, location } = datum;
-      let geoJSON = {};
-      geoJSON['type'] = 'Feature';
-      geoJSON['geometry'] = {
-        'type': 'Point',
-        'coordinates': [location.longitude, location.latitude]
-      },
-      geoJSON['properties'] = { category, date };
-      return geoJSON;
-    });
-  }
-
-  addLayer(layerId, dataset) {
-    this.map.addLayer({
-      "id": layerId,
-      "type": "circle",
-      "source": {
-        "type": "geojson",
-        "data": {
-          "type": "FeatureCollection",
-          "features": dataset
-        }
-      },
-      "layout": {
-        "visibility": "visible"
-      }
-    });
-  }
-
-  paintLayer(layerId, property, value) {
-    this.map.setPaintProperty(layerId, property, value);
+  addLayer(layer) {
+    this.map.addLayer(layer);
   }
 
   handleToggle(layerId) {
