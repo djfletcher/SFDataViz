@@ -6,7 +6,8 @@ class DataMap extends React.Component {
     super(props);
     this.requestData = this.requestData.bind(this);
     this.convertToGeoJSON = this.convertToGeoJSON.bind(this);
-    this.paint = this.paint.bind(this);
+    this.addLayer = this.addLayer.bind(this);
+    this.paintLayer = this.paintLayer.bind(this);
     this.handleToggle = this.handleToggle.bind(this);
   }
 
@@ -26,7 +27,36 @@ class DataMap extends React.Component {
   componentWillReceiveProps(nextProps) {
     if (nextProps.crimes.length === 6000) {
       let crimes = this.convertToGeoJSON(nextProps.crimes);
-      this.paint('crime', crimes);
+      let paintProperties = {
+        'circle-radius': {
+          'base': 1.75,
+          'stops': [[12, 3], [22, 180]]
+        },
+        "circle-color": `#e55e5e`
+        // 'circle-color': {
+        //   'property': 'category',
+        //   'type': 'categorical',
+        //   'default': `#e55e5e`,
+        //   'stops': [
+        //     ['ARSON', 'blue'],
+        //     ['ASSAULT', 'yellow'],
+        //     ['BURGLARY', 'green'],
+        //     ['DRIVING UNDER THE INFLUENCE', 'orange'],
+        //     ['DRUG/NARCOTIC', 'white'],
+        //     ['KIDNAPPING', 'black'],
+        //     ['LARCENY/THEFT', 'purple'],
+        //     ['PROSTITUTION', 'blue'],
+        //     ['ROBBERY', 'yellow'],
+        //     ['SEX OFFENSES, FORCIBLE', 'green'],
+        //     ['SEX OFFENSES, NON FORCIBLE', 'orange'],
+        //     ['STOLEN PROPERTY', 'white'],
+        //     ['VEHICLE THEFT', 'black'],
+        //     ['WEAPON LAWS', 'purple']
+        //   ]
+        // }
+      };
+      this.addLayer('crime-layer', crimes);
+      this.paintLayer('crime-layer', 'paint', paintProperties);
     }
   }
 
@@ -48,9 +78,9 @@ class DataMap extends React.Component {
     });
   }
 
-  paint(layerName, dataset) {
+  addLayer(layerId, dataset) {
     this.map.addLayer({
-      "id": layerName,
+      "id": layerId,
       "type": "circle",
       "source": {
         "type": "geojson",
@@ -59,27 +89,24 @@ class DataMap extends React.Component {
           "features": dataset
         }
       },
-      "paint": {
-        'circle-radius': {
-          'base': 1.75,
-          'stops': [[12, 3], [22, 180]]
-        },
-        "circle-color": `#e55e5e`
-      },
       "layout": {
         "visibility": "visible"
       }
     });
   }
 
-  handleToggle(layer) {
-    let el = document.getElementById(`${layer}-layer`);
-    let visibility = this.map.getLayoutProperty(layer, 'visibility');
+  paintLayer(layerId, property, value) {
+    this.map.setPaintProperty(layerId, property, value);
+  }
+
+  handleToggle(layerId) {
+    let el = document.getElementById(layerId);
+    let visibility = this.map.getLayoutProperty(layerId, 'visibility');
     if (visibility === 'visible') {
-      this.map.setLayoutProperty(layer, 'visibility', 'none');
+      this.map.setLayoutProperty(layerId, 'visibility', 'none');
       el.className = '';
     } else {
-      this.map.setLayoutProperty(layer, 'visibility', 'visible');
+      this.map.setLayoutProperty(layerId, 'visibility', 'visible');
       el.className = 'active';
     }
   }
@@ -90,7 +117,7 @@ class DataMap extends React.Component {
         <li
           id="crime-layer"
           className="active"
-          onClick={ () => this.handleToggle('crime') }>Crime
+          onClick={ () => this.handleToggle('crime-layer') }>Crime
         </li>
       </ul>
     );
