@@ -3,9 +3,9 @@ import React from 'react';
 import configureStore from './store/store';
 import App from './components/app';
 
-import {fetchEvictions} from './util/evictions_api_util';
+import {requestEvictions} from './actions/evictions_actions';
 
-window.fetchEvictions = fetchEvictions;
+window.requestEvictions = requestEvictions;
 
 window.addEventListener("DOMContentLoaded", () => {
   const root = document.getElementById("root");

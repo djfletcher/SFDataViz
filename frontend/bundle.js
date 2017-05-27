@@ -11497,11 +11497,11 @@ var _app = __webpack_require__(97);
 
 var _app2 = _interopRequireDefault(_app);
 
-var _evictions_api_util = __webpack_require__(237);
+var _evictions_actions = __webpack_require__(238);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-window.fetchEvictions = _evictions_api_util.fetchEvictions;
+window.requestEvictions = _evictions_actions.requestEvictions;
 
 window.addEventListener("DOMContentLoaded", function () {
   var root = document.getElementById("root");
@@ -11652,10 +11652,15 @@ var _neighborhoods_reducer = __webpack_require__(106);
 
 var _neighborhoods_reducer2 = _interopRequireDefault(_neighborhoods_reducer);
 
+var _evictions_reducer = __webpack_require__(239);
+
+var _evictions_reducer2 = _interopRequireDefault(_evictions_reducer);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var RootReducer = (0, _redux.combineReducers)({
   crime: _crime_reducer2.default,
+  evictions: _evictions_reducer2.default,
   neighborhoods: _neighborhoods_reducer2.default
 });
 
@@ -25536,6 +25541,72 @@ var fetchEvictions = exports.fetchEvictions = function fetchEvictions(offset) {
 var columns = ['client_location AS location', 'file_date', 'neighborhood', 'non_payment', 'breach', 'nuisance', 'illegal_use', 'failure_to_sign_renewal', 'access_denial', 'unapproved_subtenant', 'owner_move_in', 'demolition', 'capital_improvement', 'substantial_rehab', 'ellis_act_withdrawal', 'condo_conversion', 'roommate_same_unit', 'other_cause', 'late_payments', 'lead_remediation', 'development', 'good_samaritan_ends'];
 
 var appToken = 'Eb5er7pn8pszkiDz2g9g7oQmp';
+
+/***/ }),
+/* 238 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.requestEvictions = exports.receiveEvictions = exports.RECEIVE_EVICTIONS = undefined;
+
+var _evictions_api_util = __webpack_require__(237);
+
+var ApiUtil = _interopRequireWildcard(_evictions_api_util);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+var RECEIVE_EVICTIONS = exports.RECEIVE_EVICTIONS = 'RECEIVE_EVICTIONS';
+
+var receiveEvictions = exports.receiveEvictions = function receiveEvictions(evictions) {
+  return {
+    type: RECEIVE_EVICTIONS,
+    evictions: evictions
+  };
+};
+
+var requestEvictions = exports.requestEvictions = function requestEvictions() {
+  return function (dispatch) {
+    for (var offset = 0; offset < 3; offset++) {
+      ApiUtil.fetchEvictions(offset * 1000).then(function (evictions) {
+        return dispatch(receiveEvictions(evictions));
+      });
+    }
+  };
+};
+
+/***/ }),
+/* 239 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _evictions_actions = __webpack_require__(238);
+
+var EvictionsReducer = function EvictionsReducer() {
+  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+  var action = arguments[1];
+
+  Object.freeze(state);
+
+  switch (action.type) {
+    case _evictions_actions.RECEIVE_EVICTIONS:
+      return state.concat(action.evictions);
+    default:
+      return state;
+  }
+};
+
+exports.default = EvictionsReducer;
 
 /***/ })
 /******/ ]);
