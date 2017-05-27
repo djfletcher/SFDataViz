@@ -11,7 +11,7 @@ Geographic data visualizations for San Francisco. This is an ongoing project, wi
 + [SF Civic Art Collection](https://data.sfgov.org/Culture-and-Recreation/SF-Civic-Art-Collection/zfw6-95su)
 + [Schools](https://data.sfgov.org/Economy-and-Community/Schools/tpp3-epx2) and [Colleges](https://data.sfgov.org/Economy-and-Community/Colleges-in-San-Francisco-2011-/8r3f-pc6a)
 + [Nature Areas / Public Parks](https://data.sfgov.org/Culture-and-Recreation/Recreation-and-Parks-Properties/strc-rdpj)
-+ Urban tree canopy
++ Urban tree cover
   + [Canopy cover](https://data.sfgov.org/Energy-and-Environment/SF-Urban-Tree-Canopy/55pv-5zcc)
   + [Individual street-trees](https://data.sfgov.org/City-Infrastructure/Street-Tree-List/tkzw-k3nq)
 + [Urban bird refuges](https://data.sfgov.org/Energy-and-Environment/Urban-Bird-Refuge/v8rh-bhzp)

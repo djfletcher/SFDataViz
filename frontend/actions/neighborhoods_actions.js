@@ -1,4 +1,4 @@
-import * as ApiUtil from '../util/neighborhood_api_util';
+import * as ApiUtil from '../util/neighborhoods_api_util';
 
 export const RECEIVE_NEIGHBORHOODS = 'RECEIVE_NEIGHBORHOODS';
 

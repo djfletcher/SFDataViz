@@ -3,9 +3,9 @@ import React from 'react';
 import configureStore from './store/store';
 import App from './components/app';
 
-import {requestNeighborhoods} from './actions/neighborhood_actions';
+import {fetchEvictions} from './util/evictions_api_util';
 
-window.requestNeighborhoods = requestNeighborhoods;
+window.fetchEvictions = fetchEvictions;
 
 window.addEventListener("DOMContentLoaded", () => {
   const root = document.getElementById("root");

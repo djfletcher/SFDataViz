@@ -4,6 +4,7 @@ export const fetchCrimes = offset => (
     data: {
       '$select': 'location,date,category',
       '$where': params.join(` OR `),
+      '$order': 'date',
       '$offset': offset
     },
     headers: {

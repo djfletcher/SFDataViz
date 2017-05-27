@@ -1,4 +1,4 @@
-import { RECEIVE_NEIGHBORHOODS } from '../actions/neighborhood_actions';
+import { RECEIVE_NEIGHBORHOODS } from '../actions/neighborhoods_actions';
 
 const NeighborhoodReducer = (state = [], action) => {
   Object.freeze(state);
