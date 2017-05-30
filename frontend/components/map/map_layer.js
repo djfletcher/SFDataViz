@@ -4,6 +4,8 @@ function createLayer(layerId, geoJSON) {
       return assembleLayerProperties(layerId, 'circle', geoJSON);
     case 'neighborhoods-layer':
       return assembleLayerProperties(layerId, 'line', geoJSON);
+    case 'evictions-layer':
+      return assembleLayerProperties(layerId, 'circle', geoJSON);
     default:
       console.log('Invalid layer id');
   }
@@ -34,6 +36,9 @@ const layoutProperties = {
     'visibility': 'visible',
     'line-cap': 'round',
     'line-join': 'round'
+  },
+  'evictions-layer': {
+    'visibility': 'visible'
   }
 };
 
@@ -43,7 +48,7 @@ const paintProperties = {
       'base': 1.75,
       'stops': [[12, 3], [22, 180]]
     },
-    "circle-color": `#e55e5e`
+    'circle-color': `#e55e5e`
     // 'circle-color': {
     //   'property': 'category',
     //   'type': 'categorical',
@@ -78,6 +83,13 @@ const paintProperties = {
     'line-blur': {
       'stops': [[12, 3], [22, 2]]
     }
+  },
+  'evictions-layer': {
+    'circle-radius': {
+      'base': 1.75,
+      'stops': [[12, 3], [22, 180]]
+    },
+    'circle-color': 'blue'
   }
 };
 
@@ -85,7 +97,7 @@ export default createLayer;
 
 
 // below is the beginnings of unfinished code to convert neighborhoods from an object
-//  with names as keys back into a feature collection array 
+//  with names as keys back into a feature collection array
 
 // function createLayer(layerId, dataset) {
 //   switch(layerId) {
