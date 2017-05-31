@@ -8,7 +8,8 @@ export const receiveCrimes = crimes => ({
 });
 
 export const requestCrimes = () => dispatch => {
-  for (let offset = 0; offset < 6; offset++) {
+  for (let offset = 0; offset < 1; offset++) {
+  // for (let offset = 0; offset < 6; offset++) {
     ApiUtil.fetchCrimes(offset * 1000)
            .then(crimes => dispatch(receiveCrimes(crimes)));
   }

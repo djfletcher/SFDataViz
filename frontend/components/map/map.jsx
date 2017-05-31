@@ -33,11 +33,11 @@ class DataMap extends React.Component {
     }
     if (nextProps.neighborhoods.length > 40 && nextProps.neighborhoods.length !== this.props.neighborhoods.length) {
       layer = createLayer('neighborhoods-layer', nextProps.neighborhoods);
-      // this.addLayer(layer);
+      this.addLayer(layer);
     }
     if (nextProps.evictions.length > 2350 && nextProps.evictions.length !== this.props.evictions.neighborhoods) {
       layer = createLayer('evictions-layer', nextProps.evictions);
-      this.addLayer(layer);
+      // this.addLayer(layer);
     }
   }
 
@@ -50,8 +50,9 @@ class DataMap extends React.Component {
   addLayer(layer) {
     // second argument to addLayer is a layer on the map beneath which to insert the new layer
     // this ensures that our custom layers don't cover up street names and map labels
-    let beneathLayer = this.map.getStyle().layers[110].id;
-    this.map.addLayer(layer, beneathLayer);
+    // let beneathLayer = this.map.getStyle().layers[110].id;
+    // this.map.addLayer(layer, beneathLayer);
+    this.map.addLayer(layer);
   }
 
   handleToggle(layerId) {

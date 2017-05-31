@@ -3,7 +3,7 @@ import { RECEIVE_EVICTIONS } from '../actions/evictions_actions';
 const EvictionsReducer = (state = [], action) => {
   Object.freeze(state);
   let geoJSON;
-  if (action.type !== RECEIVE_EVICTIONS) { debugger; }
+  // if (action.type !== RECEIVE_EVICTIONS) { debugger; }
   switch(action.type) {
     case RECEIVE_EVICTIONS:
       geoJSON = convertToGeoJSONArray(action.evictions);

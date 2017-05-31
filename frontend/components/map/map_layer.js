@@ -1,7 +1,8 @@
 function createLayer(layerId, geoJSON) {
   switch(layerId) {
     case 'crime-layer':
-      return assembleLayerProperties(layerId, 'circle', geoJSON);
+      // return assembleLayerProperties(layerId, 'circle', geoJSON);
+      return assembleLayerProperties(layerId, 'fill-extrusion', geoJSON);
     case 'neighborhoods-layer':
       return assembleLayerProperties(layerId, 'line', geoJSON);
     case 'evictions-layer':
@@ -44,11 +45,15 @@ const layoutProperties = {
 
 const paintProperties = {
   'crime-layer': {
-    'circle-radius': {
-      'base': 1.75,
-      'stops': [[12, 3], [22, 180]]
-    },
-    'circle-color': `#e55e5e`
+    'fill-extrusion-height': 10,
+    'fill-extrusion-color': `#e55e5e`
+    //
+    // 'circle-radius': {
+    //   'base': 1.75,
+    //   'stops': [[12, 3], [22, 180]]
+    // },
+    // 'circle-color': `#e55e5e`
+    //
     // 'circle-color': {
     //   'property': 'category',
     //   'type': 'categorical',
