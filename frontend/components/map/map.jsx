@@ -58,6 +58,12 @@ class DataMap extends React.Component {
       closeOnClick: false
     });
 
+    let title = new mapboxgl.Popup({
+      closeButton: false,
+      closeOnClick: false,
+      anchor: 'bottom'
+    });
+
     this.map.on('mouseenter', 'crime-layer', e => {
       // Change the cursor style as a UI indicator.
       this.map.getCanvas().style.cursor = 'pointer';
@@ -72,14 +78,46 @@ class DataMap extends React.Component {
     this.map.on('mouseleave', 'crime-layer', () => {
         this.map.getCanvas().style.cursor = '';
         popup.remove();
-        this.map.setFilter('filtered-crime-layer', ['in', 'category', '']);
+        title.remove();
+        this.map.setFilter('filtered-crime-layer', ['==', 'category', '']);
     });
 
     this.map.on('mousemove', 'crime-layer', e => {
       let feature = e.features[0];
 
-      this.map.setFilter('filtered-crime-layer', ['in', 'category', feature.properties.category]);
+      // Query the crime-layer visible in the map. Use the filter
+      // param to only collect results that share the same category name.
+      let relatedIncidents = this.map.querySourceFeatures('crime-layer', {
+        sourceLayer: 'original',
+        filter: ['==', 'category', feature.properties.category]
+      });
+
+      title.setLngLat(feature.geometry.coordinates)
+           .setHTML(feature.properties.category + ' (' + countUniqueFeatures(relatedIncidents, 'idx') + ' found)')
+           .addTo(this.map);
+
+      this.map.setFilter('filtered-crime-layer', ['==', 'category', feature.properties.category]);
     });
+
+
+    function countUniqueFeatures(array, comparatorProperty) {
+      let existingFeatureKeys = {};
+      // Because features come from tiled vector data, feature geometries may be split
+      // or duplicated across tile boundaries and, as a result, features may appear
+      // multiple times in query results.
+      let uniqueFeatures = array.filter(function(el) {
+          if (existingFeatureKeys[el.properties[comparatorProperty]]) {
+              return false;
+          } else {
+              existingFeatureKeys[el.properties[comparatorProperty]] = true;
+              return true;
+          }
+      });
+
+      return uniqueFeatures.length;
+    }
+
+
   }
 
   addLayer(layer) {

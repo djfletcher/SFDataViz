@@ -15,7 +15,7 @@ const CrimeReducer = (state = [], action) => {
 };
 
 function convertToGeoJSONArray(dataset) {
-  return dataset.map(datum => {
+  return dataset.map((datum, idx) => {
     let { category, date, location } = datum;
     let geoJSON = {};
     geoJSON['type'] = 'Feature';
@@ -25,7 +25,8 @@ function convertToGeoJSONArray(dataset) {
     },
     geoJSON['properties'] = {
       category: toTitleCase(category),
-      date: date.slice(0, 10)
+      date: date.slice(0, 10),
+      idx
     };
     return geoJSON;
   });

@@ -11312,6 +11312,12 @@ var DataMap = function (_React$Component) {
         closeOnClick: false
       });
 
+      var title = new _mapboxGl2.default.Popup({
+        closeButton: false,
+        closeOnClick: false,
+        anchor: 'bottom'
+      });
+
       this.map.on('mouseenter', 'crime-layer', function (e) {
         // Change the cursor style as a UI indicator.
         _this2.map.getCanvas().style.cursor = 'pointer';
@@ -11324,14 +11330,41 @@ var DataMap = function (_React$Component) {
       this.map.on('mouseleave', 'crime-layer', function () {
         _this2.map.getCanvas().style.cursor = '';
         popup.remove();
-        _this2.map.setFilter('filtered-crime-layer', ['in', 'category', '']);
+        title.remove();
+        _this2.map.setFilter('filtered-crime-layer', ['==', 'category', '']);
       });
 
       this.map.on('mousemove', 'crime-layer', function (e) {
         var feature = e.features[0];
 
-        _this2.map.setFilter('filtered-crime-layer', ['in', 'category', feature.properties.category]);
+        // Query the crime-layer visible in the map. Use the filter
+        // param to only collect results that share the same category name.
+        var relatedIncidents = _this2.map.querySourceFeatures('crime-layer', {
+          sourceLayer: 'original',
+          filter: ['==', 'category', feature.properties.category]
+        });
+
+        title.setLngLat(feature.geometry.coordinates).setHTML(feature.properties.category + ' (' + countUniqueFeatures(relatedIncidents, 'idx') + ' found)').addTo(_this2.map);
+
+        _this2.map.setFilter('filtered-crime-layer', ['==', 'category', feature.properties.category]);
       });
+
+      function countUniqueFeatures(array, comparatorProperty) {
+        var existingFeatureKeys = {};
+        // Because features come from tiled vector data, feature geometries may be split
+        // or duplicated across tile boundaries and, as a result, features may appear
+        // multiple times in query results.
+        var uniqueFeatures = array.filter(function (el) {
+          if (existingFeatureKeys[el.properties[comparatorProperty]]) {
+            return false;
+          } else {
+            existingFeatureKeys[el.properties[comparatorProperty]] = true;
+            return true;
+          }
+        });
+
+        return uniqueFeatures.length;
+      }
     }
   }, {
     key: 'addLayer',
@@ -11659,7 +11692,7 @@ var CrimeReducer = function CrimeReducer() {
 };
 
 function convertToGeoJSONArray(dataset) {
-  return dataset.map(function (datum) {
+  return dataset.map(function (datum, idx) {
     var category = datum.category,
         date = datum.date,
         location = datum.location;
@@ -11671,7 +11704,8 @@ function convertToGeoJSONArray(dataset) {
       'coordinates': [location.longitude, location.latitude]
     }, geoJSON['properties'] = {
       category: toTitleCase(category),
-      date: date.slice(0, 10)
+      date: date.slice(0, 10),
+      idx: idx
     };
     return geoJSON;
   });
