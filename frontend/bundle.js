@@ -6926,8 +6926,7 @@ var receiveCrimes = exports.receiveCrimes = function receiveCrimes(crimes) {
 
 var requestCrimes = exports.requestCrimes = function requestCrimes() {
   return function (dispatch) {
-    for (var offset = 0; offset < 1; offset++) {
-      // for (let offset = 0; offset < 6; offset++) {
+    for (var offset = 0; offset < 6; offset++) {
       ApiUtil.fetchCrimes(offset * 1000).then(function (crimes) {
         return dispatch(receiveCrimes(crimes));
       });
@@ -11304,9 +11303,8 @@ var DataMap = function (_React$Component) {
     value: function addLayer(layer) {
       // second argument to addLayer is a layer on the map beneath which to insert the new layer
       // this ensures that our custom layers don't cover up street names and map labels
-      // let beneathLayer = this.map.getStyle().layers[110].id;
-      // this.map.addLayer(layer, beneathLayer);
-      this.map.addLayer(layer);
+      var beneathLayer = this.map.getStyle().layers[110].id;
+      this.map.addLayer(layer, beneathLayer);
     }
   }, {
     key: 'handleToggle',
@@ -11424,8 +11422,8 @@ Object.defineProperty(exports, "__esModule", {
 function createLayer(layerId, geoJSON) {
   switch (layerId) {
     case 'crime-layer':
-      // return assembleLayerProperties(layerId, 'circle', geoJSON);
-      return assembleLayerProperties(layerId, 'fill-extrusion', geoJSON);
+      return assembleLayerProperties(layerId, 'circle', geoJSON);
+    // return assembleLayerProperties(layerId, 'fill-extrusion', geoJSON);
     case 'neighborhoods-layer':
       return assembleLayerProperties(layerId, 'line', geoJSON);
     case 'evictions-layer':
@@ -11468,14 +11466,14 @@ var layoutProperties = {
 
 var paintProperties = {
   'crime-layer': {
-    'fill-extrusion-height': 10,
-    'fill-extrusion-color': '#e55e5e'
+    // 'fill-extrusion-height': 10,
+    // 'fill-extrusion-color': `#e55e5e`
     //
-    // 'circle-radius': {
-    //   'base': 1.75,
-    //   'stops': [[12, 3], [22, 180]]
-    // },
-    // 'circle-color': `#e55e5e`
+    'circle-radius': {
+      'base': 1.75,
+      'stops': [[12, 3], [22, 180]]
+    },
+    'circle-color': '#e55e5e'
     //
     // 'circle-color': {
     //   'property': 'category',
@@ -11601,8 +11599,8 @@ var CrimeReducer = function CrimeReducer() {
 
   switch (action.type) {
     case _crime_actions.RECEIVE_CRIMES:
-      // geoJSON = convertToGeoJSONArray(action.crimes);
-      geoJSON = convertToGeoJSONPolygons(action.crimes);
+      geoJSON = convertToGeoJSONArray(action.crimes);
+      // geoJSON = convertToGeoJSONPolygons(action.crimes);
       return state.concat(geoJSON);
     default:
       return state;
@@ -11635,7 +11633,7 @@ function convertToGeoJSONPolygons(dataset) {
     geoJSON['type'] = 'Feature';
     geoJSON['geometry'] = {
       'type': 'Polygon',
-      'coordinates': makeBox(location.longitude, location.latitude)
+      'coordinates': makeBox(parseFloat(location.longitude), parseFloat(location.latitude))
     }, geoJSON['properties'] = { category: category, date: date };
     return geoJSON;
   });

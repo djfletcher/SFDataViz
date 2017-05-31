@@ -6,8 +6,8 @@ const CrimeReducer = (state = [], action) => {
 
   switch(action.type) {
     case RECEIVE_CRIMES:
-      // geoJSON = convertToGeoJSONArray(action.crimes);
-      geoJSON = convertToGeoJSONPolygons(action.crimes);
+      geoJSON = convertToGeoJSONArray(action.crimes);
+      // geoJSON = convertToGeoJSONPolygons(action.crimes);
       return state.concat(geoJSON);
     default:
       return state;
@@ -35,7 +35,7 @@ function convertToGeoJSONPolygons(dataset) {
     geoJSON['type'] = 'Feature';
     geoJSON['geometry'] = {
       'type': 'Polygon',
-      'coordinates': makeBox(location.longitude, location.latitude)
+      'coordinates': makeBox(parseFloat(location.longitude), parseFloat(location.latitude))
     },
     geoJSON['properties'] = { category, date };
     return geoJSON;

@@ -50,9 +50,8 @@ class DataMap extends React.Component {
   addLayer(layer) {
     // second argument to addLayer is a layer on the map beneath which to insert the new layer
     // this ensures that our custom layers don't cover up street names and map labels
-    // let beneathLayer = this.map.getStyle().layers[110].id;
-    // this.map.addLayer(layer, beneathLayer);
-    this.map.addLayer(layer);
+    let beneathLayer = this.map.getStyle().layers[110].id;
+    this.map.addLayer(layer, beneathLayer);
   }
 
   handleToggle(layerId) {
