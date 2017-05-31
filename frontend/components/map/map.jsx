@@ -6,6 +6,7 @@ class DataMap extends React.Component {
   constructor(props) {
     super(props);
     this.requestData = this.requestData.bind(this);
+    this.addHoverEffects = this.addHoverEffects.bind(this);
     this.addLayer = this.addLayer.bind(this);
     this.handleToggle = this.handleToggle.bind(this);
   }
@@ -21,7 +22,9 @@ class DataMap extends React.Component {
       maxBounds: [[-123.255444, 37.291841], [-121.182195, 38.166895]]
     });
 
+
     window.map = this.map;
+    this.addHoverEffects();
     this.requestData();
   }
 
@@ -45,6 +48,29 @@ class DataMap extends React.Component {
     this.props.requestCrimes();
     this.props.requestNeighborhoodLines();
     this.props.requestEvictions();
+  }
+
+  addHoverEffects() {
+    let popup = new mapboxgl.Popup({
+      closeButton: false,
+      closeOnClick: false
+    });
+
+    this.map.on('mouseenter', 'crime-layer', e => {
+      // Change the cursor style as a UI indicator.
+      this.map.getCanvas().style.cursor = 'pointer';
+
+      // Populate the popup and set its coordinates
+      // based on the feature found.
+      popup.setLngLat(e.features[0].geometry.coordinates)
+           .setHTML(e.features[0].properties.date)
+           .addTo(this.map);
+    });
+
+    this.map.on('mouseleave', 'crime-layer', () => {
+        this.map.getCanvas().style.cursor = '';
+        popup.remove();
+    });
   }
 
   addLayer(layer) {

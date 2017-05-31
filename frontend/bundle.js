@@ -11253,6 +11253,7 @@ var DataMap = function (_React$Component) {
     var _this = _possibleConstructorReturn(this, (DataMap.__proto__ || Object.getPrototypeOf(DataMap)).call(this, props));
 
     _this.requestData = _this.requestData.bind(_this);
+    _this.addHoverEffects = _this.addHoverEffects.bind(_this);
     _this.addLayer = _this.addLayer.bind(_this);
     _this.handleToggle = _this.handleToggle.bind(_this);
     return _this;
@@ -11272,6 +11273,7 @@ var DataMap = function (_React$Component) {
       });
 
       window.map = this.map;
+      this.addHoverEffects();
       this.requestData();
     }
   }, {
@@ -11299,6 +11301,30 @@ var DataMap = function (_React$Component) {
       this.props.requestEvictions();
     }
   }, {
+    key: 'addHoverEffects',
+    value: function addHoverEffects() {
+      var _this2 = this;
+
+      var popup = new _mapboxGl2.default.Popup({
+        closeButton: false,
+        closeOnClick: false
+      });
+
+      this.map.on('mouseenter', 'crime-layer', function (e) {
+        // Change the cursor style as a UI indicator.
+        _this2.map.getCanvas().style.cursor = 'pointer';
+
+        // Populate the popup and set its coordinates
+        // based on the feature found.
+        popup.setLngLat(e.features[0].geometry.coordinates).setHTML(e.features[0].properties.date).addTo(_this2.map);
+      });
+
+      this.map.on('mouseleave', 'crime-layer', function () {
+        _this2.map.getCanvas().style.cursor = '';
+        popup.remove();
+      });
+    }
+  }, {
     key: 'addLayer',
     value: function addLayer(layer) {
       // second argument to addLayer is a layer on the map beneath which to insert the new layer
@@ -11322,7 +11348,7 @@ var DataMap = function (_React$Component) {
   }, {
     key: 'render',
     value: function render() {
-      var _this2 = this;
+      var _this3 = this;
 
       var toggleableLayers = _react2.default.createElement(
         'ul',
@@ -11333,7 +11359,7 @@ var DataMap = function (_React$Component) {
             id: 'crime-layer',
             className: 'active',
             onClick: function onClick() {
-              return _this2.handleToggle('crime-layer');
+              return _this3.handleToggle('crime-layer');
             } },
           'Crime'
         ),
@@ -11343,7 +11369,7 @@ var DataMap = function (_React$Component) {
             id: 'neighborhoods-layer',
             className: 'active',
             onClick: function onClick() {
-              return _this2.handleToggle('neighborhoods-layer');
+              return _this3.handleToggle('neighborhoods-layer');
             } },
           'Neighborhoods'
         )
@@ -11618,7 +11644,7 @@ function convertToGeoJSONArray(dataset) {
     geoJSON['geometry'] = {
       'type': 'Point',
       'coordinates': [location.longitude, location.latitude]
-    }, geoJSON['properties'] = { category: category, date: date };
+    }, geoJSON['properties'] = { category: category, date: date.slice(0, 10) };
     return geoJSON;
   });
 }

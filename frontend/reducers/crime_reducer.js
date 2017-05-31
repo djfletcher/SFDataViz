@@ -23,7 +23,7 @@ function convertToGeoJSONArray(dataset) {
       'type': 'Point',
       'coordinates': [location.longitude, location.latitude]
     },
-    geoJSON['properties'] = { category, date };
+    geoJSON['properties'] = { category, date: date.slice(0, 10) };
     return geoJSON;
   });
 }
