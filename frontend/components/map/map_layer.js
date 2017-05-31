@@ -2,6 +2,8 @@ function createLayer(layerId, geoJSON) {
   switch(layerId) {
     case 'crime-layer':
       return assembleLayerProperties(layerId, 'circle', geoJSON);
+    case 'filtered-crime-layer':
+      return assembleLayerProperties(layerId, 'circle', geoJSON);
       // return assembleLayerProperties(layerId, 'fill-extrusion', geoJSON);
     case 'neighborhoods-layer':
       return assembleLayerProperties(layerId, 'line', geoJSON);
@@ -26,11 +28,17 @@ function assembleLayerProperties(layerId, type, geoJSON) {
     "paint": paintProperties[layerId],
     "layout": layoutProperties[layerId]
   };
+  if (layerId === 'filtered-crime-layer') {
+    properties["filter"] = ["in", "category", ""];
+  }
   return properties;
 }
 
 const layoutProperties = {
   'crime-layer': {
+    'visibility': 'visible'
+  },
+  'filtered-crime-layer': {
     'visibility': 'visible'
   },
   'neighborhoods-layer': {
@@ -75,6 +83,13 @@ const paintProperties = {
     //     ['WEAPON LAWS', 'purple']
     //   ]
     // }
+  },
+  'filtered-crime-layer': {
+    'circle-radius': {
+      'base': 1.75,
+      'stops': [[12, 3], [22, 180]]
+    },
+    'circle-color': `blue`
   },
   'neighborhoods-layer': {
     // neighborhoods should have fill color only when hovered

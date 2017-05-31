@@ -11283,6 +11283,8 @@ var DataMap = function (_React$Component) {
       if (nextProps.crimes.length > 5000 && nextProps.crimes.length !== this.props.crimes.length) {
         layer = (0, _map_layer2.default)('crime-layer', nextProps.crimes);
         this.addLayer(layer);
+        layer = (0, _map_layer2.default)('filtered-crime-layer', nextProps.crimes);
+        this.addLayer(layer);
       }
       if (nextProps.neighborhoods.length > 40 && nextProps.neighborhoods.length !== this.props.neighborhoods.length) {
         layer = (0, _map_layer2.default)('neighborhoods-layer', nextProps.neighborhoods);
@@ -11316,12 +11318,19 @@ var DataMap = function (_React$Component) {
 
         // Populate the popup and set its coordinates
         // based on the feature found.
-        popup.setLngLat(e.features[0].geometry.coordinates).setHTML(e.features[0].properties.date).addTo(_this2.map);
+        popup.setLngLat(e.features[0].geometry.coordinates).setHTML(e.features[0].properties.category).addTo(_this2.map);
       });
 
       this.map.on('mouseleave', 'crime-layer', function () {
         _this2.map.getCanvas().style.cursor = '';
         popup.remove();
+        _this2.map.setFilter('filtered-crime-layer', ['in', 'category', '']);
+      });
+
+      this.map.on('mousemove', 'crime-layer', function (e) {
+        var feature = e.features[0];
+
+        _this2.map.setFilter('filtered-crime-layer', ['in', 'category', feature.properties.category]);
       });
     }
   }, {
@@ -11329,8 +11338,9 @@ var DataMap = function (_React$Component) {
     value: function addLayer(layer) {
       // second argument to addLayer is a layer on the map beneath which to insert the new layer
       // this ensures that our custom layers don't cover up street names and map labels
-      var beneathLayer = this.map.getStyle().layers[110].id;
-      this.map.addLayer(layer, beneathLayer);
+      // let beneathLayer = this.map.getStyle().layers[110].id;
+      // this.map.addLayer(layer, beneathLayer);
+      this.map.addLayer(layer);
     }
   }, {
     key: 'handleToggle',
@@ -11449,6 +11459,8 @@ function createLayer(layerId, geoJSON) {
   switch (layerId) {
     case 'crime-layer':
       return assembleLayerProperties(layerId, 'circle', geoJSON);
+    case 'filtered-crime-layer':
+      return assembleLayerProperties(layerId, 'circle', geoJSON);
     // return assembleLayerProperties(layerId, 'fill-extrusion', geoJSON);
     case 'neighborhoods-layer':
       return assembleLayerProperties(layerId, 'line', geoJSON);
@@ -11473,11 +11485,17 @@ function assembleLayerProperties(layerId, type, geoJSON) {
     "paint": paintProperties[layerId],
     "layout": layoutProperties[layerId]
   };
+  if (layerId === 'filtered-crime-layer') {
+    properties["filter"] = ["in", "category", ""];
+  }
   return properties;
 }
 
 var layoutProperties = {
   'crime-layer': {
+    'visibility': 'visible'
+  },
+  'filtered-crime-layer': {
     'visibility': 'visible'
   },
   'neighborhoods-layer': {
@@ -11522,6 +11540,13 @@ var paintProperties = {
     //     ['WEAPON LAWS', 'purple']
     //   ]
     // }
+  },
+  'filtered-crime-layer': {
+    'circle-radius': {
+      'base': 1.75,
+      'stops': [[12, 3], [22, 180]]
+    },
+    'circle-color': 'blue'
   },
   'neighborhoods-layer': {
     // neighborhoods should have fill color only when hovered
@@ -11644,7 +11669,10 @@ function convertToGeoJSONArray(dataset) {
     geoJSON['geometry'] = {
       'type': 'Point',
       'coordinates': [location.longitude, location.latitude]
-    }, geoJSON['properties'] = { category: category, date: date.slice(0, 10) };
+    }, geoJSON['properties'] = {
+      category: toTitleCase(category),
+      date: date.slice(0, 10)
+    };
     return geoJSON;
   });
 }
@@ -11668,6 +11696,12 @@ function convertToGeoJSONPolygons(dataset) {
 function makeBox(lon, lat) {
   var diff = 0.000001;
   return [[lon + diff, lat + diff], [lon + diff, lat - diff], [lon - diff, lat - diff], [lon - diff, lat + diff]];
+}
+
+function toTitleCase(str) {
+  return str.replace(/\w\S*/g, function (txt) {
+    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+  });
 }
 
 exports.default = CrimeReducer;

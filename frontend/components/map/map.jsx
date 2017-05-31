@@ -33,6 +33,8 @@ class DataMap extends React.Component {
     if (nextProps.crimes.length > 5000 && nextProps.crimes.length !== this.props.crimes.length) {
       layer = createLayer('crime-layer', nextProps.crimes);
       this.addLayer(layer);
+      layer = createLayer('filtered-crime-layer', nextProps.crimes);
+      this.addLayer(layer);
     }
     if (nextProps.neighborhoods.length > 40 && nextProps.neighborhoods.length !== this.props.neighborhoods.length) {
       layer = createLayer('neighborhoods-layer', nextProps.neighborhoods);
@@ -63,21 +65,29 @@ class DataMap extends React.Component {
       // Populate the popup and set its coordinates
       // based on the feature found.
       popup.setLngLat(e.features[0].geometry.coordinates)
-           .setHTML(e.features[0].properties.date)
+           .setHTML(e.features[0].properties.category)
            .addTo(this.map);
     });
 
     this.map.on('mouseleave', 'crime-layer', () => {
         this.map.getCanvas().style.cursor = '';
         popup.remove();
+        this.map.setFilter('filtered-crime-layer', ['in', 'category', '']);
+    });
+
+    this.map.on('mousemove', 'crime-layer', e => {
+      let feature = e.features[0];
+
+      this.map.setFilter('filtered-crime-layer', ['in', 'category', feature.properties.category]);
     });
   }
 
   addLayer(layer) {
     // second argument to addLayer is a layer on the map beneath which to insert the new layer
     // this ensures that our custom layers don't cover up street names and map labels
-    let beneathLayer = this.map.getStyle().layers[110].id;
-    this.map.addLayer(layer, beneathLayer);
+    // let beneathLayer = this.map.getStyle().layers[110].id;
+    // this.map.addLayer(layer, beneathLayer);
+    this.map.addLayer(layer);
   }
 
   handleToggle(layerId) {
