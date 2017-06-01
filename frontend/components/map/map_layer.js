@@ -3,7 +3,9 @@ function createLayer(layerId, geoJSON) {
     case 'crime-layer':
       return assembleLayerProperties(layerId, 'circle', geoJSON);
       // return assembleLayerProperties(layerId, 'fill-extrusion', geoJSON);
-    case 'neighborhoods-layer':
+    case 'neighborhood-fills-layer':
+      return assembleLayerProperties(layerId, 'fill', geoJSON);
+    case 'neighborhoods-invisible-layer':
       return assembleLayerProperties(layerId, 'fill', geoJSON);
     case 'neighborhood-outlines-layer':
       return assembleLayerProperties(layerId, 'line', geoJSON);
@@ -26,8 +28,8 @@ function assembleLayerProperties(layerId, type, geoJSON) {
     "paint": paintProperties[layerId],
     "layout": layoutProperties[layerId]
   };
-  if (layerId === 'neighborhoods-layer') {
-    // properties['filter'] = ["==", "name", ""];
+  if (layerId === 'neighborhood-fills-layer') {
+    properties['filter'] = ["==", "name", ""];
   }
   return properties;
 }
@@ -36,7 +38,10 @@ const layoutProperties = {
   'crime-layer': {
     'visibility': 'visible'
   },
-  'neighborhoods-layer': {
+  'neighborhoods-invisible-layer': {
+    'visibility': 'visible'
+  },
+  'neighborhood-fills-layer': {
     'visibility': 'visible'
   },
   'neighborhood-outlines-layer': {
@@ -89,7 +94,12 @@ const paintProperties = {
       'stops': [[12, 3], [22, 2]]
     }
   },
-  'neighborhoods-layer': {
+  'neighborhoods-invisible-layer': {
+    // neighborhoods should have fill color only when hovered
+    'fill-opacity': 0,
+    'fill-color': '#6699CC'
+  },
+  'neighborhood-fills-layer': {
     // neighborhoods should have fill color only when hovered
     'fill-opacity': 0.5,
     'fill-color': '#6699CC'
@@ -106,7 +116,7 @@ export default createLayer;
 //   switch(layerId) {
 //     case 'crime-layer':
 //       return assembleLayerProperties(layerId, 'circle', dataset);
-//     case 'neighborhoods-layer':
+//     case 'neighborhoods-invisible-layer':
 //       let neighborhoodsArray = [];
 //       for (let hood in dataset) {
 //         let geoJSON = {};

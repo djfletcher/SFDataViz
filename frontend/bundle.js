@@ -11217,6 +11217,7 @@ var DataMap = function (_React$Component) {
     var _this = _possibleConstructorReturn(this, (DataMap.__proto__ || Object.getPrototypeOf(DataMap)).call(this, props));
 
     _this.requestData = _this.requestData.bind(_this);
+    _this.addHoverEffects = _this.addHoverEffects.bind(_this);
     _this.addLayer = _this.addLayer.bind(_this);
     _this.handleToggle = _this.handleToggle.bind(_this);
     return _this;
@@ -11235,8 +11236,8 @@ var DataMap = function (_React$Component) {
         maxBounds: [[-123.255444, 37.291841], [-121.182195, 38.166895]]
       });
 
-      window.map = this.map;
       this.requestData();
+      window.map = this.map;
     }
   }, {
     key: 'componentWillReceiveProps',
@@ -11249,8 +11250,11 @@ var DataMap = function (_React$Component) {
       if (nextProps.neighborhoods.length > 40 && nextProps.neighborhoods.length !== this.props.neighborhoods.length) {
         layer = (0, _map_layer2.default)('neighborhood-outlines-layer', nextProps.neighborhoods);
         this.addLayer(layer);
-        layer = (0, _map_layer2.default)('neighborhoods-layer', nextProps.neighborhoods);
+        layer = (0, _map_layer2.default)('neighborhoods-invisible-layer', nextProps.neighborhoods);
         this.addLayer(layer);
+        layer = (0, _map_layer2.default)('neighborhood-fills-layer', nextProps.neighborhoods);
+        this.addLayer(layer);
+        this.addHoverEffects();
       }
     }
   }, {
@@ -11258,6 +11262,22 @@ var DataMap = function (_React$Component) {
     value: function requestData() {
       this.props.requestCrimes();
       this.props.requestNeighborhoodLines();
+    }
+  }, {
+    key: 'addHoverEffects',
+    value: function addHoverEffects() {
+      var _this2 = this;
+
+      // When the user moves their mouse over the neighborhood-fills-layer, we'll update the filter
+      // to only show the matching neighborhood, thus making a hover effect.
+      this.map.on("mousemove", "neighborhoods-invisible-layer", function (e) {
+        _this2.map.setFilter("neighborhood-fills-layer", ["==", "name", e.features[0].properties.name]);
+      });
+
+      // Reset the neighborhoods-invisible-layer's filter when the mouse leaves the layer.
+      this.map.on("mouseleave", "neighborhoods-invisible-layer", function () {
+        _this2.map.setFilter("neighborhood-fills-layer", ["==", "name", ""]);
+      });
     }
   }, {
     key: 'addLayer',
@@ -11283,7 +11303,7 @@ var DataMap = function (_React$Component) {
   }, {
     key: 'render',
     value: function render() {
-      var _this2 = this;
+      var _this3 = this;
 
       var toggleableLayers = _react2.default.createElement(
         'ul',
@@ -11294,18 +11314,17 @@ var DataMap = function (_React$Component) {
             id: 'crime-layer',
             className: 'active',
             onClick: function onClick() {
-              return _this2.handleToggle('crime-layer');
+              return _this3.handleToggle('crime-layer');
             } },
           'Crime'
         ),
         _react2.default.createElement(
           'li',
           {
-            id: 'neighborhoods-layer',
+            id: 'neighborhood-outlines-layer',
             className: 'active',
             onClick: function onClick() {
-              _this2.handleToggle('neighborhoods-layer');
-              _this2.handleToggle('neighborhood-outlines-layer');
+              return _this3.handleToggle('neighborhood-outlines-layer');
             } },
           'Neighborhoods'
         )
@@ -11379,7 +11398,9 @@ function createLayer(layerId, geoJSON) {
     case 'crime-layer':
       return assembleLayerProperties(layerId, 'circle', geoJSON);
     // return assembleLayerProperties(layerId, 'fill-extrusion', geoJSON);
-    case 'neighborhoods-layer':
+    case 'neighborhood-fills-layer':
+      return assembleLayerProperties(layerId, 'fill', geoJSON);
+    case 'neighborhoods-invisible-layer':
       return assembleLayerProperties(layerId, 'fill', geoJSON);
     case 'neighborhood-outlines-layer':
       return assembleLayerProperties(layerId, 'line', geoJSON);
@@ -11402,8 +11423,8 @@ function assembleLayerProperties(layerId, type, geoJSON) {
     "paint": paintProperties[layerId],
     "layout": layoutProperties[layerId]
   };
-  if (layerId === 'neighborhoods-layer') {
-    // properties['filter'] = ["==", "name", ""];
+  if (layerId === 'neighborhood-fills-layer') {
+    properties['filter'] = ["==", "name", ""];
   }
   return properties;
 }
@@ -11412,7 +11433,10 @@ var layoutProperties = {
   'crime-layer': {
     'visibility': 'visible'
   },
-  'neighborhoods-layer': {
+  'neighborhoods-invisible-layer': {
+    'visibility': 'visible'
+  },
+  'neighborhood-fills-layer': {
     'visibility': 'visible'
   },
   'neighborhood-outlines-layer': {
@@ -11465,7 +11489,12 @@ var paintProperties = {
       'stops': [[12, 3], [22, 2]]
     }
   },
-  'neighborhoods-layer': {
+  'neighborhoods-invisible-layer': {
+    // neighborhoods should have fill color only when hovered
+    'fill-opacity': 0,
+    'fill-color': '#6699CC'
+  },
+  'neighborhood-fills-layer': {
     // neighborhoods should have fill color only when hovered
     'fill-opacity': 0.5,
     'fill-color': '#6699CC'
@@ -11481,7 +11510,7 @@ exports.default = createLayer;
 //   switch(layerId) {
 //     case 'crime-layer':
 //       return assembleLayerProperties(layerId, 'circle', dataset);
-//     case 'neighborhoods-layer':
+//     case 'neighborhoods-invisible-layer':
 //       let neighborhoodsArray = [];
 //       for (let hood in dataset) {
 //         let geoJSON = {};
