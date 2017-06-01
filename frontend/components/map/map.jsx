@@ -29,15 +29,15 @@ class DataMap extends React.Component {
   componentWillReceiveProps(nextProps) {
     let layer;
     if (nextProps.crimes.length > 5000 && nextProps.crimes.length !== this.props.crimes.length) {
-      layer = createLayer('crime-layer', nextProps.crimes);
+      layer = createLayer('crime', nextProps.crimes);
       this.addLayer(layer);
     }
     if (nextProps.neighborhoods.length > 40 && nextProps.neighborhoods.length !== this.props.neighborhoods.length) {
-      layer = createLayer('neighborhood-outlines-layer', nextProps.neighborhoods);
+      layer = createLayer('neighborhood-outlines', nextProps.neighborhoods);
       this.addLayer(layer);
-      layer = createLayer('neighborhoods-invisible-layer', nextProps.neighborhoods);
+      layer = createLayer('neighborhoods', nextProps.neighborhoods);
       this.addLayer(layer);
-      layer = createLayer('neighborhood-fills-layer', nextProps.neighborhoods);
+      layer = createLayer('neighborhood-fills', nextProps.neighborhoods);
       this.addLayer(layer);
       this.addHoverEffects();
     }
@@ -49,15 +49,15 @@ class DataMap extends React.Component {
   }
 
   addHoverEffects() {
-    // When the user moves their mouse over the neighborhood-fills-layer, we'll update the filter
+    // When the user moves their mouse over the neighborhood-fills, we'll update the filter
     // to only show the matching neighborhood, thus making a hover effect.
-    this.map.on("mousemove", "neighborhoods-invisible-layer", e => {
-        this.map.setFilter("neighborhood-fills-layer", ["==", "name", e.features[0].properties.name]);
+    this.map.on("mousemove", "neighborhoods", e => {
+        this.map.setFilter("neighborhood-fills", ["==", "name", e.features[0].properties.name]);
     });
 
-    // Reset the neighborhoods-invisible-layer's filter when the mouse leaves the layer.
-    this.map.on("mouseleave", "neighborhoods-invisible-layer", () => {
-        this.map.setFilter("neighborhood-fills-layer", ["==", "name", ""]);
+    // Reset the neighborhoods's filter when the mouse leaves the layer.
+    this.map.on("mouseleave", "neighborhoods", () => {
+        this.map.setFilter("neighborhood-fills", ["==", "name", ""]);
     });
   }
 
@@ -84,14 +84,14 @@ class DataMap extends React.Component {
     const toggleableLayers = (
       <ul className="legend">
         <li
-          id="crime-layer"
+          id="crime"
           className="active"
-          onClick={ () => this.handleToggle('crime-layer') }>Crime
+          onClick={ () => this.handleToggle('crime') }>Crime
         </li>
         <li
-          id="neighborhood-outlines-layer"
+          id="neighborhood-outlines"
           className="active"
-          onClick={ () => this.handleToggle('neighborhood-outlines-layer') }>Neighborhoods
+          onClick={ () => this.handleToggle('neighborhood-outlines') }>Neighborhoods
         </li>
       </ul>
     );

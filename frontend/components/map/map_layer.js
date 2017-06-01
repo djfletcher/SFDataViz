@@ -1,13 +1,13 @@
 function createLayer(layerId, geoJSON) {
   switch(layerId) {
-    case 'crime-layer':
+    case 'crime':
       return assembleLayerProperties(layerId, 'circle', geoJSON);
       // return assembleLayerProperties(layerId, 'fill-extrusion', geoJSON);
-    case 'neighborhood-fills-layer':
+    case 'neighborhood-fills':
       return assembleLayerProperties(layerId, 'fill', geoJSON);
-    case 'neighborhoods-invisible-layer':
+    case 'neighborhoods':
       return assembleLayerProperties(layerId, 'fill', geoJSON);
-    case 'neighborhood-outlines-layer':
+    case 'neighborhood-outlines':
       return assembleLayerProperties(layerId, 'line', geoJSON);
     default:
       console.log('Invalid layer id');
@@ -28,23 +28,23 @@ function assembleLayerProperties(layerId, type, geoJSON) {
     "paint": paintProperties[layerId],
     "layout": layoutProperties[layerId]
   };
-  if (layerId === 'neighborhood-fills-layer') {
+  if (layerId === 'neighborhood-fills') {
     properties['filter'] = ["==", "name", ""];
   }
   return properties;
 }
 
 const layoutProperties = {
-  'crime-layer': {
+  'crime': {
     'visibility': 'visible'
   },
-  'neighborhoods-invisible-layer': {
+  'neighborhoods': {
     'visibility': 'visible'
   },
-  'neighborhood-fills-layer': {
+  'neighborhood-fills': {
     'visibility': 'visible'
   },
-  'neighborhood-outlines-layer': {
+  'neighborhood-outlines': {
     'visibility': 'visible',
     'line-cap': 'round',
     'line-join': 'round'
@@ -52,7 +52,7 @@ const layoutProperties = {
 };
 
 const paintProperties = {
-  'crime-layer': {
+  'crime': {
     // 'fill-extrusion-height': 10,
     // 'fill-extrusion-color': `#e55e5e`
     //
@@ -84,7 +84,7 @@ const paintProperties = {
     //   ]
     // }
   },
-  'neighborhood-outlines-layer': {
+  'neighborhood-outlines': {
     'line-opacity': 1,
     'line-color': 'black',
     'line-width': {
@@ -94,12 +94,12 @@ const paintProperties = {
       'stops': [[12, 3], [22, 2]]
     }
   },
-  'neighborhoods-invisible-layer': {
+  'neighborhoods': {
     // neighborhoods should have fill color only when hovered
     'fill-opacity': 0,
     'fill-color': '#6699CC'
   },
-  'neighborhood-fills-layer': {
+  'neighborhood-fills': {
     // neighborhoods should have fill color only when hovered
     'fill-opacity': 0.5,
     'fill-color': '#6699CC'
@@ -114,9 +114,9 @@ export default createLayer;
 
 // function createLayer(layerId, dataset) {
 //   switch(layerId) {
-//     case 'crime-layer':
+//     case 'crime':
 //       return assembleLayerProperties(layerId, 'circle', dataset);
-//     case 'neighborhoods-invisible-layer':
+//     case 'neighborhoods':
 //       let neighborhoodsArray = [];
 //       for (let hood in dataset) {
 //         let geoJSON = {};

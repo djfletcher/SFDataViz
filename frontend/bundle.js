@@ -11244,15 +11244,15 @@ var DataMap = function (_React$Component) {
     value: function componentWillReceiveProps(nextProps) {
       var layer = void 0;
       if (nextProps.crimes.length > 5000 && nextProps.crimes.length !== this.props.crimes.length) {
-        layer = (0, _map_layer2.default)('crime-layer', nextProps.crimes);
+        layer = (0, _map_layer2.default)('crime', nextProps.crimes);
         this.addLayer(layer);
       }
       if (nextProps.neighborhoods.length > 40 && nextProps.neighborhoods.length !== this.props.neighborhoods.length) {
-        layer = (0, _map_layer2.default)('neighborhood-outlines-layer', nextProps.neighborhoods);
+        layer = (0, _map_layer2.default)('neighborhood-outlines', nextProps.neighborhoods);
         this.addLayer(layer);
-        layer = (0, _map_layer2.default)('neighborhoods-invisible-layer', nextProps.neighborhoods);
+        layer = (0, _map_layer2.default)('neighborhoods', nextProps.neighborhoods);
         this.addLayer(layer);
-        layer = (0, _map_layer2.default)('neighborhood-fills-layer', nextProps.neighborhoods);
+        layer = (0, _map_layer2.default)('neighborhood-fills', nextProps.neighborhoods);
         this.addLayer(layer);
         this.addHoverEffects();
       }
@@ -11268,15 +11268,15 @@ var DataMap = function (_React$Component) {
     value: function addHoverEffects() {
       var _this2 = this;
 
-      // When the user moves their mouse over the neighborhood-fills-layer, we'll update the filter
+      // When the user moves their mouse over the neighborhood-fills, we'll update the filter
       // to only show the matching neighborhood, thus making a hover effect.
-      this.map.on("mousemove", "neighborhoods-invisible-layer", function (e) {
-        _this2.map.setFilter("neighborhood-fills-layer", ["==", "name", e.features[0].properties.name]);
+      this.map.on("mousemove", "neighborhoods", function (e) {
+        _this2.map.setFilter("neighborhood-fills", ["==", "name", e.features[0].properties.name]);
       });
 
-      // Reset the neighborhoods-invisible-layer's filter when the mouse leaves the layer.
-      this.map.on("mouseleave", "neighborhoods-invisible-layer", function () {
-        _this2.map.setFilter("neighborhood-fills-layer", ["==", "name", ""]);
+      // Reset the neighborhoods's filter when the mouse leaves the layer.
+      this.map.on("mouseleave", "neighborhoods", function () {
+        _this2.map.setFilter("neighborhood-fills", ["==", "name", ""]);
       });
     }
   }, {
@@ -11311,20 +11311,20 @@ var DataMap = function (_React$Component) {
         _react2.default.createElement(
           'li',
           {
-            id: 'crime-layer',
+            id: 'crime',
             className: 'active',
             onClick: function onClick() {
-              return _this3.handleToggle('crime-layer');
+              return _this3.handleToggle('crime');
             } },
           'Crime'
         ),
         _react2.default.createElement(
           'li',
           {
-            id: 'neighborhood-outlines-layer',
+            id: 'neighborhood-outlines',
             className: 'active',
             onClick: function onClick() {
-              return _this3.handleToggle('neighborhood-outlines-layer');
+              return _this3.handleToggle('neighborhood-outlines');
             } },
           'Neighborhoods'
         )
@@ -11395,14 +11395,14 @@ Object.defineProperty(exports, "__esModule", {
 });
 function createLayer(layerId, geoJSON) {
   switch (layerId) {
-    case 'crime-layer':
+    case 'crime':
       return assembleLayerProperties(layerId, 'circle', geoJSON);
     // return assembleLayerProperties(layerId, 'fill-extrusion', geoJSON);
-    case 'neighborhood-fills-layer':
+    case 'neighborhood-fills':
       return assembleLayerProperties(layerId, 'fill', geoJSON);
-    case 'neighborhoods-invisible-layer':
+    case 'neighborhoods':
       return assembleLayerProperties(layerId, 'fill', geoJSON);
-    case 'neighborhood-outlines-layer':
+    case 'neighborhood-outlines':
       return assembleLayerProperties(layerId, 'line', geoJSON);
     default:
       console.log('Invalid layer id');
@@ -11423,23 +11423,23 @@ function assembleLayerProperties(layerId, type, geoJSON) {
     "paint": paintProperties[layerId],
     "layout": layoutProperties[layerId]
   };
-  if (layerId === 'neighborhood-fills-layer') {
+  if (layerId === 'neighborhood-fills') {
     properties['filter'] = ["==", "name", ""];
   }
   return properties;
 }
 
 var layoutProperties = {
-  'crime-layer': {
+  'crime': {
     'visibility': 'visible'
   },
-  'neighborhoods-invisible-layer': {
+  'neighborhoods': {
     'visibility': 'visible'
   },
-  'neighborhood-fills-layer': {
+  'neighborhood-fills': {
     'visibility': 'visible'
   },
-  'neighborhood-outlines-layer': {
+  'neighborhood-outlines': {
     'visibility': 'visible',
     'line-cap': 'round',
     'line-join': 'round'
@@ -11447,7 +11447,7 @@ var layoutProperties = {
 };
 
 var paintProperties = {
-  'crime-layer': {
+  'crime': {
     // 'fill-extrusion-height': 10,
     // 'fill-extrusion-color': `#e55e5e`
     //
@@ -11479,7 +11479,7 @@ var paintProperties = {
     //   ]
     // }
   },
-  'neighborhood-outlines-layer': {
+  'neighborhood-outlines': {
     'line-opacity': 1,
     'line-color': 'black',
     'line-width': {
@@ -11489,12 +11489,12 @@ var paintProperties = {
       'stops': [[12, 3], [22, 2]]
     }
   },
-  'neighborhoods-invisible-layer': {
+  'neighborhoods': {
     // neighborhoods should have fill color only when hovered
     'fill-opacity': 0,
     'fill-color': '#6699CC'
   },
-  'neighborhood-fills-layer': {
+  'neighborhood-fills': {
     // neighborhoods should have fill color only when hovered
     'fill-opacity': 0.5,
     'fill-color': '#6699CC'
@@ -11508,9 +11508,9 @@ exports.default = createLayer;
 
 // function createLayer(layerId, dataset) {
 //   switch(layerId) {
-//     case 'crime-layer':
+//     case 'crime':
 //       return assembleLayerProperties(layerId, 'circle', dataset);
-//     case 'neighborhoods-invisible-layer':
+//     case 'neighborhoods':
 //       let neighborhoodsArray = [];
 //       for (let hood in dataset) {
 //         let geoJSON = {};
