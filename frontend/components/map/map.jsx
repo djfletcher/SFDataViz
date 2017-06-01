@@ -35,16 +35,11 @@ class DataMap extends React.Component {
       layer = createLayer('neighborhoods-layer', nextProps.neighborhoods);
       this.addLayer(layer);
     }
-    if (nextProps.evictions.length > 2350 && nextProps.evictions.length !== this.props.evictions.neighborhoods) {
-      layer = createLayer('evictions-layer', nextProps.evictions);
-      // this.addLayer(layer);
-    }
   }
 
   requestData() {
     this.props.requestCrimes();
     this.props.requestNeighborhoodLines();
-    this.props.requestEvictions();
   }
 
   addLayer(layer) {

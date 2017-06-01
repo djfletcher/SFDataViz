@@ -5,8 +5,6 @@ function createLayer(layerId, geoJSON) {
       // return assembleLayerProperties(layerId, 'fill-extrusion', geoJSON);
     case 'neighborhoods-layer':
       return assembleLayerProperties(layerId, 'line', geoJSON);
-    case 'evictions-layer':
-      return assembleLayerProperties(layerId, 'circle', geoJSON);
     default:
       console.log('Invalid layer id');
   }
@@ -37,9 +35,6 @@ const layoutProperties = {
     'visibility': 'visible',
     'line-cap': 'round',
     'line-join': 'round'
-  },
-  'evictions-layer': {
-    'visibility': 'visible'
   }
 };
 
@@ -88,13 +83,6 @@ const paintProperties = {
     'line-blur': {
       'stops': [[12, 3], [22, 2]]
     }
-  },
-  'evictions-layer': {
-    'circle-radius': {
-      'base': 1.75,
-      'stops': [[12, 3], [22, 180]]
-    },
-    'circle-color': 'blue'
   }
 };
 
