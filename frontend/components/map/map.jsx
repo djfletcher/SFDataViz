@@ -1,6 +1,7 @@
 import React from 'react';
 import mapboxgl from 'mapbox-gl/dist/mapbox-gl';
 import createLayer from './map_layer';
+import { getBbox } from './calculations';
 
 class DataMap extends React.Component {
   constructor(props) {
@@ -58,6 +59,12 @@ class DataMap extends React.Component {
     // Reset the neighborhoods's filter when the mouse leaves the layer.
     this.map.on("mouseleave", "neighborhoods", () => {
         this.map.setFilter("neighborhood-fills", ["==", "name", ""]);
+    });
+
+    // Reset the neighborhoods's filter when the mouse leaves the layer.
+    this.map.on("click", "neighborhoods", e => {
+      let box = getBbox(e.features[0]);
+      console.log(box);
     });
   }
 
