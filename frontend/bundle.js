@@ -11219,6 +11219,8 @@ var DataMap = function (_React$Component) {
     var _this = _possibleConstructorReturn(this, (DataMap.__proto__ || Object.getPrototypeOf(DataMap)).call(this, props));
 
     _this.requestData = _this.requestData.bind(_this);
+    _this.makeInteractive = _this.makeInteractive.bind(_this);
+    _this.addClickEffects = _this.addClickEffects.bind(_this);
     _this.addHoverEffects = _this.addHoverEffects.bind(_this);
     _this.addLayer = _this.addLayer.bind(_this);
     _this.handleToggle = _this.handleToggle.bind(_this);
@@ -11256,7 +11258,7 @@ var DataMap = function (_React$Component) {
         this.addLayer(layer);
         layer = (0, _map_layer2.default)('neighborhood-fills', nextProps.neighborhoods);
         this.addLayer(layer);
-        this.addHoverEffects();
+        this.makeInteractive();
       }
     }
   }, {
@@ -11264,6 +11266,12 @@ var DataMap = function (_React$Component) {
     value: function requestData() {
       this.props.requestCrimes();
       this.props.requestNeighborhoodLines();
+    }
+  }, {
+    key: 'makeInteractive',
+    value: function makeInteractive() {
+      this.addHoverEffects();
+      this.addClickEffects();
     }
   }, {
     key: 'addHoverEffects',
@@ -11280,11 +11288,15 @@ var DataMap = function (_React$Component) {
       this.map.on("mouseleave", "neighborhoods", function () {
         _this2.map.setFilter("neighborhood-fills", ["==", "name", ""]);
       });
+    }
+  }, {
+    key: 'addClickEffects',
+    value: function addClickEffects() {
+      var _this3 = this;
 
-      // Reset the neighborhoods's filter when the mouse leaves the layer.
       this.map.on("click", "neighborhoods", function (e) {
-        var box = (0, _calculations.getBbox)(e.features[0]);
-        console.log(box);
+        var bbox = (0, _calculations.getBbox)(e.features[0]);
+        _this3.map.fitBounds(bbox, { padding: 10 });
       });
     }
   }, {
@@ -11311,7 +11323,7 @@ var DataMap = function (_React$Component) {
   }, {
     key: 'render',
     value: function render() {
-      var _this3 = this;
+      var _this4 = this;
 
       var toggleableLayers = _react2.default.createElement(
         'ul',
@@ -11322,7 +11334,7 @@ var DataMap = function (_React$Component) {
             id: 'crime',
             className: 'active',
             onClick: function onClick() {
-              return _this3.handleToggle('crime');
+              return _this4.handleToggle('crime');
             } },
           'Crime'
         ),
@@ -11332,7 +11344,7 @@ var DataMap = function (_React$Component) {
             id: 'neighborhood-outlines',
             className: 'active',
             onClick: function onClick() {
-              return _this3.handleToggle('neighborhood-outlines');
+              return _this4.handleToggle('neighborhood-outlines');
             } },
           'Neighborhoods'
         )

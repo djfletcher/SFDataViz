@@ -7,6 +7,8 @@ class DataMap extends React.Component {
   constructor(props) {
     super(props);
     this.requestData = this.requestData.bind(this);
+    this.makeInteractive = this.makeInteractive.bind(this);
+    this.addClickEffects = this.addClickEffects.bind(this);
     this.addHoverEffects = this.addHoverEffects.bind(this);
     this.addLayer = this.addLayer.bind(this);
     this.handleToggle = this.handleToggle.bind(this);
@@ -40,13 +42,18 @@ class DataMap extends React.Component {
       this.addLayer(layer);
       layer = createLayer('neighborhood-fills', nextProps.neighborhoods);
       this.addLayer(layer);
-      this.addHoverEffects();
+      this.makeInteractive();
     }
   }
 
   requestData() {
     this.props.requestCrimes();
     this.props.requestNeighborhoodLines();
+  }
+
+  makeInteractive() {
+    this.addHoverEffects();
+    this.addClickEffects();
   }
 
   addHoverEffects() {
@@ -60,11 +67,12 @@ class DataMap extends React.Component {
     this.map.on("mouseleave", "neighborhoods", () => {
         this.map.setFilter("neighborhood-fills", ["==", "name", ""]);
     });
+  }
 
-    // Reset the neighborhoods's filter when the mouse leaves the layer.
+  addClickEffects() {
     this.map.on("click", "neighborhoods", e => {
-      let box = getBbox(e.features[0]);
-      console.log(box);
+      let bbox = getBbox(e.features[0]);
+      this.map.fitBounds(bbox, { padding: 10 });
     });
   }
 
