@@ -11247,6 +11247,8 @@ var DataMap = function (_React$Component) {
         this.addLayer(layer);
       }
       if (nextProps.neighborhoods.length > 40 && nextProps.neighborhoods.length !== this.props.neighborhoods.length) {
+        layer = (0, _map_layer2.default)('neighborhood-outlines-layer', nextProps.neighborhoods);
+        this.addLayer(layer);
         layer = (0, _map_layer2.default)('neighborhoods-layer', nextProps.neighborhoods);
         this.addLayer(layer);
       }
@@ -11302,7 +11304,8 @@ var DataMap = function (_React$Component) {
             id: 'neighborhoods-layer',
             className: 'active',
             onClick: function onClick() {
-              return _this2.handleToggle('neighborhoods-layer');
+              _this2.handleToggle('neighborhoods-layer');
+              _this2.handleToggle('neighborhood-outlines-layer');
             } },
           'Neighborhoods'
         )
@@ -11377,6 +11380,8 @@ function createLayer(layerId, geoJSON) {
       return assembleLayerProperties(layerId, 'circle', geoJSON);
     // return assembleLayerProperties(layerId, 'fill-extrusion', geoJSON);
     case 'neighborhoods-layer':
+      return assembleLayerProperties(layerId, 'fill', geoJSON);
+    case 'neighborhood-outlines-layer':
       return assembleLayerProperties(layerId, 'line', geoJSON);
     default:
       console.log('Invalid layer id');
@@ -11397,6 +11402,9 @@ function assembleLayerProperties(layerId, type, geoJSON) {
     "paint": paintProperties[layerId],
     "layout": layoutProperties[layerId]
   };
+  if (layerId === 'neighborhoods-layer') {
+    // properties['filter'] = ["==", "name", ""];
+  }
   return properties;
 }
 
@@ -11405,6 +11413,9 @@ var layoutProperties = {
     'visibility': 'visible'
   },
   'neighborhoods-layer': {
+    'visibility': 'visible'
+  },
+  'neighborhood-outlines-layer': {
     'visibility': 'visible',
     'line-cap': 'round',
     'line-join': 'round'
@@ -11444,10 +11455,7 @@ var paintProperties = {
     //   ]
     // }
   },
-  'neighborhoods-layer': {
-    // neighborhoods should have fill color only when hovered
-    // 'fill-color': 'rgba(0,0,0,0)',
-    // 'fill-outline-color': 'black'
+  'neighborhood-outlines-layer': {
     'line-opacity': 1,
     'line-color': 'black',
     'line-width': {
@@ -11456,6 +11464,11 @@ var paintProperties = {
     'line-blur': {
       'stops': [[12, 3], [22, 2]]
     }
+  },
+  'neighborhoods-layer': {
+    // neighborhoods should have fill color only when hovered
+    'fill-opacity': 0.5,
+    'fill-color': '#6699CC'
   }
 };
 

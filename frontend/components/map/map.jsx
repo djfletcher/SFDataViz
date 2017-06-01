@@ -32,6 +32,8 @@ class DataMap extends React.Component {
       this.addLayer(layer);
     }
     if (nextProps.neighborhoods.length > 40 && nextProps.neighborhoods.length !== this.props.neighborhoods.length) {
+      layer = createLayer('neighborhood-outlines-layer', nextProps.neighborhoods);
+      this.addLayer(layer);
       layer = createLayer('neighborhoods-layer', nextProps.neighborhoods);
       this.addLayer(layer);
     }
@@ -72,7 +74,10 @@ class DataMap extends React.Component {
         <li
           id="neighborhoods-layer"
           className="active"
-          onClick={ () => this.handleToggle('neighborhoods-layer') }>Neighborhoods
+          onClick={ () => {
+            this.handleToggle('neighborhoods-layer') ;
+            this.handleToggle('neighborhood-outlines-layer');
+          }}>Neighborhoods
         </li>
       </ul>
     );
