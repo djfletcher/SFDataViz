@@ -29,3 +29,9 @@ Geographic data visualizations for San Francisco. This is an ongoing project, wi
 + Cultural attractions: museums, concert venues, theaters
 + Traffic congestion
 + Religious centers: churches, synagogues, mosques
+
+## Turf.js helper functions
++ Joins - #inside, #within
++ Classification - #nearest
++ Aggregation - #collect
++ Meta - #propEach (for creating a hash table of crime type counts), 
