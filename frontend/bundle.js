@@ -12198,8 +12198,11 @@ var DataMap = function (_React$Component) {
     value: function addClickEffects() {
       var _this3 = this;
 
+      var name = void 0,
+          bbox = void 0;
       this.map.on("click", "neighborhoods", function (e) {
-        var bbox = (0, _calculations.getBbox)(e.features[0]);
+        name = e.features[0].properties.name;
+        bbox = (0, _calculations.getBbox)(_this3.props.neighborhoods[name]);
         _this3.map.fitBounds(bbox, { padding: 10 });
       });
     }

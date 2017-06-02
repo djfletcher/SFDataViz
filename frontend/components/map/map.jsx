@@ -70,8 +70,10 @@ class DataMap extends React.Component {
   }
 
   addClickEffects() {
+    let name, bbox;
     this.map.on("click", "neighborhoods", e => {
-      let bbox = getBbox(e.features[0]);
+      name = e.features[0].properties.name;
+      bbox = getBbox(this.props.neighborhoods[name]);
       this.map.fitBounds(bbox, { padding: 10 });
     });
   }
