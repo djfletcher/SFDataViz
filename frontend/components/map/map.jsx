@@ -35,7 +35,7 @@ class DataMap extends React.Component {
       layer = createLayer('crime', nextProps.crimes);
       this.addLayer(layer);
     }
-    if (nextProps.neighborhoods.length > 40 && nextProps.neighborhoods.length !== this.props.neighborhoods.length) {
+    if (!$.isEmptyObject(nextProps.neighborhoods) && $.isEmptyObject(this.props.neighborhoods)) {
       layer = createLayer('neighborhood-outlines', nextProps.neighborhoods);
       this.addLayer(layer);
       layer = createLayer('neighborhoods', nextProps.neighborhoods);
@@ -57,7 +57,7 @@ class DataMap extends React.Component {
   }
 
   addHoverEffects() {
-    // When the user moves their mouse over the neighborhood-fills, we'll update the filter
+    // When the user moves their mouse over the neighborhood-fills, update the filter
     // to only show the matching neighborhood, thus making a hover effect.
     this.map.on("mousemove", "neighborhoods", e => {
         this.map.setFilter("neighborhood-fills", ["==", "name", e.features[0].properties.name]);

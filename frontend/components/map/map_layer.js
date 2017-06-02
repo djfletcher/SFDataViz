@@ -4,11 +4,11 @@ function createLayer(layerId, geoJSON) {
       return assembleLayerProperties(layerId, 'circle', geoJSON);
       // return assembleLayerProperties(layerId, 'fill-extrusion', geoJSON);
     case 'neighborhood-fills':
-      return assembleLayerProperties(layerId, 'fill', geoJSON);
+      return assembleLayerProperties(layerId, 'fill', convertToArray(geoJSON));
     case 'neighborhoods':
-      return assembleLayerProperties(layerId, 'fill', geoJSON);
+      return assembleLayerProperties(layerId, 'fill', convertToArray(geoJSON));
     case 'neighborhood-outlines':
-      return assembleLayerProperties(layerId, 'line', geoJSON);
+      return assembleLayerProperties(layerId, 'line', convertToArray(geoJSON));
     default:
       console.log('Invalid layer id');
   }
@@ -32,6 +32,17 @@ function assembleLayerProperties(layerId, type, geoJSON) {
     properties['filter'] = ["==", "name", ""];
   }
   return properties;
+}
+
+function convertToArray(obj) {
+  let arr = [];
+  for (let key in obj) {
+    obj[key].properties = {
+      'name': key
+    };
+    arr.push(obj[key]);
+  }
+  return arr;
 }
 
 const layoutProperties = {
@@ -95,9 +106,7 @@ const paintProperties = {
     }
   },
   'neighborhoods': {
-    // neighborhoods should have fill color only when hovered
-    'fill-opacity': 0,
-    'fill-color': '#6699CC'
+    'fill-opacity': 0
   },
   'neighborhood-fills': {
     // neighborhoods should have fill color only when hovered

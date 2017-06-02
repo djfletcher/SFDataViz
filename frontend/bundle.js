@@ -12155,7 +12155,7 @@ var DataMap = function (_React$Component) {
         layer = (0, _map_layer2.default)('crime', nextProps.crimes);
         this.addLayer(layer);
       }
-      if (nextProps.neighborhoods.length > 40 && nextProps.neighborhoods.length !== this.props.neighborhoods.length) {
+      if (!$.isEmptyObject(nextProps.neighborhoods) && $.isEmptyObject(this.props.neighborhoods)) {
         layer = (0, _map_layer2.default)('neighborhood-outlines', nextProps.neighborhoods);
         this.addLayer(layer);
         layer = (0, _map_layer2.default)('neighborhoods', nextProps.neighborhoods);
@@ -12182,7 +12182,7 @@ var DataMap = function (_React$Component) {
     value: function addHoverEffects() {
       var _this2 = this;
 
-      // When the user moves their mouse over the neighborhood-fills, we'll update the filter
+      // When the user moves their mouse over the neighborhood-fills, update the filter
       // to only show the matching neighborhood, thus making a hover effect.
       this.map.on("mousemove", "neighborhoods", function (e) {
         _this2.map.setFilter("neighborhood-fills", ["==", "name", e.features[0].properties.name]);
@@ -12323,11 +12323,11 @@ function createLayer(layerId, geoJSON) {
       return assembleLayerProperties(layerId, 'circle', geoJSON);
     // return assembleLayerProperties(layerId, 'fill-extrusion', geoJSON);
     case 'neighborhood-fills':
-      return assembleLayerProperties(layerId, 'fill', geoJSON);
+      return assembleLayerProperties(layerId, 'fill', convertToArray(geoJSON));
     case 'neighborhoods':
-      return assembleLayerProperties(layerId, 'fill', geoJSON);
+      return assembleLayerProperties(layerId, 'fill', convertToArray(geoJSON));
     case 'neighborhood-outlines':
-      return assembleLayerProperties(layerId, 'line', geoJSON);
+      return assembleLayerProperties(layerId, 'line', convertToArray(geoJSON));
     default:
       console.log('Invalid layer id');
   }
@@ -12351,6 +12351,17 @@ function assembleLayerProperties(layerId, type, geoJSON) {
     properties['filter'] = ["==", "name", ""];
   }
   return properties;
+}
+
+function convertToArray(obj) {
+  var arr = [];
+  for (var key in obj) {
+    obj[key].properties = {
+      'name': key
+    };
+    arr.push(obj[key]);
+  }
+  return arr;
 }
 
 var layoutProperties = {
@@ -12414,9 +12425,7 @@ var paintProperties = {
     }
   },
   'neighborhoods': {
-    // neighborhoods should have fill color only when hovered
-    'fill-opacity': 0,
-    'fill-color': '#6699CC'
+    'fill-opacity': 0
   },
   'neighborhood-fills': {
     // neighborhoods should have fill color only when hovered
