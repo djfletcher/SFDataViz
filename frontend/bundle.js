@@ -11290,7 +11290,6 @@ var DataMap = function (_React$Component) {
         this.addLayer(layer);
       }
       if (!$.isEmptyObject(nextProps.neighborhoods) && $.isEmptyObject(this.props.neighborhoods)) {
-        // if (nextProps.neighborhoods['Bernal Heights']) {
         layer = (0, _map_layer2.default)('neighborhood-outlines', nextProps.neighborhoods);
         this.addLayer(layer);
         layer = (0, _map_layer2.default)('neighborhoods', nextProps.neighborhoods);
@@ -11298,10 +11297,6 @@ var DataMap = function (_React$Component) {
         layer = (0, _map_layer2.default)('neighborhood-fills', nextProps.neighborhoods);
         this.addLayer(layer);
         this.makeInteractive();
-      }
-      if (nextProps.crimes.length > 5000 && nextProps.neighborhoods['Bernal Heights']) {
-        var hood = nextProps.neighborhoods['Bernal Heights'];
-        (0, _calculations.countCrimes)(nextProps.crimes, hood);
       }
     }
   }, {
@@ -11338,11 +11333,14 @@ var DataMap = function (_React$Component) {
       var _this3 = this;
 
       var name = void 0,
-          bbox = void 0;
+          bbox = void 0,
+          counts = void 0;
       this.map.on("click", "neighborhoods", function (e) {
         name = e.features[0].properties.name;
         bbox = (0, _calculations.getBbox)(_this3.props.neighborhoods[name]);
         _this3.map.fitBounds(bbox, { padding: 10 });
+        counts = (0, _calculations.countCrimes)(_this3.props.crimes, _this3.props.neighborhoods[name]);
+        console.log(counts);
       });
     }
   }, {
@@ -11675,7 +11673,10 @@ function convertToGeoJSONArray(dataset) {
     geoJSON['geometry'] = {
       'type': 'Point',
       'coordinates': [location.longitude, location.latitude]
-    }, geoJSON['properties'] = { category: category, date: date };
+    }, geoJSON['properties'] = {
+      category: toTitleCase(category),
+      date: date.slice(0, 10)
+    };
     return geoJSON;
   });
 }
@@ -11699,6 +11700,12 @@ function convertToGeoJSONPolygons(dataset) {
 function makeBox(lon, lat) {
   var diff = 0.000001;
   return [[lon + diff, lat + diff], [lon + diff, lat - diff], [lon - diff, lat - diff], [lon - diff, lat + diff]];
+}
+
+function toTitleCase(str) {
+  return str.replace(/\w\S*/g, function (txt) {
+    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+  });
 }
 
 exports.default = CrimeReducer;

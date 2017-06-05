@@ -23,7 +23,10 @@ function convertToGeoJSONArray(dataset) {
       'type': 'Point',
       'coordinates': [location.longitude, location.latitude]
     },
-    geoJSON['properties'] = { category, date };
+    geoJSON['properties'] = {
+      category: toTitleCase(category),
+      date: date.slice(0, 10)
+    };
     return geoJSON;
   });
 }
@@ -50,6 +53,10 @@ function makeBox(lon, lat) {
     [lon - diff, lat - diff],
     [lon - diff, lat + diff]
   ];
+}
+
+function toTitleCase(str) {
+  return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
 }
 
 export default CrimeReducer;

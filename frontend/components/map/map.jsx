@@ -36,7 +36,6 @@ class DataMap extends React.Component {
       this.addLayer(layer);
     }
     if (!$.isEmptyObject(nextProps.neighborhoods) && $.isEmptyObject(this.props.neighborhoods)) {
-    // if (nextProps.neighborhoods['Bernal Heights']) {
       layer = createLayer('neighborhood-outlines', nextProps.neighborhoods);
       this.addLayer(layer);
       layer = createLayer('neighborhoods', nextProps.neighborhoods);
@@ -44,10 +43,6 @@ class DataMap extends React.Component {
       layer = createLayer('neighborhood-fills', nextProps.neighborhoods);
       this.addLayer(layer);
       this.makeInteractive();
-    }
-    if (nextProps.crimes.length > 5000 && nextProps.neighborhoods['Bernal Heights']) {
-      let hood = nextProps.neighborhoods['Bernal Heights'];
-      countCrimes(nextProps.crimes, hood);
     }
   }
 
@@ -75,11 +70,13 @@ class DataMap extends React.Component {
   }
 
   addClickEffects() {
-    let name, bbox;
+    let name, bbox, counts;
     this.map.on("click", "neighborhoods", e => {
       name = e.features[0].properties.name;
       bbox = getBbox(this.props.neighborhoods[name]);
       this.map.fitBounds(bbox, { padding: 10 });
+      counts = countCrimes(this.props.crimes, this.props.neighborhoods[name]);
+      console.log(counts);
     });
   }
 
