@@ -10,7 +10,7 @@ const mapStateToProps = ({ crime, neighborhoods }) => ({
 
 const mapDispatchToProps = dispatch => ({
   requestCrimes: () => dispatch(requestCrimes()),
-  requestNeighborhoodLines: () => dispatch(requestNeighborhoods())
+  requestNeighborhoods: () => dispatch(requestNeighborhoods())
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(DataMap);

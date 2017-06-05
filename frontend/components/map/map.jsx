@@ -1,7 +1,7 @@
 import React from 'react';
 import mapboxgl from 'mapbox-gl/dist/mapbox-gl';
 import createLayer from './map_layer';
-import { getBbox } from './calculations';
+import { getBbox, countCrimes } from './calculations';
 
 class DataMap extends React.Component {
   constructor(props) {
@@ -36,6 +36,7 @@ class DataMap extends React.Component {
       this.addLayer(layer);
     }
     if (!$.isEmptyObject(nextProps.neighborhoods) && $.isEmptyObject(this.props.neighborhoods)) {
+    // if (nextProps.neighborhoods['Bernal Heights']) {
       layer = createLayer('neighborhood-outlines', nextProps.neighborhoods);
       this.addLayer(layer);
       layer = createLayer('neighborhoods', nextProps.neighborhoods);
@@ -44,11 +45,15 @@ class DataMap extends React.Component {
       this.addLayer(layer);
       this.makeInteractive();
     }
+    if (nextProps.crimes.length > 5000 && nextProps.neighborhoods['Bernal Heights']) {
+      let hood = nextProps.neighborhoods['Bernal Heights'];
+      countCrimes(nextProps.crimes, hood);
+    }
   }
 
   requestData() {
     this.props.requestCrimes();
-    this.props.requestNeighborhoodLines();
+    this.props.requestNeighborhoods();
   }
 
   makeInteractive() {
