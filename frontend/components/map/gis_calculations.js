@@ -15,3 +15,13 @@ export function countCrimes(crimes, neighborhood) {
   });
   return counts;
 }
+
+// export function mergeCrimes(hoods, crimes) {
+//   let collected, hCollection, cCollection;
+//   hCollection = { 'features': hoods };
+//   cCollection = { 'features': crimes };
+//   console.log('made it here...');
+//   collected = turf.collect(hCollection, cCollection, 'category', 'values');
+//   console.log('MADE IT OUT YEAH!');
+//   console.log(collected);
+// }

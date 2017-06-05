@@ -1,15 +1,17 @@
 import React from 'react';
 import mapboxgl from 'mapbox-gl/dist/mapbox-gl';
 import createLayer from './map_layer';
-import { getBbox, countCrimes } from './calculations';
+import { getBbox, countCrimes } from './gis_calculations';
 
 class DataMap extends React.Component {
   constructor(props) {
     super(props);
+    this.state = { neighborhoodMemo: {} };
     this.requestData = this.requestData.bind(this);
     this.makeInteractive = this.makeInteractive.bind(this);
-    this.addClickEffects = this.addClickEffects.bind(this);
     this.addHoverEffects = this.addHoverEffects.bind(this);
+    this.addClickEffects = this.addClickEffects.bind(this);
+    this.memoizeNeighborhood = this.memoizeNeighborhood.bind(this);
     this.addLayer = this.addLayer.bind(this);
     this.handleToggle = this.handleToggle.bind(this);
   }
@@ -75,9 +77,20 @@ class DataMap extends React.Component {
       name = e.features[0].properties.name;
       bbox = getBbox(this.props.neighborhoods[name]);
       this.map.fitBounds(bbox, { padding: 10 });
-      counts = countCrimes(this.props.crimes, this.props.neighborhoods[name]);
-      console.log(counts);
+      this.memoizeNeighborhood(name);
     });
+  }
+
+  memoizeNeighborhood(name) {
+    let hoodGeometry = this.state.neighborhoodMemo[name];
+    if (hoodGeometry) {
+      console.log(hoodGeometry);
+      return hoodGeometry;
+    }
+    let counts = countCrimes(this.props.crimes, this.props.neighborhoods[name]);
+    this.setState({ neighborhoodMemo: { [name]: counts } });
+    console.log(counts);
+    return counts;
   }
 
   addLayer(layer) {

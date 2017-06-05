@@ -6861,41 +6861,7 @@ module.exports = g;
 
 
 /***/ }),
-/* 56 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.getBbox = getBbox;
-exports.countCrimes = countCrimes;
-
-var _turf = __webpack_require__(315);
-
-var _turf2 = _interopRequireDefault(_turf);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function getBbox(feature) {
-  var coords = _turf2.default.bbox(feature);
-  return [[coords[0], coords[1]], [coords[2], coords[3]]];
-}
-
-function countCrimes(crimes, neighborhood) {
-  var counts = {};
-  crimes.forEach(function (crime, idx) {
-    if (_turf2.default.inside(crime, neighborhood)) {
-      var crimeType = crime.properties.category;
-      counts[crimeType] = counts[crimeType] + 1 || 1;
-    }
-  });
-  return counts;
-}
-
-/***/ }),
+/* 56 */,
 /* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -11238,9 +11204,11 @@ var _map_layer = __webpack_require__(108);
 
 var _map_layer2 = _interopRequireDefault(_map_layer);
 
-var _calculations = __webpack_require__(56);
+var _gis_calculations = __webpack_require__(322);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -11256,10 +11224,12 @@ var DataMap = function (_React$Component) {
 
     var _this = _possibleConstructorReturn(this, (DataMap.__proto__ || Object.getPrototypeOf(DataMap)).call(this, props));
 
+    _this.state = { neighborhoodMemo: {} };
     _this.requestData = _this.requestData.bind(_this);
     _this.makeInteractive = _this.makeInteractive.bind(_this);
-    _this.addClickEffects = _this.addClickEffects.bind(_this);
     _this.addHoverEffects = _this.addHoverEffects.bind(_this);
+    _this.addClickEffects = _this.addClickEffects.bind(_this);
+    _this.memoizeNeighborhood = _this.memoizeNeighborhood.bind(_this);
     _this.addLayer = _this.addLayer.bind(_this);
     _this.handleToggle = _this.handleToggle.bind(_this);
     return _this;
@@ -11337,11 +11307,23 @@ var DataMap = function (_React$Component) {
           counts = void 0;
       this.map.on("click", "neighborhoods", function (e) {
         name = e.features[0].properties.name;
-        bbox = (0, _calculations.getBbox)(_this3.props.neighborhoods[name]);
+        bbox = (0, _gis_calculations.getBbox)(_this3.props.neighborhoods[name]);
         _this3.map.fitBounds(bbox, { padding: 10 });
-        counts = (0, _calculations.countCrimes)(_this3.props.crimes, _this3.props.neighborhoods[name]);
-        console.log(counts);
+        _this3.memoizeNeighborhood(name);
       });
+    }
+  }, {
+    key: 'memoizeNeighborhood',
+    value: function memoizeNeighborhood(name) {
+      var hoodGeometry = this.state.neighborhoodMemo[name];
+      if (hoodGeometry) {
+        console.log(hoodGeometry);
+        return hoodGeometry;
+      }
+      var counts = (0, _gis_calculations.countCrimes)(this.props.crimes, this.props.neighborhoods[name]);
+      this.setState({ neighborhoodMemo: _defineProperty({}, name, counts) });
+      console.log(counts);
+      return counts;
     }
   }, {
     key: 'addLayer',
@@ -11619,11 +11601,7 @@ var _app = __webpack_require__(99);
 
 var _app2 = _interopRequireDefault(_app);
 
-var _calculations = __webpack_require__(56);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-window.getBbox = _calculations.getBbox;
 
 window.addEventListener("DOMContentLoaded", function () {
   var root = document.getElementById("root");
@@ -33945,6 +33923,54 @@ module.exports.RADIUS = 6378137;
 module.exports.FLATTENING = 1/298.257223563;
 module.exports.POLAR_RADIUS = 6356752.3142;
 
+
+/***/ }),
+/* 319 */,
+/* 320 */,
+/* 321 */,
+/* 322 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getBbox = getBbox;
+exports.countCrimes = countCrimes;
+
+var _turf = __webpack_require__(315);
+
+var _turf2 = _interopRequireDefault(_turf);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function getBbox(feature) {
+  var coords = _turf2.default.bbox(feature);
+  return [[coords[0], coords[1]], [coords[2], coords[3]]];
+}
+
+function countCrimes(crimes, neighborhood) {
+  var counts = {};
+  crimes.forEach(function (crime, idx) {
+    if (_turf2.default.inside(crime, neighborhood)) {
+      var crimeType = crime.properties.category;
+      counts[crimeType] = counts[crimeType] + 1 || 1;
+    }
+  });
+  return counts;
+}
+
+// export function mergeCrimes(hoods, crimes) {
+//   let collected, hCollection, cCollection;
+//   hCollection = { 'features': hoods };
+//   cCollection = { 'features': crimes };
+//   console.log('made it here...');
+//   collected = turf.collect(hCollection, cCollection, 'category', 'values');
+//   console.log('MADE IT OUT YEAH!');
+//   console.log(collected);
+// }
 
 /***/ })
 /******/ ]);
