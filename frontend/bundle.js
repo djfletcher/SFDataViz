@@ -34061,8 +34061,13 @@ var statsList = function statsList(stats) {
       rows = void 0;
   rows = [];
   for (category in stats) {
-    rows.push(category + ": " + stats[category]);
+    rows.push({ category: category, counts: stats[category] });
   }
+  // sort stats in descending order
+  rows.sort(function (a, b) {
+    return b.counts - a.counts;
+  });
+
   return _react2.default.createElement(
     "ul",
     { id: "neighborhood-stats" },
@@ -34072,11 +34077,11 @@ var statsList = function statsList(stats) {
   );
 };
 
-var statsListItem = function statsListItem(content, idx) {
+var statsListItem = function statsListItem(row, idx) {
   return _react2.default.createElement(
     "li",
     { key: "stat-" + idx },
-    content
+    row.category + ": " + row.counts
   );
 };
 

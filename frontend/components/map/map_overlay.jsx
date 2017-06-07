@@ -18,8 +18,11 @@ const statsList = stats => {
   let category, rows;
   rows = [];
   for (category in stats) {
-    rows.push(`${category}: ${stats[category]}`);
+    rows.push({ category, counts: stats[category] });
   }
+  // sort stats in descending order
+  rows.sort((a, b) => b.counts - a.counts);
+  
   return(
     <ul id="neighborhood-stats">
       { rows.map((row, idx) => statsListItem(row, idx)) }
@@ -27,6 +30,8 @@ const statsList = stats => {
   );
 };
 
-const statsListItem = (content, idx) => <li key={ `stat-${idx}` }>{ content }</li>;
+const statsListItem = (row, idx) => (
+  <li key={ `stat-${idx}` }>{ `${row.category}: ${row.counts}` }</li>
+);
 
 export default mapOverlay;
