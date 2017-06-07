@@ -21,7 +21,7 @@ const statsList = stats => {
     rows.push(`${category}: ${stats[category]}`);
   }
   return(
-    <ul>
+    <ul id="neighborhood-stats">
       { rows.map((row, idx) => statsListItem(row, idx)) }
     </ul>
   );

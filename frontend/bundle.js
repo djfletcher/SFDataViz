@@ -34065,7 +34065,7 @@ var statsList = function statsList(stats) {
   }
   return _react2.default.createElement(
     "ul",
-    null,
+    { id: "neighborhood-stats" },
     rows.map(function (row, idx) {
       return statsListItem(row, idx);
     })
