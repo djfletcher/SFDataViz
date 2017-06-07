@@ -9,14 +9,18 @@ class DataMap extends React.Component {
     super(props);
     this.state = {
       statsMemo: {},
-      statsDisplayed: {}
+      statsDisplayed: {
+        neighborhood: '',
+        stats: {}
+      }
     };
     this.requestData = this.requestData.bind(this);
     this.makeInteractive = this.makeInteractive.bind(this);
     this.addHoverEffects = this.addHoverEffects.bind(this);
     this.addClickEffects = this.addClickEffects.bind(this);
-    this.memoizeNeighborhood = this.memoizeNeighborhood.bind(this);
-    this.updateCountsDisplayed = this.updateCountsDisplayed.bind(this);
+    this.getStats = this.getStats.bind(this);
+    this.memoizeStats = this.memoizeStats.bind(this);
+    this.updateStatsDisplayed = this.updateStatsDisplayed.bind(this);
     this.addLayer = this.addLayer.bind(this);
     this.handleToggle = this.handleToggle.bind(this);
   }
@@ -79,42 +83,41 @@ class DataMap extends React.Component {
   }
 
   addClickEffects() {
-    let name, bbox, counts;
+    let name, bbox, stats;
     // Get bounding box of neighborhood clicked, compile stats on that neighborhood,
     // and then center map over it
     this.map.on("click", "neighborhoods", e => {
       name = e.features[0].properties.name;
       bbox = getBbox(this.props.neighborhoods[name]);
       this.map.fitBounds(bbox, { padding: 10 });
-      this.memoizeNeighborhood(name);
+      this.getStats(name);
     });
   }
 
-  memoizeNeighborhood(name) {
-    // memoize the stats for this neighborhood for rapid retrieval next time it is clicked
-    let counts, statsMemo;
-    counts = this.state.statsMemo[name];
-    if (counts) {
-      this.updateCountsDisplayed(name, counts);
-    } else {
-      counts = countCrimes(
-        this.props.crimes,
-        this.props.neighborhoods[name],
-        this.updateCountsDisplayed,
-        name
-      );
-      statsMemo = this.state.statsMemo;
-      statsMemo[name] = counts;
-      this.setState(statsMemo);
-      this.updateCountsDisplayed(name, counts);
+  getStats(name) {
+    let stats = this.state.statsMemo[name];
+    if (!stats) {
+      stats = this.memoizeStats(name);
     }
+    this.updateStatsDisplayed(name, stats);
   }
 
-  updateCountsDisplayed(name, counts) {
-    this.setState(
-      { statsDisplayed: counts },
-      () => mapOverlay(name, counts)
+  memoizeStats(name) {
+    // memoize the stats for this neighborhood for rapid retrieval next time it is clicked
+    let stats, statsMemo;
+    stats = countCrimes(
+      this.props.crimes,
+      this.props.neighborhoods[name]
     );
+    statsMemo = this.state.statsMemo;
+    statsMemo[name] = stats;
+    this.setState({ statsMemo });
+  }
+
+  updateStatsDisplayed(name, stats) {
+    this.setState({
+      statsDisplayed: { name, stats }
+    });
   }
 
   addLayer(layer) {
@@ -151,7 +154,15 @@ class DataMap extends React.Component {
         </li>
       </ul>
     );
-    return toggleableLayers;
+
+    const overlay = mapOverlay();
+
+    return (
+      <div>
+        toggleableLayers;
+        mapOverlay();
+      </div>
+    );
   }
 }
 

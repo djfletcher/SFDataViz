@@ -1,17 +1,25 @@
-const mapOverlay = (neighborhood, crimeStats) => {
+const mapOverlay = (neighborhood, stats) => {
   let overlay, title, category, row;
-  overlay = document.getElementById('map-overlay');
-  title = document.createElement('h1');
-  overlay.innerHTML = '';
-  title.innerHTML = neighborhood;
-  overlay.appendChild(title);
-  for (category in crimeStats) {
-    row = document.createElement('li');
-    row.innerHTML = `${category}: ${crimeStats[category]}`;
-    overlay.appendChild(row);
+  if (!neighborhood) {
+    return <div></div>;
+  } else {
+    return (
+      <div id="map-overlay">
+        <h1>{ neighborhood }</h1>
+        { statsList(stats) }
+      </div>
+    );
   }
-  overlay.style.display = 'block';
-  return overlay;
+};
+
+const statsList = stats => {
+  let category, list, row;
+  list = <ul></ul>;
+  for (category in stats) {
+    row = <li>`${category}: ${stats[category]}`</li>;
+    list.appendChild(row);
+  }
+  return list;
 };
 
 export default mapOverlay;
