@@ -1,6 +1,6 @@
 # SF Crime Map
 
-Geographic data visualization and analytics for San Francisco crime. This is an ongoing project, with the current live version [here](https://djfletcher.github.io/SFDataViz/).
+Geographic data visualization and analytics for San Francisco crime. In its current iteration, the project fetches and maps the 6,000 most recently reported violent crimes in San Francisco. This is an ongoing project, with the current live version [here](https://djfletcher.github.io/SFDataViz/).
 
 ## Features in Development:
 + Filter by crime type.
