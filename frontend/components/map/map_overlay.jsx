@@ -1,3 +1,5 @@
+import React from 'react';
+
 const mapOverlay = (neighborhood, stats) => {
   let overlay, title, category, row;
   if (!neighborhood) {
@@ -13,13 +15,18 @@ const mapOverlay = (neighborhood, stats) => {
 };
 
 const statsList = stats => {
-  let category, list, row;
-  list = <ul></ul>;
+  let category, rows;
+  rows = [];
   for (category in stats) {
-    row = <li>`${category}: ${stats[category]}`</li>;
-    list.appendChild(row);
+    rows.push(`${category}: ${stats[category]}`);
   }
-  return list;
+  return(
+    <ul>
+      { rows.map((row, idx) => statsListItem(row, idx)) }
+    </ul>
+  );
 };
+
+const statsListItem = (content, idx) => <li key={ `stat-${idx}` }>{ content }</li>;
 
 export default mapOverlay;

@@ -13240,8 +13240,7 @@ var App = function (_React$Component) {
         _react2.default.createElement(
           'div',
           { id: 'map' },
-          _react2.default.createElement(_map_container2.default, null),
-          _react2.default.createElement('ul', { id: 'map-overlay' })
+          _react2.default.createElement(_map_container2.default, null)
         )
       );
     }
@@ -13374,15 +13373,19 @@ function getBbox(feature) {
   return [[coords[0], coords[1]], [coords[2], coords[3]]];
 }
 
-function countCrimes(crimes, neighborhood) {
-  var counts = {};
+function countCrimes(crimes, boundaries, neighborhood, memoizeStats, updateStatsDisplayed) {
+  var stats = {};
   crimes.forEach(function (crime) {
-    if (_turf2.default.inside(crime, neighborhood)) {
+    if (_turf2.default.inside(crime, boundaries)) {
       var crimeType = crime.properties.category;
-      counts[crimeType] = counts[crimeType] + 1 || 1;
+      stats[crimeType] = stats[crimeType] + 1 || 1;
     }
   });
-  return counts;
+
+  memoizeStats(neighborhood, stats);
+  updateStatsDisplayed(neighborhood, stats);
+
+  return stats;
 }
 
 function findDuplicateCrimes(crimes, hoods) {
@@ -13536,43 +13539,42 @@ var DataMap = function (_React$Component) {
     value: function addClickEffects() {
       var _this3 = this;
 
-      var name = void 0,
-          bbox = void 0,
-          stats = void 0;
+      var neighborhood = void 0,
+          bbox = void 0;
       // Get bounding box of neighborhood clicked, compile stats on that neighborhood,
       // and then center map over it
       this.map.on("click", "neighborhoods", function (e) {
-        name = e.features[0].properties.name;
-        bbox = (0, _gis_calculations.getBbox)(_this3.props.neighborhoods[name]);
+        neighborhood = e.features[0].properties.name;
+        bbox = (0, _gis_calculations.getBbox)(_this3.props.neighborhoods[neighborhood]);
         _this3.map.fitBounds(bbox, { padding: 10 });
-        _this3.getStats(name);
+        _this3.getStats(neighborhood);
       });
     }
   }, {
     key: 'getStats',
-    value: function getStats(name) {
-      var stats = this.state.statsMemo[name];
+    value: function getStats(neighborhood) {
+      var stats = void 0,
+          statsMemo = void 0;
+      stats = this.state.statsMemo[neighborhood];
       if (!stats) {
-        stats = this.memoizeStats(name);
+        stats = (0, _gis_calculations.countCrimes)(this.props.crimes, this.props.neighborhoods[neighborhood], neighborhood, this.memoizeStats, this.updateStatsDisplayed);
+      } else {
+        this.updateStatsDisplayed(neighborhood, stats);
       }
-      this.updateStatsDisplayed(name, stats);
     }
   }, {
     key: 'memoizeStats',
-    value: function memoizeStats(name) {
+    value: function memoizeStats(neighborhood, stats) {
       // memoize the stats for this neighborhood for rapid retrieval next time it is clicked
-      var stats = void 0,
-          statsMemo = void 0;
-      stats = (0, _gis_calculations.countCrimes)(this.props.crimes, this.props.neighborhoods[name]);
-      statsMemo = this.state.statsMemo;
-      statsMemo[name] = stats;
+      var statsMemo = this.state.statsMemo;
+      statsMemo[neighborhood] = stats;
       this.setState({ statsMemo: statsMemo });
     }
   }, {
     key: 'updateStatsDisplayed',
-    value: function updateStatsDisplayed(name, stats) {
+    value: function updateStatsDisplayed(neighborhood, stats) {
       this.setState({
-        statsDisplayed: { name: name, stats: stats }
+        statsDisplayed: { neighborhood: neighborhood, stats: stats }
       });
     }
   }, {
@@ -13626,12 +13628,14 @@ var DataMap = function (_React$Component) {
         )
       );
 
-      var overlay = (0, _map_overlay2.default)();
+      var statsDisplayed = this.state.statsDisplayed;
+      var overlay = (0, _map_overlay2.default)(statsDisplayed.neighborhood, statsDisplayed.stats);
 
       return _react2.default.createElement(
         'div',
         null,
-        'toggleableLayers; mapOverlay();'
+        toggleableLayers,
+        overlay
       );
     }
   }]);
@@ -34024,18 +34028,25 @@ module.exports.POLAR_RADIUS = 6356752.3142;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _react = __webpack_require__(24);
+
+var _react2 = _interopRequireDefault(_react);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 var mapOverlay = function mapOverlay(neighborhood, stats) {
   var overlay = void 0,
       title = void 0,
       category = void 0,
       row = void 0;
   if (!neighborhood) {
-    return React.createElement("div", null);
+    return _react2.default.createElement("div", null);
   } else {
-    return React.createElement(
+    return _react2.default.createElement(
       "div",
       { id: "map-overlay" },
-      React.createElement(
+      _react2.default.createElement(
         "h1",
         null,
         neighborhood
@@ -34047,22 +34058,26 @@ var mapOverlay = function mapOverlay(neighborhood, stats) {
 
 var statsList = function statsList(stats) {
   var category = void 0,
-      list = void 0,
-      row = void 0;
-  list = React.createElement("ul", null);
+      rows = void 0;
+  rows = [];
   for (category in stats) {
-    row = React.createElement(
-      "li",
-      null,
-      "`$",
-      category,
-      ": $",
-      stats[category],
-      "`"
-    );
-    list.appendChild(row);
+    rows.push(category + ": " + stats[category]);
   }
-  return list;
+  return _react2.default.createElement(
+    "ul",
+    null,
+    rows.map(function (row, idx) {
+      return statsListItem(row, idx);
+    })
+  );
+};
+
+var statsListItem = function statsListItem(content, idx) {
+  return _react2.default.createElement(
+    "li",
+    { key: "stat-" + idx },
+    content
+  );
 };
 
 exports.default = mapOverlay;

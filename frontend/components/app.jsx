@@ -9,7 +9,6 @@ class App extends React.Component {
       <Provider store={ this.props.store }>
         <div id="map">
           <DataMapContainer />
-          <ul id="map-overlay"></ul>
         </div>
       </Provider>
     );

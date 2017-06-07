@@ -5,15 +5,19 @@ export function getBbox(feature) {
   return [[coords[0], coords[1]], [coords[2], coords[3]]];
 }
 
-export function countCrimes(crimes, neighborhood) {
-  let counts = {};
+export function countCrimes(crimes, boundaries, neighborhood, memoizeStats, updateStatsDisplayed) {
+  let stats = {};
   crimes.forEach(crime => {
-    if (turf.inside(crime, neighborhood)) {
+    if (turf.inside(crime, boundaries)) {
       let crimeType = crime.properties.category;
-      counts[crimeType] = counts[crimeType] + 1 || 1;
+      stats[crimeType] = stats[crimeType] + 1 || 1;
     }
   });
-  return counts;
+
+  memoizeStats(neighborhood, stats);
+  updateStatsDisplayed(neighborhood, stats);
+  
+  return stats;
 }
 
 export function findDuplicateCrimes(crimes, hoods) {

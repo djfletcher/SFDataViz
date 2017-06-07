@@ -83,40 +83,43 @@ class DataMap extends React.Component {
   }
 
   addClickEffects() {
-    let name, bbox, stats;
+    let neighborhood, bbox;
     // Get bounding box of neighborhood clicked, compile stats on that neighborhood,
     // and then center map over it
     this.map.on("click", "neighborhoods", e => {
-      name = e.features[0].properties.name;
-      bbox = getBbox(this.props.neighborhoods[name]);
+      neighborhood = e.features[0].properties.name;
+      bbox = getBbox(this.props.neighborhoods[neighborhood]);
       this.map.fitBounds(bbox, { padding: 10 });
-      this.getStats(name);
+      this.getStats(neighborhood);
     });
   }
 
-  getStats(name) {
-    let stats = this.state.statsMemo[name];
+  getStats(neighborhood) {
+    let stats, statsMemo;
+    stats = this.state.statsMemo[neighborhood];
     if (!stats) {
-      stats = this.memoizeStats(name);
+      stats = countCrimes(
+        this.props.crimes,
+        this.props.neighborhoods[neighborhood],
+        neighborhood,
+        this.memoizeStats,
+        this.updateStatsDisplayed
+      );
+    } else {
+      this.updateStatsDisplayed(neighborhood, stats);
     }
-    this.updateStatsDisplayed(name, stats);
   }
 
-  memoizeStats(name) {
+  memoizeStats(neighborhood, stats) {
     // memoize the stats for this neighborhood for rapid retrieval next time it is clicked
-    let stats, statsMemo;
-    stats = countCrimes(
-      this.props.crimes,
-      this.props.neighborhoods[name]
-    );
-    statsMemo = this.state.statsMemo;
-    statsMemo[name] = stats;
+    let statsMemo = this.state.statsMemo;
+    statsMemo[neighborhood] = stats;
     this.setState({ statsMemo });
   }
 
-  updateStatsDisplayed(name, stats) {
+  updateStatsDisplayed(neighborhood, stats) {
     this.setState({
-      statsDisplayed: { name, stats }
+      statsDisplayed: { neighborhood, stats }
     });
   }
 
@@ -155,12 +158,13 @@ class DataMap extends React.Component {
       </ul>
     );
 
-    const overlay = mapOverlay();
+    let statsDisplayed = this.state.statsDisplayed;
+    const overlay = mapOverlay(statsDisplayed.neighborhood, statsDisplayed.stats);
 
     return (
       <div>
-        toggleableLayers;
-        mapOverlay();
+        { toggleableLayers }
+        { overlay }
       </div>
     );
   }
