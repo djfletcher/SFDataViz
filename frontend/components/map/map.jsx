@@ -2,14 +2,14 @@ import React from 'react';
 import mapboxgl from 'mapbox-gl/dist/mapbox-gl';
 import createLayer from './map_layer';
 import { getBbox, countCrimes } from './gis_calculations';
-import countsDisplay from './counts_display';
+import mapOverlay from './map_overlay';
 
 class DataMap extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      neighborhoodMemo: {},
-      countsDisplayed: {}
+      statsMemo: {},
+      statsDisplayed: {}
     };
     this.requestData = this.requestData.bind(this);
     this.makeInteractive = this.makeInteractive.bind(this);
@@ -80,6 +80,8 @@ class DataMap extends React.Component {
 
   addClickEffects() {
     let name, bbox, counts;
+    // Get bounding box of neighborhood clicked, compile stats on that neighborhood,
+    // and then center map over it
     this.map.on("click", "neighborhoods", e => {
       name = e.features[0].properties.name;
       bbox = getBbox(this.props.neighborhoods[name]);
@@ -89,13 +91,11 @@ class DataMap extends React.Component {
   }
 
   memoizeNeighborhood(name) {
-    let counts, newState;
-    counts = this.state.neighborhoodMemo[name];
+    // memoize the stats for this neighborhood for rapid retrieval next time it is clicked
+    let counts, statsMemo;
+    counts = this.state.statsMemo[name];
     if (counts) {
-      this.setState(
-        { countsDisplayed: counts },
-        () => this.updateCountsDisplayed(name)
-      );
+      this.updateCountsDisplayed(name, counts);
     } else {
       counts = countCrimes(
         this.props.crimes,
@@ -103,19 +103,17 @@ class DataMap extends React.Component {
         this.updateCountsDisplayed,
         name
       );
-      newState = this.state;
-      newState.neighborhoodMemo[name] = counts;
-      this.setState(
-        newState,
-        () => this.updateCountsDisplayed(name)
-      );
+      statsMemo = this.state.statsMemo;
+      statsMemo[name] = counts;
+      this.setState(statsMemo);
+      this.updateCountsDisplayed(name, counts);
     }
   }
 
   updateCountsDisplayed(name, counts) {
     this.setState(
-      { countsDisplayed: counts },
-      () => countsDisplay(name, counts)
+      { statsDisplayed: counts },
+      () => mapOverlay(name, counts)
     );
   }
 

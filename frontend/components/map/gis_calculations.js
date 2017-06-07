@@ -6,8 +6,6 @@ export function getBbox(feature) {
 }
 
 export function countCrimes(crimes, neighborhood) {
-// export function countCrimes(crimes, neighborhood, displayCounts, name) {
-  console.log('calculating...');
   let counts = {};
   crimes.forEach(crime => {
     if (turf.inside(crime, neighborhood)) {
@@ -15,8 +13,6 @@ export function countCrimes(crimes, neighborhood) {
       counts[crimeType] = counts[crimeType] + 1 || 1;
     }
   });
-  // displayCounts(counts, name);
-  console.log('done calculating');
   return counts;
 }
 

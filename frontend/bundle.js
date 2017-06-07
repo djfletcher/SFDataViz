@@ -13375,8 +13375,6 @@ function getBbox(feature) {
 }
 
 function countCrimes(crimes, neighborhood) {
-  // export function countCrimes(crimes, neighborhood, displayCounts, name) {
-  console.log('calculating...');
   var counts = {};
   crimes.forEach(function (crime) {
     if (_turf2.default.inside(crime, neighborhood)) {
@@ -13384,8 +13382,6 @@ function countCrimes(crimes, neighborhood) {
       counts[crimeType] = counts[crimeType] + 1 || 1;
     }
   });
-  // displayCounts(counts, name);
-  console.log('done calculating');
   return counts;
 }
 
@@ -13432,9 +13428,9 @@ var _map_layer2 = _interopRequireDefault(_map_layer);
 
 var _gis_calculations = __webpack_require__(121);
 
-var _counts_display = __webpack_require__(315);
+var _map_overlay = __webpack_require__(316);
 
-var _counts_display2 = _interopRequireDefault(_counts_display);
+var _map_overlay2 = _interopRequireDefault(_map_overlay);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -13453,8 +13449,8 @@ var DataMap = function (_React$Component) {
     var _this = _possibleConstructorReturn(this, (DataMap.__proto__ || Object.getPrototypeOf(DataMap)).call(this, props));
 
     _this.state = {
-      neighborhoodMemo: {},
-      countsDisplayed: {}
+      statsMemo: {},
+      statsDisplayed: {}
     };
     _this.requestData = _this.requestData.bind(_this);
     _this.makeInteractive = _this.makeInteractive.bind(_this);
@@ -13539,6 +13535,8 @@ var DataMap = function (_React$Component) {
       var name = void 0,
           bbox = void 0,
           counts = void 0;
+      // Get bounding box of neighborhood clicked, compile stats on that neighborhood,
+      // and then center map over it
       this.map.on("click", "neighborhoods", function (e) {
         name = e.features[0].properties.name;
         bbox = (0, _gis_calculations.getBbox)(_this3.props.neighborhoods[name]);
@@ -13549,29 +13547,25 @@ var DataMap = function (_React$Component) {
   }, {
     key: 'memoizeNeighborhood',
     value: function memoizeNeighborhood(name) {
-      var _this4 = this;
-
+      // memoize the stats for this neighborhood for rapid retrieval next time it is clicked
       var counts = void 0,
-          newState = void 0;
-      counts = this.state.neighborhoodMemo[name];
+          statsMemo = void 0;
+      counts = this.state.statsMemo[name];
       if (counts) {
-        this.setState({ countsDisplayed: counts }, function () {
-          return _this4.updateCountsDisplayed(name);
-        });
+        this.updateCountsDisplayed(name, counts);
       } else {
         counts = (0, _gis_calculations.countCrimes)(this.props.crimes, this.props.neighborhoods[name], this.updateCountsDisplayed, name);
-        newState = this.state;
-        newState.neighborhoodMemo[name] = counts;
-        this.setState(newState, function () {
-          return _this4.updateCountsDisplayed(name);
-        });
+        statsMemo = this.state.statsMemo;
+        statsMemo[name] = counts;
+        this.setState(statsMemo);
+        this.updateCountsDisplayed(name, counts);
       }
     }
   }, {
     key: 'updateCountsDisplayed',
     value: function updateCountsDisplayed(name, counts) {
-      this.setState({ countsDisplayed: counts }, function () {
-        return (0, _counts_display2.default)(name, counts);
+      this.setState({ statsDisplayed: counts }, function () {
+        return (0, _map_overlay2.default)(name, counts);
       });
     }
   }, {
@@ -13598,7 +13592,7 @@ var DataMap = function (_React$Component) {
   }, {
     key: 'render',
     value: function render() {
-      var _this5 = this;
+      var _this4 = this;
 
       var toggleableLayers = _react2.default.createElement(
         'ul',
@@ -13609,7 +13603,7 @@ var DataMap = function (_React$Component) {
             id: 'crime',
             className: 'active',
             onClick: function onClick() {
-              return _this5.handleToggle('crime');
+              return _this4.handleToggle('crime');
             } },
           'Crime'
         ),
@@ -13619,7 +13613,7 @@ var DataMap = function (_React$Component) {
             id: 'neighborhood-outlines',
             className: 'active',
             onClick: function onClick() {
-              return _this5.handleToggle('neighborhood-outlines');
+              return _this4.handleToggle('neighborhood-outlines');
             } },
           'Neighborhoods'
         )
@@ -34006,7 +34000,8 @@ module.exports.POLAR_RADIUS = 6356752.3142;
 
 
 /***/ }),
-/* 315 */
+/* 315 */,
+/* 316 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -34015,7 +34010,7 @@ module.exports.POLAR_RADIUS = 6356752.3142;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-var countsDisplay = function countsDisplay(neighborhoodName, crimeCounts) {
+var mapOverlay = function mapOverlay(neighborhood, crimeStats) {
   var overlay = void 0,
       title = void 0,
       category = void 0,
@@ -34023,18 +34018,18 @@ var countsDisplay = function countsDisplay(neighborhoodName, crimeCounts) {
   overlay = document.getElementById('map-overlay');
   title = document.createElement('h1');
   overlay.innerHTML = '';
-  title.innerHTML = neighborhoodName;
+  title.innerHTML = neighborhood;
   overlay.appendChild(title);
-  for (category in crimeCounts) {
+  for (category in crimeStats) {
     row = document.createElement('li');
-    row.innerHTML = category + ': ' + crimeCounts[category];
+    row.innerHTML = category + ': ' + crimeStats[category];
     overlay.appendChild(row);
   }
   overlay.style.display = 'block';
   return overlay;
 };
 
-exports.default = countsDisplay;
+exports.default = mapOverlay;
 
 /***/ })
 /******/ ]);
