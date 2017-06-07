@@ -13374,7 +13374,9 @@ function getBbox(feature) {
   return [[coords[0], coords[1]], [coords[2], coords[3]]];
 }
 
-function countCrimes(crimes, neighborhood, displayCounts, name) {
+function countCrimes(crimes, neighborhood) {
+  // export function countCrimes(crimes, neighborhood, displayCounts, name) {
+  console.log('calculating...');
   var counts = {};
   crimes.forEach(function (crime) {
     if (_turf2.default.inside(crime, neighborhood)) {
@@ -13382,7 +13384,8 @@ function countCrimes(crimes, neighborhood, displayCounts, name) {
       counts[crimeType] = counts[crimeType] + 1 || 1;
     }
   });
-  displayCounts(counts, name);
+  // displayCounts(counts, name);
+  console.log('done calculating');
   return counts;
 }
 
@@ -13429,9 +13432,11 @@ var _map_layer2 = _interopRequireDefault(_map_layer);
 
 var _gis_calculations = __webpack_require__(121);
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+var _counts_display = __webpack_require__(315);
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+var _counts_display2 = _interopRequireDefault(_counts_display);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -13447,12 +13452,16 @@ var DataMap = function (_React$Component) {
 
     var _this = _possibleConstructorReturn(this, (DataMap.__proto__ || Object.getPrototypeOf(DataMap)).call(this, props));
 
-    _this.state = { neighborhoodMemo: {} };
+    _this.state = {
+      neighborhoodMemo: {},
+      countsDisplayed: {}
+    };
     _this.requestData = _this.requestData.bind(_this);
     _this.makeInteractive = _this.makeInteractive.bind(_this);
     _this.addHoverEffects = _this.addHoverEffects.bind(_this);
     _this.addClickEffects = _this.addClickEffects.bind(_this);
     _this.memoizeNeighborhood = _this.memoizeNeighborhood.bind(_this);
+    _this.updateCountsDisplayed = _this.updateCountsDisplayed.bind(_this);
     _this.addLayer = _this.addLayer.bind(_this);
     _this.handleToggle = _this.handleToggle.bind(_this);
     return _this;
@@ -13513,11 +13522,13 @@ var DataMap = function (_React$Component) {
       // to only show the matching neighborhood, thus making a hover effect.
       this.map.on("mousemove", "neighborhoods", function (e) {
         _this2.map.setFilter("neighborhood-fills", ["==", "name", e.features[0].properties.name]);
+        _this2.map.getCanvas().style.cursor = 'pointer';
       });
 
       // Reset the neighborhoods's filter when the mouse leaves the layer.
       this.map.on("mouseleave", "neighborhoods", function () {
         _this2.map.setFilter("neighborhood-fills", ["==", "name", ""]);
+        _this2.map.getCanvas().style.cursor = '';
       });
     }
   }, {
@@ -13538,30 +13549,30 @@ var DataMap = function (_React$Component) {
   }, {
     key: 'memoizeNeighborhood',
     value: function memoizeNeighborhood(name) {
-      var existingMemo = this.state.neighborhoodMemo[name];
-      if (existingMemo) {
-        return existingMemo;
+      var _this4 = this;
+
+      var counts = void 0,
+          newState = void 0;
+      counts = this.state.neighborhoodMemo[name];
+      if (counts) {
+        this.setState({ countsDisplayed: counts }, function () {
+          return _this4.updateCountsDisplayed(name);
+        });
       } else {
-        var counts = (0, _gis_calculations.countCrimes)(this.props.crimes, this.props.neighborhoods[name], this.displayCounts, name);
-        this.setState({ neighborhoodMemo: _defineProperty({}, name, counts) });
-        return counts;
+        counts = (0, _gis_calculations.countCrimes)(this.props.crimes, this.props.neighborhoods[name], this.updateCountsDisplayed, name);
+        newState = this.state;
+        newState.neighborhoodMemo[name] = counts;
+        this.setState(newState, function () {
+          return _this4.updateCountsDisplayed(name);
+        });
       }
     }
   }, {
-    key: 'displayCounts',
-    value: function displayCounts(counts, name) {
-      var overlay = document.getElementById('map-overlay');
-      var title = document.createElement('h1');
-      overlay.innerHTML = '';
-      title.innerHTML = name;
-      overlay.appendChild(title);
-      for (var category in counts) {
-        var row = document.createElement('li');
-        row.innerHTML = category + ': ' + counts[category];
-        overlay.appendChild(row);
-      }
-      overlay.style.display = 'block';
-      return overlay;
+    key: 'updateCountsDisplayed',
+    value: function updateCountsDisplayed(name, counts) {
+      this.setState({ countsDisplayed: counts }, function () {
+        return (0, _counts_display2.default)(name, counts);
+      });
     }
   }, {
     key: 'addLayer',
@@ -13587,7 +13598,7 @@ var DataMap = function (_React$Component) {
   }, {
     key: 'render',
     value: function render() {
-      var _this4 = this;
+      var _this5 = this;
 
       var toggleableLayers = _react2.default.createElement(
         'ul',
@@ -13598,7 +13609,7 @@ var DataMap = function (_React$Component) {
             id: 'crime',
             className: 'active',
             onClick: function onClick() {
-              return _this4.handleToggle('crime');
+              return _this5.handleToggle('crime');
             } },
           'Crime'
         ),
@@ -13608,7 +13619,7 @@ var DataMap = function (_React$Component) {
             id: 'neighborhood-outlines',
             className: 'active',
             onClick: function onClick() {
-              return _this4.handleToggle('neighborhood-outlines');
+              return _this5.handleToggle('neighborhood-outlines');
             } },
           'Neighborhoods'
         )
@@ -33993,6 +34004,37 @@ module.exports.RADIUS = 6378137;
 module.exports.FLATTENING = 1/298.257223563;
 module.exports.POLAR_RADIUS = 6356752.3142;
 
+
+/***/ }),
+/* 315 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var countsDisplay = function countsDisplay(neighborhoodName, crimeCounts) {
+  var overlay = void 0,
+      title = void 0,
+      category = void 0,
+      row = void 0;
+  overlay = document.getElementById('map-overlay');
+  title = document.createElement('h1');
+  overlay.innerHTML = '';
+  title.innerHTML = neighborhoodName;
+  overlay.appendChild(title);
+  for (category in crimeCounts) {
+    row = document.createElement('li');
+    row.innerHTML = category + ': ' + crimeCounts[category];
+    overlay.appendChild(row);
+  }
+  overlay.style.display = 'block';
+  return overlay;
+};
+
+exports.default = countsDisplay;
 
 /***/ })
 /******/ ]);

@@ -2,16 +2,21 @@ import React from 'react';
 import mapboxgl from 'mapbox-gl/dist/mapbox-gl';
 import createLayer from './map_layer';
 import { getBbox, countCrimes } from './gis_calculations';
+import countsDisplay from './counts_display';
 
 class DataMap extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { neighborhoodMemo: {} };
+    this.state = {
+      neighborhoodMemo: {},
+      countsDisplayed: {}
+    };
     this.requestData = this.requestData.bind(this);
     this.makeInteractive = this.makeInteractive.bind(this);
     this.addHoverEffects = this.addHoverEffects.bind(this);
     this.addClickEffects = this.addClickEffects.bind(this);
     this.memoizeNeighborhood = this.memoizeNeighborhood.bind(this);
+    this.updateCountsDisplayed = this.updateCountsDisplayed.bind(this);
     this.addLayer = this.addLayer.bind(this);
     this.handleToggle = this.handleToggle.bind(this);
   }
@@ -62,12 +67,14 @@ class DataMap extends React.Component {
     // When the user moves their mouse over the neighborhood-fills, update the filter
     // to only show the matching neighborhood, thus making a hover effect.
     this.map.on("mousemove", "neighborhoods", e => {
-        this.map.setFilter("neighborhood-fills", ["==", "name", e.features[0].properties.name]);
+      this.map.setFilter("neighborhood-fills", ["==", "name", e.features[0].properties.name]);
+      this.map.getCanvas().style.cursor = 'pointer';
     });
 
     // Reset the neighborhoods's filter when the mouse leaves the layer.
     this.map.on("mouseleave", "neighborhoods", () => {
-        this.map.setFilter("neighborhood-fills", ["==", "name", ""]);
+      this.map.setFilter("neighborhood-fills", ["==", "name", ""]);
+      this.map.getCanvas().style.cursor = '';
     });
   }
 
@@ -82,34 +89,34 @@ class DataMap extends React.Component {
   }
 
   memoizeNeighborhood(name) {
-    let existingMemo = this.state.neighborhoodMemo[name];
-    if (existingMemo) {
-      return existingMemo;
+    let counts, newState;
+    counts = this.state.neighborhoodMemo[name];
+    if (counts) {
+      this.setState(
+        { countsDisplayed: counts },
+        () => this.updateCountsDisplayed(name)
+      );
     } else {
-      let counts = countCrimes(
+      counts = countCrimes(
         this.props.crimes,
         this.props.neighborhoods[name],
-        this.displayCounts,
+        this.updateCountsDisplayed,
         name
       );
-      this.setState({ neighborhoodMemo: { [name]: counts } });
-      return counts;
+      newState = this.state;
+      newState.neighborhoodMemo[name] = counts;
+      this.setState(
+        newState,
+        () => this.updateCountsDisplayed(name)
+      );
     }
   }
 
-  displayCounts(counts, name) {
-    let overlay = document.getElementById('map-overlay');
-    let title = document.createElement('h1');
-    overlay.innerHTML = '';
-    title.innerHTML = name;
-    overlay.appendChild(title);
-    for (let category in counts) {
-      let row = document.createElement('li');
-      row.innerHTML = `${category}: ${counts[category]}`;
-      overlay.appendChild(row);
-    }
-    overlay.style.display = 'block';
-    return overlay;
+  updateCountsDisplayed(name, counts) {
+    this.setState(
+      { countsDisplayed: counts },
+      () => countsDisplay(name, counts)
+    );
   }
 
   addLayer(layer) {
