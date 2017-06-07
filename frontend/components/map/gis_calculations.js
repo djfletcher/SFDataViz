@@ -5,15 +5,20 @@ export function getBbox(feature) {
   return [[coords[0], coords[1]], [coords[2], coords[3]]];
 }
 
-export function countCrimes(crimes, neighborhood) {
+export function countCrimes(crimes, neighborhood, displayCounts, name) {
   let counts = {};
-  crimes.forEach((crime, idx) => {
+  crimes.forEach(crime => {
     if (turf.inside(crime, neighborhood)) {
       let crimeType = crime.properties.category;
       counts[crimeType] = counts[crimeType] + 1 || 1;
     }
   });
+  displayCounts(counts, name);
   return counts;
+}
+
+export function findDuplicateCrimes(crimes, hoods) {
+  let tr = crimes.filter(c => turf.inside(c, hoods['Treasure Island']));
 }
 
 // export function mergeCrimes(hoods, crimes) {

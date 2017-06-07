@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 109);
+/******/ 	return __webpack_require__(__webpack_require__.s = 125);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -335,7 +335,7 @@ module.exports = invariant;
 
 
 
-var emptyFunction = __webpack_require__(8);
+var emptyFunction = __webpack_require__(10);
 
 /**
  * Similar to invariant but only logs a warning if the condition is not met.
@@ -393,6 +393,335 @@ module.exports = warning;
 
 /***/ }),
 /* 3 */
+/***/ (function(module, exports) {
+
+/**
+ * Wraps a GeoJSON {@link Geometry} in a GeoJSON {@link Feature}.
+ *
+ * @name feature
+ * @param {Geometry} geometry input geometry
+ * @param {Object} properties properties
+ * @returns {FeatureCollection} a FeatureCollection of input features
+ * @example
+ * var geometry = {
+ *      "type": "Point",
+ *      "coordinates": [
+ *        67.5,
+ *        32.84267363195431
+ *      ]
+ *    }
+ *
+ * var feature = turf.feature(geometry);
+ *
+ * //=feature
+ */
+function feature(geometry, properties) {
+    return {
+        type: 'Feature',
+        properties: properties || {},
+        geometry: geometry
+    };
+}
+
+module.exports.feature = feature;
+
+/**
+ * Takes coordinates and properties (optional) and returns a new {@link Point} feature.
+ *
+ * @name point
+ * @param {number[]} coordinates longitude, latitude position (each in decimal degrees)
+ * @param {Object=} properties an Object that is used as the {@link Feature}'s
+ * properties
+ * @returns {Feature<Point>} a Point feature
+ * @example
+ * var pt1 = turf.point([-75.343, 39.984]);
+ *
+ * //=pt1
+ */
+module.exports.point = function (coordinates, properties) {
+    if (!Array.isArray(coordinates)) throw new Error('Coordinates must be an array');
+    if (coordinates.length < 2) throw new Error('Coordinates must be at least 2 numbers long');
+    return feature({
+        type: 'Point',
+        coordinates: coordinates.slice()
+    }, properties);
+};
+
+/**
+ * Takes an array of LinearRings and optionally an {@link Object} with properties and returns a {@link Polygon} feature.
+ *
+ * @name polygon
+ * @param {Array<Array<Array<number>>>} coordinates an array of LinearRings
+ * @param {Object=} properties a properties object
+ * @returns {Feature<Polygon>} a Polygon feature
+ * @throws {Error} throw an error if a LinearRing of the polygon has too few positions
+ * or if a LinearRing of the Polygon does not have matching Positions at the
+ * beginning & end.
+ * @example
+ * var polygon = turf.polygon([[
+ *  [-2.275543, 53.464547],
+ *  [-2.275543, 53.489271],
+ *  [-2.215118, 53.489271],
+ *  [-2.215118, 53.464547],
+ *  [-2.275543, 53.464547]
+ * ]], { name: 'poly1', population: 400});
+ *
+ * //=polygon
+ */
+module.exports.polygon = function (coordinates, properties) {
+
+    if (!coordinates) throw new Error('No coordinates passed');
+
+    for (var i = 0; i < coordinates.length; i++) {
+        var ring = coordinates[i];
+        if (ring.length < 4) {
+            throw new Error('Each LinearRing of a Polygon must have 4 or more Positions.');
+        }
+        for (var j = 0; j < ring[ring.length - 1].length; j++) {
+            if (ring[ring.length - 1][j] !== ring[0][j]) {
+                throw new Error('First and last Position are not equivalent.');
+            }
+        }
+    }
+
+    return feature({
+        type: 'Polygon',
+        coordinates: coordinates
+    }, properties);
+};
+
+/**
+ * Creates a {@link LineString} based on a
+ * coordinate array. Properties can be added optionally.
+ *
+ * @name lineString
+ * @param {Array<Array<number>>} coordinates an array of Positions
+ * @param {Object=} properties an Object of key-value pairs to add as properties
+ * @returns {Feature<LineString>} a LineString feature
+ * @throws {Error} if no coordinates are passed
+ * @example
+ * var linestring1 = turf.lineString([
+ *	[-21.964416, 64.148203],
+ *	[-21.956176, 64.141316],
+ *	[-21.93901, 64.135924],
+ *	[-21.927337, 64.136673]
+ * ]);
+ * var linestring2 = turf.lineString([
+ *	[-21.929054, 64.127985],
+ *	[-21.912918, 64.134726],
+ *	[-21.916007, 64.141016],
+ * 	[-21.930084, 64.14446]
+ * ], {name: 'line 1', distance: 145});
+ *
+ * //=linestring1
+ *
+ * //=linestring2
+ */
+module.exports.lineString = function (coordinates, properties) {
+    if (!coordinates) {
+        throw new Error('No coordinates passed');
+    }
+    return feature({
+        type: 'LineString',
+        coordinates: coordinates
+    }, properties);
+};
+
+/**
+ * Takes one or more {@link Feature|Features} and creates a {@link FeatureCollection}.
+ *
+ * @name featureCollection
+ * @param {Feature[]} features input features
+ * @returns {FeatureCollection} a FeatureCollection of input features
+ * @example
+ * var features = [
+ *  turf.point([-75.343, 39.984], {name: 'Location A'}),
+ *  turf.point([-75.833, 39.284], {name: 'Location B'}),
+ *  turf.point([-75.534, 39.123], {name: 'Location C'})
+ * ];
+ *
+ * var fc = turf.featureCollection(features);
+ *
+ * //=fc
+ */
+module.exports.featureCollection = function (features) {
+    return {
+        type: 'FeatureCollection',
+        features: features
+    };
+};
+
+/**
+ * Creates a {@link Feature<MultiLineString>} based on a
+ * coordinate array. Properties can be added optionally.
+ *
+ * @name multiLineString
+ * @param {Array<Array<Array<number>>>} coordinates an array of LineStrings
+ * @param {Object=} properties an Object of key-value pairs to add as properties
+ * @returns {Feature<MultiLineString>} a MultiLineString feature
+ * @throws {Error} if no coordinates are passed
+ * @example
+ * var multiLine = turf.multiLineString([[[0,0],[10,10]]]);
+ *
+ * //=multiLine
+ *
+ */
+module.exports.multiLineString = function (coordinates, properties) {
+    if (!coordinates) {
+        throw new Error('No coordinates passed');
+    }
+    return feature({
+        type: 'MultiLineString',
+        coordinates: coordinates
+    }, properties);
+};
+
+/**
+ * Creates a {@link Feature<MultiPoint>} based on a
+ * coordinate array. Properties can be added optionally.
+ *
+ * @name multiPoint
+ * @param {Array<Array<number>>} coordinates an array of Positions
+ * @param {Object=} properties an Object of key-value pairs to add as properties
+ * @returns {Feature<MultiPoint>} a MultiPoint feature
+ * @throws {Error} if no coordinates are passed
+ * @example
+ * var multiPt = turf.multiPoint([[0,0],[10,10]]);
+ *
+ * //=multiPt
+ *
+ */
+module.exports.multiPoint = function (coordinates, properties) {
+    if (!coordinates) {
+        throw new Error('No coordinates passed');
+    }
+    return feature({
+        type: 'MultiPoint',
+        coordinates: coordinates
+    }, properties);
+};
+
+
+/**
+ * Creates a {@link Feature<MultiPolygon>} based on a
+ * coordinate array. Properties can be added optionally.
+ *
+ * @name multiPolygon
+ * @param {Array<Array<Array<Array<number>>>>} coordinates an array of Polygons
+ * @param {Object=} properties an Object of key-value pairs to add as properties
+ * @returns {Feature<MultiPolygon>} a multipolygon feature
+ * @throws {Error} if no coordinates are passed
+ * @example
+ * var multiPoly = turf.multiPolygon([[[[0,0],[0,10],[10,10],[10,0],[0,0]]]);
+ *
+ * //=multiPoly
+ *
+ */
+module.exports.multiPolygon = function (coordinates, properties) {
+    if (!coordinates) {
+        throw new Error('No coordinates passed');
+    }
+    return feature({
+        type: 'MultiPolygon',
+        coordinates: coordinates
+    }, properties);
+};
+
+/**
+ * Creates a {@link Feature<GeometryCollection>} based on a
+ * coordinate array. Properties can be added optionally.
+ *
+ * @name geometryCollection
+ * @param {Array<{Geometry}>} geometries an array of GeoJSON Geometries
+ * @param {Object=} properties an Object of key-value pairs to add as properties
+ * @returns {Feature<GeometryCollection>} a geometrycollection feature
+ * @example
+ * var pt = {
+ *     "type": "Point",
+ *       "coordinates": [100, 0]
+ *     };
+ * var line = {
+ *     "type": "LineString",
+ *     "coordinates": [ [101, 0], [102, 1] ]
+ *   };
+ * var collection = turf.geometrycollection([[0,0],[10,10]]);
+ *
+ * //=collection
+ */
+module.exports.geometryCollection = function (geometries, properties) {
+    return feature({
+        type: 'GeometryCollection',
+        geometries: geometries
+    }, properties);
+};
+
+var factors = {
+    miles: 3960,
+    nauticalmiles: 3441.145,
+    degrees: 57.2957795,
+    radians: 1,
+    inches: 250905600,
+    yards: 6969600,
+    meters: 6373000,
+    metres: 6373000,
+    kilometers: 6373,
+    kilometres: 6373
+};
+
+/*
+ * Convert a distance measurement from radians to a more friendly unit.
+ *
+ * @name radiansToDistance
+ * @param {number} distance in radians across the sphere
+ * @param {string=kilometers} units: one of miles, nauticalmiles, degrees, radians,
+ * inches, yards, metres, meters, kilometres, kilometers.
+ * @returns {number} distance
+ */
+module.exports.radiansToDistance = function (radians, units) {
+    var factor = factors[units || 'kilometers'];
+    if (factor === undefined) {
+        throw new Error('Invalid unit');
+    }
+    return radians * factor;
+};
+
+/*
+ * Convert a distance measurement from a real-world unit into radians
+ *
+ * @name distanceToRadians
+ * @param {number} distance in real units
+ * @param {string=kilometers} units: one of miles, nauticalmiles, degrees, radians,
+ * inches, yards, metres, meters, kilometres, kilometers.
+ * @returns {number} radians
+ */
+module.exports.distanceToRadians = function (distance, units) {
+    var factor = factors[units || 'kilometers'];
+    if (factor === undefined) {
+        throw new Error('Invalid unit');
+    }
+    return distance / factor;
+};
+
+/*
+ * Convert a distance measurement from a real-world unit into degrees
+ *
+ * @name distanceToRadians
+ * @param {number} distance in real units
+ * @param {string=kilometers} units: one of miles, nauticalmiles, degrees, radians,
+ * inches, yards, metres, meters, kilometres, kilometers.
+ * @returns {number} degrees
+ */
+module.exports.distanceToDegrees = function (distance, units) {
+    var factor = factors[units || 'kilometers'];
+    if (factor === undefined) {
+        throw new Error('Invalid unit');
+    }
+    return (distance / factor) * 57.2958;
+};
+
+
+/***/ }),
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -436,7 +765,7 @@ function reactProdInvariant(code) {
 module.exports = reactProdInvariant;
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -533,7 +862,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -549,10 +878,10 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
-var DOMProperty = __webpack_require__(13);
-var ReactDOMComponentFlags = __webpack_require__(69);
+var DOMProperty = __webpack_require__(15);
+var ReactDOMComponentFlags = __webpack_require__(79);
 
 var invariant = __webpack_require__(1);
 
@@ -734,7 +1063,7 @@ module.exports = ReactDOMComponentTree;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -775,7 +1104,7 @@ var ExecutionEnvironment = {
 module.exports = ExecutionEnvironment;
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -792,9 +1121,9 @@ module.exports = ExecutionEnvironment;
 
 
 
-var _prodInvariant = __webpack_require__(16);
+var _prodInvariant = __webpack_require__(18);
 
-var ReactCurrentOwner = __webpack_require__(11);
+var ReactCurrentOwner = __webpack_require__(13);
 
 var invariant = __webpack_require__(1);
 var warning = __webpack_require__(2);
@@ -1115,7 +1444,73 @@ module.exports = ReactComponentTreeHook;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 8 */
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var getCoord = __webpack_require__(40).getCoord;
+var radiansToDistance = __webpack_require__(3).radiansToDistance;
+//http://en.wikipedia.org/wiki/Haversine_formula
+//http://www.movable-type.co.uk/scripts/latlong.html
+
+/**
+ * Calculates the distance between two {@link Point|points} in degrees, radians,
+ * miles, or kilometers. This uses the
+ * [Haversine formula](http://en.wikipedia.org/wiki/Haversine_formula)
+ * to account for global curvature.
+ *
+ * @name distance
+ * @param {Feature<Point>} from origin point
+ * @param {Feature<Point>} to destination point
+ * @param {String} [units=kilometers] can be degrees, radians, miles, or kilometers
+ * @return {Number} distance between the two points
+ * @example
+ * var from = {
+ *   "type": "Feature",
+ *   "properties": {},
+ *   "geometry": {
+ *     "type": "Point",
+ *     "coordinates": [-75.343, 39.984]
+ *   }
+ * };
+ * var to = {
+ *   "type": "Feature",
+ *   "properties": {},
+ *   "geometry": {
+ *     "type": "Point",
+ *     "coordinates": [-75.534, 39.123]
+ *   }
+ * };
+ * var units = "miles";
+ *
+ * var points = {
+ *   "type": "FeatureCollection",
+ *   "features": [from, to]
+ * };
+ *
+ * //=points
+ *
+ * var distance = turf.distance(from, to, units);
+ *
+ * //=distance
+ */
+module.exports = function (from, to, units) {
+    var degrees2radians = Math.PI / 180;
+    var coordinates1 = getCoord(from);
+    var coordinates2 = getCoord(to);
+    var dLat = degrees2radians * (coordinates2[1] - coordinates1[1]);
+    var dLon = degrees2radians * (coordinates2[0] - coordinates1[0]);
+    var lat1 = degrees2radians * coordinates1[1];
+    var lat2 = degrees2radians * coordinates2[1];
+
+    var a = Math.pow(Math.sin(dLat / 2), 2) +
+          Math.pow(Math.sin(dLon / 2), 2) * Math.cos(lat1) * Math.cos(lat2);
+
+    return radiansToDistance(2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)), units);
+};
+
+
+/***/ }),
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1159,7 +1554,7 @@ emptyFunction.thatReturnsArgument = function (arg) {
 module.exports = emptyFunction;
 
 /***/ }),
-/* 9 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1181,7 +1576,7 @@ module.exports = emptyFunction;
 var debugTool = null;
 
 if (process.env.NODE_ENV !== 'production') {
-  var ReactDebugTool = __webpack_require__(170);
+  var ReactDebugTool = __webpack_require__(196);
   debugTool = ReactDebugTool;
 }
 
@@ -1189,7 +1584,7 @@ module.exports = { debugTool: debugTool };
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 10 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1205,14 +1600,14 @@ module.exports = { debugTool: debugTool };
 
 
 
-var _prodInvariant = __webpack_require__(3),
-    _assign = __webpack_require__(4);
+var _prodInvariant = __webpack_require__(4),
+    _assign = __webpack_require__(5);
 
-var CallbackQueue = __webpack_require__(67);
-var PooledClass = __webpack_require__(14);
-var ReactFeatureFlags = __webpack_require__(72);
-var ReactReconciler = __webpack_require__(18);
-var Transaction = __webpack_require__(29);
+var CallbackQueue = __webpack_require__(77);
+var PooledClass = __webpack_require__(16);
+var ReactFeatureFlags = __webpack_require__(82);
+var ReactReconciler = __webpack_require__(20);
+var Transaction = __webpack_require__(33);
 
 var invariant = __webpack_require__(1);
 
@@ -1446,7 +1841,7 @@ module.exports = ReactUpdates;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 11 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1482,7 +1877,7 @@ var ReactCurrentOwner = {
 module.exports = ReactCurrentOwner;
 
 /***/ }),
-/* 12 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1498,11 +1893,11 @@ module.exports = ReactCurrentOwner;
 
 
 
-var _assign = __webpack_require__(4);
+var _assign = __webpack_require__(5);
 
-var PooledClass = __webpack_require__(14);
+var PooledClass = __webpack_require__(16);
 
-var emptyFunction = __webpack_require__(8);
+var emptyFunction = __webpack_require__(10);
 var warning = __webpack_require__(2);
 
 var didWarnForAddedNewProperty = false;
@@ -1756,7 +2151,7 @@ function getPooledWarningPropertyDefinition(propName, getVal) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 13 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1772,7 +2167,7 @@ function getPooledWarningPropertyDefinition(propName, getVal) {
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
 var invariant = __webpack_require__(1);
 
@@ -1972,7 +2367,7 @@ module.exports = DOMProperty;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 14 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1989,7 +2384,7 @@ module.exports = DOMProperty;
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
 var invariant = __webpack_require__(1);
 
@@ -2090,7 +2485,7 @@ module.exports = PooledClass;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 15 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2106,15 +2501,15 @@ module.exports = PooledClass;
 
 
 
-var _assign = __webpack_require__(4);
+var _assign = __webpack_require__(5);
 
-var ReactCurrentOwner = __webpack_require__(11);
+var ReactCurrentOwner = __webpack_require__(13);
 
 var warning = __webpack_require__(2);
-var canDefineProperty = __webpack_require__(32);
+var canDefineProperty = __webpack_require__(36);
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 
-var REACT_ELEMENT_TYPE = __webpack_require__(92);
+var REACT_ELEMENT_TYPE = __webpack_require__(102);
 
 var RESERVED_PROPS = {
   key: true,
@@ -2437,7 +2832,7 @@ module.exports = ReactElement;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 16 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2481,7 +2876,7 @@ function reactProdInvariant(code) {
 module.exports = reactProdInvariant;
 
 /***/ }),
-/* 17 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2497,11 +2892,11 @@ module.exports = reactProdInvariant;
 
 
 
-var DOMNamespaces = __webpack_require__(37);
-var setInnerHTML = __webpack_require__(31);
+var DOMNamespaces = __webpack_require__(45);
+var setInnerHTML = __webpack_require__(35);
 
-var createMicrosoftUnsafeLocalFunction = __webpack_require__(44);
-var setTextContent = __webpack_require__(85);
+var createMicrosoftUnsafeLocalFunction = __webpack_require__(52);
+var setTextContent = __webpack_require__(95);
 
 var ELEMENT_NODE_TYPE = 1;
 var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
@@ -2604,7 +2999,7 @@ DOMLazyTree.queueText = queueText;
 module.exports = DOMLazyTree;
 
 /***/ }),
-/* 18 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2620,8 +3015,8 @@ module.exports = DOMLazyTree;
 
 
 
-var ReactRef = __webpack_require__(184);
-var ReactInstrumentation = __webpack_require__(9);
+var ReactRef = __webpack_require__(210);
+var ReactInstrumentation = __webpack_require__(11);
 
 var warning = __webpack_require__(2);
 
@@ -2778,7 +3173,7 @@ module.exports = ReactReconciler;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 19 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2794,18 +3189,18 @@ module.exports = ReactReconciler;
 
 
 
-var _assign = __webpack_require__(4);
+var _assign = __webpack_require__(5);
 
-var ReactChildren = __webpack_require__(223);
-var ReactComponent = __webpack_require__(52);
-var ReactPureComponent = __webpack_require__(228);
-var ReactClass = __webpack_require__(224);
-var ReactDOMFactories = __webpack_require__(225);
-var ReactElement = __webpack_require__(15);
-var ReactPropTypes = __webpack_require__(226);
-var ReactVersion = __webpack_require__(229);
+var ReactChildren = __webpack_require__(249);
+var ReactComponent = __webpack_require__(60);
+var ReactPureComponent = __webpack_require__(254);
+var ReactClass = __webpack_require__(250);
+var ReactDOMFactories = __webpack_require__(251);
+var ReactElement = __webpack_require__(17);
+var ReactPropTypes = __webpack_require__(252);
+var ReactVersion = __webpack_require__(255);
 
-var onlyChild = __webpack_require__(232);
+var onlyChild = __webpack_require__(258);
 var warning = __webpack_require__(2);
 
 var createElement = ReactElement.createElement;
@@ -2813,8 +3208,8 @@ var createFactory = ReactElement.createFactory;
 var cloneElement = ReactElement.cloneElement;
 
 if (process.env.NODE_ENV !== 'production') {
-  var canDefineProperty = __webpack_require__(32);
-  var ReactElementValidator = __webpack_require__(93);
+  var canDefineProperty = __webpack_require__(36);
+  var ReactElementValidator = __webpack_require__(103);
   var didWarnPropTypesDeprecated = false;
   createElement = ReactElementValidator.createElement;
   createFactory = ReactElementValidator.createFactory;
@@ -2888,17 +3283,304 @@ module.exports = React;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 20 */
+/* 22 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var invariant = __webpack_require__(40);
+
+// http://en.wikipedia.org/wiki/Even%E2%80%93odd_rule
+// modified from: https://github.com/substack/point-in-polygon/blob/master/index.js
+// which was modified from http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+
+/**
+ * Takes a {@link Point} and a {@link Polygon} or {@link MultiPolygon} and determines if the point resides inside the polygon. The polygon can
+ * be convex or concave. The function accounts for holes.
+ *
+ * @name inside
+ * @param {Feature<Point>} point input point
+ * @param {Feature<(Polygon|MultiPolygon)>} polygon input polygon or multipolygon
+ * @return {Boolean} `true` if the Point is inside the Polygon; `false` if the Point is not inside the Polygon
+ * @example
+ * var pt1 = {
+ *   "type": "Feature",
+ *   "properties": {
+ *     "marker-color": "#f00"
+ *   },
+ *   "geometry": {
+ *     "type": "Point",
+ *     "coordinates": [-111.467285, 40.75766]
+ *   }
+ * };
+ * var pt2 = {
+ *   "type": "Feature",
+ *   "properties": {
+ *     "marker-color": "#0f0"
+ *   },
+ *   "geometry": {
+ *     "type": "Point",
+ *     "coordinates": [-111.873779, 40.647303]
+ *   }
+ * };
+ * var poly = {
+ *   "type": "Feature",
+ *   "properties": {},
+ *   "geometry": {
+ *     "type": "Polygon",
+ *     "coordinates": [[
+ *       [-112.074279, 40.52215],
+ *       [-112.074279, 40.853293],
+ *       [-111.610107, 40.853293],
+ *       [-111.610107, 40.52215],
+ *       [-112.074279, 40.52215]
+ *     ]]
+ *   }
+ * };
+ *
+ * var features = {
+ *   "type": "FeatureCollection",
+ *   "features": [pt1, pt2, poly]
+ * };
+ *
+ * //=features
+ *
+ * var isInside1 = turf.inside(pt1, poly);
+ * //=isInside1
+ *
+ * var isInside2 = turf.inside(pt2, poly);
+ * //=isInside2
+ */
+module.exports = function input(point, polygon) {
+    var pt = invariant.getCoord(point);
+    var polys = polygon.geometry.coordinates;
+    // normalize to multipolygon
+    if (polygon.geometry.type === 'Polygon') polys = [polys];
+
+    for (var i = 0, insidePoly = false; i < polys.length && !insidePoly; i++) {
+        // check if it is in the outer ring first
+        if (inRing(pt, polys[i][0])) {
+            var inHole = false;
+            var k = 1;
+            // check for the point in any of the holes
+            while (k < polys[i].length && !inHole) {
+                if (inRing(pt, polys[i][k])) {
+                    inHole = true;
+                }
+                k++;
+            }
+            if (!inHole) insidePoly = true;
+        }
+    }
+    return insidePoly;
+};
+
+// pt is [x,y] and ring is [[x,y], [x,y],..]
+function inRing(pt, ring) {
+    var isInside = false;
+    for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        var xi = ring[i][0], yi = ring[i][1];
+        var xj = ring[j][0], yj = ring[j][1];
+        var intersect = ((yi > pt[1]) !== (yj > pt[1])) &&
+        (pt[0] < (xj - xi) * (pt[1] - yi) / (yj - yi) + xi);
+        if (intersect) isInside = !isInside;
+    }
+    return isInside;
+}
+
+
+/***/ }),
+/* 23 */
+/***/ (function(module, exports) {
+
+/**
+ * Iterate over coordinates in any GeoJSON object, similar to
+ * Array.forEach.
+ *
+ * @param {Object} layer any GeoJSON object
+ * @param {Function} callback a method that takes (value)
+ * @param {boolean=} excludeWrapCoord whether or not to include
+ * the final coordinate of LinearRings that wraps the ring in its iteration.
+ * @example
+ * var point = { type: 'Point', coordinates: [0, 0] };
+ * coordEach(point, function(coords) {
+ *   // coords is equal to [0, 0]
+ * });
+ */
+function coordEach(layer, callback, excludeWrapCoord) {
+    var i, j, k, g, l, geometry, stopG, coords,
+        geometryMaybeCollection,
+        wrapShrink = 0,
+        isGeometryCollection,
+        isFeatureCollection = layer.type === 'FeatureCollection',
+        isFeature = layer.type === 'Feature',
+        stop = isFeatureCollection ? layer.features.length : 1;
+
+  // This logic may look a little weird. The reason why it is that way
+  // is because it's trying to be fast. GeoJSON supports multiple kinds
+  // of objects at its root: FeatureCollection, Features, Geometries.
+  // This function has the responsibility of handling all of them, and that
+  // means that some of the `for` loops you see below actually just don't apply
+  // to certain inputs. For instance, if you give this just a
+  // Point geometry, then both loops are short-circuited and all we do
+  // is gradually rename the input until it's called 'geometry'.
+  //
+  // This also aims to allocate as few resources as possible: just a
+  // few numbers and booleans, rather than any temporary arrays as would
+  // be required with the normalization approach.
+    for (i = 0; i < stop; i++) {
+
+        geometryMaybeCollection = (isFeatureCollection ? layer.features[i].geometry :
+        (isFeature ? layer.geometry : layer));
+        isGeometryCollection = geometryMaybeCollection.type === 'GeometryCollection';
+        stopG = isGeometryCollection ? geometryMaybeCollection.geometries.length : 1;
+
+        for (g = 0; g < stopG; g++) {
+            geometry = isGeometryCollection ?
+            geometryMaybeCollection.geometries[g] : geometryMaybeCollection;
+            coords = geometry.coordinates;
+
+            wrapShrink = (excludeWrapCoord &&
+                (geometry.type === 'Polygon' || geometry.type === 'MultiPolygon')) ?
+                1 : 0;
+
+            if (geometry.type === 'Point') {
+                callback(coords);
+            } else if (geometry.type === 'LineString' || geometry.type === 'MultiPoint') {
+                for (j = 0; j < coords.length; j++) callback(coords[j]);
+            } else if (geometry.type === 'Polygon' || geometry.type === 'MultiLineString') {
+                for (j = 0; j < coords.length; j++)
+                    for (k = 0; k < coords[j].length - wrapShrink; k++)
+                        callback(coords[j][k]);
+            } else if (geometry.type === 'MultiPolygon') {
+                for (j = 0; j < coords.length; j++)
+                    for (k = 0; k < coords[j].length; k++)
+                        for (l = 0; l < coords[j][k].length - wrapShrink; l++)
+                            callback(coords[j][k][l]);
+            } else {
+                throw new Error('Unknown Geometry Type');
+            }
+        }
+    }
+}
+module.exports.coordEach = coordEach;
+
+/**
+ * Reduce coordinates in any GeoJSON object into a single value,
+ * similar to how Array.reduce works. However, in this case we lazily run
+ * the reduction, so an array of all coordinates is unnecessary.
+ *
+ * @param {Object} layer any GeoJSON object
+ * @param {Function} callback a method that takes (memo, value) and returns
+ * a new memo
+ * @param {*} memo the starting value of memo: can be any type.
+ * @param {boolean=} excludeWrapCoord whether or not to include
+ * the final coordinate of LinearRings that wraps the ring in its iteration.
+ * @return {*} combined value
+ */
+function coordReduce(layer, callback, memo, excludeWrapCoord) {
+    coordEach(layer, function (coord) {
+        memo = callback(memo, coord);
+    }, excludeWrapCoord);
+    return memo;
+}
+module.exports.coordReduce = coordReduce;
+
+/**
+ * Iterate over property objects in any GeoJSON object, similar to
+ * Array.forEach.
+ *
+ * @param {Object} layer any GeoJSON object
+ * @param {Function} callback a method that takes (value)
+ * @example
+ * var point = { type: 'Feature', geometry: null, properties: { foo: 1 } };
+ * propEach(point, function(props) {
+ *   // props is equal to { foo: 1}
+ * });
+ */
+function propEach(layer, callback) {
+    var i;
+    switch (layer.type) {
+    case 'FeatureCollection':
+        for (i = 0; i < layer.features.length; i++) {
+            callback(layer.features[i].properties);
+        }
+        break;
+    case 'Feature':
+        callback(layer.properties);
+        break;
+    }
+}
+module.exports.propEach = propEach;
+
+/**
+ * Reduce properties in any GeoJSON object into a single value,
+ * similar to how Array.reduce works. However, in this case we lazily run
+ * the reduction, so an array of all properties is unnecessary.
+ *
+ * @param {Object} layer any GeoJSON object
+ * @param {Function} callback a method that takes (memo, coord) and returns
+ * a new memo
+ * @param {*} memo the starting value of memo: can be any type.
+ * @return {*} combined value
+ */
+function propReduce(layer, callback, memo) {
+    propEach(layer, function (prop) {
+        memo = callback(memo, prop);
+    });
+    return memo;
+}
+module.exports.propReduce = propReduce;
+
+/**
+ * Iterate over features in any GeoJSON object, similar to
+ * Array.forEach.
+ *
+ * @param {Object} layer any GeoJSON object
+ * @param {Function} callback a method that takes (value)
+ * @example
+ * var feature = { type: 'Feature', geometry: null, properties: {} };
+ * featureEach(feature, function(feature) {
+ *   // feature == feature
+ * });
+ */
+function featureEach(layer, callback) {
+    if (layer.type === 'Feature') {
+        callback(layer);
+    } else if (layer.type === 'FeatureCollection') {
+        for (var i = 0; i < layer.features.length; i++) {
+            callback(layer.features[i]);
+        }
+    }
+}
+module.exports.featureEach = featureEach;
+
+/**
+ * Get all coordinates from any GeoJSON object, returning an array of coordinate
+ * arrays.
+ * @param {Object} layer any GeoJSON object
+ * @return {Array<Array<Number>>} coordinate position array
+ */
+function coordAll(layer) {
+    var coords = [];
+    coordEach(layer, function (coord) {
+        coords.push(coord);
+    });
+    return coords;
+}
+module.exports.coordAll = coordAll;
+
+
+/***/ }),
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-module.exports = __webpack_require__(19);
+module.exports = __webpack_require__(21);
 
 
 /***/ }),
-/* 21 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2924,7 +3606,7 @@ module.exports = emptyObject;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 22 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2940,14 +3622,14 @@ module.exports = emptyObject;
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
-var EventPluginRegistry = __webpack_require__(26);
-var EventPluginUtils = __webpack_require__(38);
-var ReactErrorUtils = __webpack_require__(42);
+var EventPluginRegistry = __webpack_require__(30);
+var EventPluginUtils = __webpack_require__(46);
+var ReactErrorUtils = __webpack_require__(50);
 
-var accumulateInto = __webpack_require__(79);
-var forEachAccumulated = __webpack_require__(80);
+var accumulateInto = __webpack_require__(89);
+var forEachAccumulated = __webpack_require__(90);
 var invariant = __webpack_require__(1);
 
 /**
@@ -3208,7 +3890,7 @@ module.exports = EventPluginHub;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 23 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3224,11 +3906,11 @@ module.exports = EventPluginHub;
 
 
 
-var EventPluginHub = __webpack_require__(22);
-var EventPluginUtils = __webpack_require__(38);
+var EventPluginHub = __webpack_require__(26);
+var EventPluginUtils = __webpack_require__(46);
 
-var accumulateInto = __webpack_require__(79);
-var forEachAccumulated = __webpack_require__(80);
+var accumulateInto = __webpack_require__(89);
+var forEachAccumulated = __webpack_require__(90);
 var warning = __webpack_require__(2);
 
 var getListener = EventPluginHub.getListener;
@@ -3348,7 +4030,7 @@ module.exports = EventPropagators;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 24 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3401,7 +4083,7 @@ var ReactInstanceMap = {
 module.exports = ReactInstanceMap;
 
 /***/ }),
-/* 25 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3417,9 +4099,9 @@ module.exports = ReactInstanceMap;
 
 
 
-var SyntheticEvent = __webpack_require__(12);
+var SyntheticEvent = __webpack_require__(14);
 
-var getEventTarget = __webpack_require__(47);
+var getEventTarget = __webpack_require__(55);
 
 /**
  * @interface UIEvent
@@ -3465,7 +4147,7 @@ SyntheticEvent.augmentClass(SyntheticUIEvent, UIEventInterface);
 module.exports = SyntheticUIEvent;
 
 /***/ }),
-/* 26 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3482,7 +4164,7 @@ module.exports = SyntheticUIEvent;
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
 var invariant = __webpack_require__(1);
 
@@ -3726,7 +4408,7 @@ module.exports = EventPluginRegistry;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 27 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3742,14 +4424,14 @@ module.exports = EventPluginRegistry;
 
 
 
-var _assign = __webpack_require__(4);
+var _assign = __webpack_require__(5);
 
-var EventPluginRegistry = __webpack_require__(26);
-var ReactEventEmitterMixin = __webpack_require__(174);
-var ViewportMetrics = __webpack_require__(78);
+var EventPluginRegistry = __webpack_require__(30);
+var ReactEventEmitterMixin = __webpack_require__(200);
+var ViewportMetrics = __webpack_require__(88);
 
-var getVendorPrefixedEventName = __webpack_require__(209);
-var isEventSupported = __webpack_require__(48);
+var getVendorPrefixedEventName = __webpack_require__(235);
+var isEventSupported = __webpack_require__(56);
 
 /**
  * Summary of `ReactBrowserEventEmitter` event handling:
@@ -4059,7 +4741,7 @@ var ReactBrowserEventEmitter = _assign({}, ReactEventEmitterMixin, {
 module.exports = ReactBrowserEventEmitter;
 
 /***/ }),
-/* 28 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4075,10 +4757,10 @@ module.exports = ReactBrowserEventEmitter;
 
 
 
-var SyntheticUIEvent = __webpack_require__(25);
-var ViewportMetrics = __webpack_require__(78);
+var SyntheticUIEvent = __webpack_require__(29);
+var ViewportMetrics = __webpack_require__(88);
 
-var getEventModifierState = __webpack_require__(46);
+var getEventModifierState = __webpack_require__(54);
 
 /**
  * @interface MouseEvent
@@ -4136,7 +4818,7 @@ SyntheticUIEvent.augmentClass(SyntheticMouseEvent, MouseEventInterface);
 module.exports = SyntheticMouseEvent;
 
 /***/ }),
-/* 29 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4153,7 +4835,7 @@ module.exports = SyntheticMouseEvent;
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
 var invariant = __webpack_require__(1);
 
@@ -4367,7 +5049,7 @@ module.exports = TransactionImpl;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 30 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4495,7 +5177,7 @@ function escapeTextContentForBrowser(text) {
 module.exports = escapeTextContentForBrowser;
 
 /***/ }),
-/* 31 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4511,13 +5193,13 @@ module.exports = escapeTextContentForBrowser;
 
 
 
-var ExecutionEnvironment = __webpack_require__(6);
-var DOMNamespaces = __webpack_require__(37);
+var ExecutionEnvironment = __webpack_require__(7);
+var DOMNamespaces = __webpack_require__(45);
 
 var WHITESPACE_TEST = /^[ \r\n\t\f]/;
 var NONVISIBLE_TEST = /<(!--|link|noscript|meta|script|style)[ \r\n\t\f\/>]/;
 
-var createMicrosoftUnsafeLocalFunction = __webpack_require__(44);
+var createMicrosoftUnsafeLocalFunction = __webpack_require__(52);
 
 // SVG temp container for IE lacking innerHTML
 var reusableSVGContainer;
@@ -4598,7 +5280,7 @@ if (ExecutionEnvironment.canUseDOM) {
 module.exports = setInnerHTML;
 
 /***/ }),
-/* 32 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4630,7 +5312,312 @@ module.exports = canDefineProperty;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 33 */
+/* 37 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var each = __webpack_require__(23).coordEach;
+
+/**
+ * Takes a set of features, calculates the bbox of all input features, and returns a bounding box.
+ *
+ * @name bbox
+ * @param {(Feature|FeatureCollection)} geojson input features
+ * @return {Array<number>} the bounding box of `input` given
+ * as an array in WSEN order (west, south, east, north)
+ * @example
+ * var input = {
+ *   "type": "FeatureCollection",
+ *   "features": [
+ *     {
+ *       "type": "Feature",
+ *       "properties": {},
+ *       "geometry": {
+ *         "type": "Point",
+ *         "coordinates": [114.175329, 22.2524]
+ *       }
+ *     }, {
+ *       "type": "Feature",
+ *       "properties": {},
+ *       "geometry": {
+ *         "type": "Point",
+ *         "coordinates": [114.170007, 22.267969]
+ *       }
+ *     }, {
+ *       "type": "Feature",
+ *       "properties": {},
+ *       "geometry": {
+ *         "type": "Point",
+ *         "coordinates": [114.200649, 22.274641]
+ *       }
+ *     }, {
+ *       "type": "Feature",
+ *       "properties": {},
+ *       "geometry": {
+ *         "type": "Point",
+ *         "coordinates": [114.186744, 22.265745]
+ *       }
+ *     }
+ *   ]
+ * };
+ *
+ * var bbox = turf.bbox(input);
+ *
+ * var bboxPolygon = turf.bboxPolygon(bbox);
+ *
+ * var resultFeatures = input.features.concat(bboxPolygon);
+ * var result = {
+ *   "type": "FeatureCollection",
+ *   "features": resultFeatures
+ * };
+ *
+ * //=result
+ */
+module.exports = function (geojson) {
+    var bbox = [Infinity, Infinity, -Infinity, -Infinity];
+    each(geojson, function (coord) {
+        if (bbox[0] > coord[0]) bbox[0] = coord[0];
+        if (bbox[1] > coord[1]) bbox[1] = coord[1];
+        if (bbox[2] < coord[0]) bbox[2] = coord[0];
+        if (bbox[3] < coord[1]) bbox[3] = coord[1];
+    });
+    return bbox;
+};
+
+
+/***/ }),
+/* 38 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var getCoord = __webpack_require__(40).getCoord;
+//http://en.wikipedia.org/wiki/Haversine_formula
+//http://www.movable-type.co.uk/scripts/latlong.html
+
+/**
+ * Takes two {@link Point|points} and finds the geographic bearing between them.
+ *
+ * @name bearing
+ * @param {Feature<Point>} start starting Point
+ * @param {Feature<Point>} end ending Point
+ * @returns {Number} bearing in decimal degrees
+ * @example
+ * var point1 = {
+ *   "type": "Feature",
+ *   "properties": {
+ *     "marker-color": '#f00'
+ *   },
+ *   "geometry": {
+ *     "type": "Point",
+ *     "coordinates": [-75.343, 39.984]
+ *   }
+ * };
+ * var point2 = {
+ *   "type": "Feature",
+ *   "properties": {
+ *     "marker-color": '#0f0'
+ *   },
+ *   "geometry": {
+ *     "type": "Point",
+ *     "coordinates": [-75.534, 39.123]
+ *   }
+ * };
+ *
+ * var points = {
+ *   "type": "FeatureCollection",
+ *   "features": [point1, point2]
+ * };
+ *
+ * //=points
+ *
+ * var bearing = turf.bearing(point1, point2);
+ *
+ * //=bearing
+ */
+module.exports = function (start, end) {
+    var degrees2radians = Math.PI / 180;
+    var radians2degrees = 180 / Math.PI;
+    var coordinates1 = getCoord(start);
+    var coordinates2 = getCoord(end);
+
+    var lon1 = degrees2radians * coordinates1[0];
+    var lon2 = degrees2radians * coordinates2[0];
+    var lat1 = degrees2radians * coordinates1[1];
+    var lat2 = degrees2radians * coordinates2[1];
+    var a = Math.sin(lon2 - lon1) * Math.cos(lat2);
+    var b = Math.cos(lat1) * Math.sin(lat2) -
+        Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
+
+    var bearing = radians2degrees * Math.atan2(a, b);
+
+    return bearing;
+};
+
+
+/***/ }),
+/* 39 */
+/***/ (function(module, exports, __webpack_require__) {
+
+//http://en.wikipedia.org/wiki/Haversine_formula
+//http://www.movable-type.co.uk/scripts/latlong.html
+var getCoord = __webpack_require__(40).getCoord;
+var helpers = __webpack_require__(3);
+var point = helpers.point;
+var distanceToRadians = helpers.distanceToRadians;
+
+/**
+ * Takes a {@link Point} and calculates the location of a destination point given a distance in degrees, radians, miles, or kilometers; and bearing in degrees. This uses the [Haversine formula](http://en.wikipedia.org/wiki/Haversine_formula) to account for global curvature.
+ *
+ * @name destination
+ * @param {Feature<Point>} from starting point
+ * @param {number} distance distance from the starting point
+ * @param {number} bearing ranging from -180 to 180
+ * @param {String} [units=kilometers] miles, kilometers, degrees, or radians
+ * @returns {Feature<Point>} destination point
+ * @example
+ * var point = {
+ *   "type": "Feature",
+ *   "properties": {
+ *     "marker-color": "#0f0"
+ *   },
+ *   "geometry": {
+ *     "type": "Point",
+ *     "coordinates": [-75.343, 39.984]
+ *   }
+ * };
+ * var distance = 50;
+ * var bearing = 90;
+ * var units = 'miles';
+ *
+ * var destination = turf.destination(point, distance, bearing, units);
+ * destination.properties['marker-color'] = '#f00';
+ *
+ * var result = {
+ *   "type": "FeatureCollection",
+ *   "features": [point, destination]
+ * };
+ *
+ * //=result
+ */
+module.exports = function (from, distance, bearing, units) {
+    var degrees2radians = Math.PI / 180;
+    var radians2degrees = 180 / Math.PI;
+    var coordinates1 = getCoord(from);
+    var longitude1 = degrees2radians * coordinates1[0];
+    var latitude1 = degrees2radians * coordinates1[1];
+    var bearing_rad = degrees2radians * bearing;
+
+    var radians = distanceToRadians(distance, units);
+
+    var latitude2 = Math.asin(Math.sin(latitude1) * Math.cos(radians) +
+        Math.cos(latitude1) * Math.sin(radians) * Math.cos(bearing_rad));
+    var longitude2 = longitude1 + Math.atan2(Math.sin(bearing_rad) *
+        Math.sin(radians) * Math.cos(latitude1),
+        Math.cos(radians) - Math.sin(latitude1) * Math.sin(latitude2));
+
+    return point([radians2degrees * longitude2, radians2degrees * latitude2]);
+};
+
+
+/***/ }),
+/* 40 */
+/***/ (function(module, exports) {
+
+/**
+ * Unwrap a coordinate from a Feature with a Point geometry, a Point
+ * geometry, or a single coordinate.
+ *
+ * @param {*} obj any value
+ * @returns {Array<number>} a coordinate
+ */
+function getCoord(obj) {
+    if (Array.isArray(obj) &&
+        typeof obj[0] === 'number' &&
+        typeof obj[1] === 'number') {
+        return obj;
+    } else if (obj) {
+        if (obj.type === 'Feature' &&
+            obj.geometry &&
+            obj.geometry.type === 'Point' &&
+            Array.isArray(obj.geometry.coordinates)) {
+            return obj.geometry.coordinates;
+        } else if (obj.type === 'Point' &&
+            Array.isArray(obj.coordinates)) {
+            return obj.coordinates;
+        }
+    }
+    throw new Error('A coordinate, feature, or point geometry is required');
+}
+
+/**
+ * Enforce expectations about types of GeoJSON objects for Turf.
+ *
+ * @alias geojsonType
+ * @param {GeoJSON} value any GeoJSON object
+ * @param {string} type expected GeoJSON type
+ * @param {string} name name of calling function
+ * @throws {Error} if value is not the expected type.
+ */
+function geojsonType(value, type, name) {
+    if (!type || !name) throw new Error('type and name required');
+
+    if (!value || value.type !== type) {
+        throw new Error('Invalid input to ' + name + ': must be a ' + type + ', given ' + value.type);
+    }
+}
+
+/**
+ * Enforce expectations about types of {@link Feature} inputs for Turf.
+ * Internally this uses {@link geojsonType} to judge geometry types.
+ *
+ * @alias featureOf
+ * @param {Feature} feature a feature with an expected geometry type
+ * @param {string} type expected GeoJSON type
+ * @param {string} name name of calling function
+ * @throws {Error} error if value is not the expected type.
+ */
+function featureOf(feature, type, name) {
+    if (!name) throw new Error('.featureOf() requires a name');
+    if (!feature || feature.type !== 'Feature' || !feature.geometry) {
+        throw new Error('Invalid input to ' + name + ', Feature with geometry required');
+    }
+    if (!feature.geometry || feature.geometry.type !== type) {
+        throw new Error('Invalid input to ' + name + ': must be a ' + type + ', given ' + feature.geometry.type);
+    }
+}
+
+/**
+ * Enforce expectations about types of {@link FeatureCollection} inputs for Turf.
+ * Internally this uses {@link geojsonType} to judge geometry types.
+ *
+ * @alias collectionOf
+ * @param {FeatureCollection} featurecollection a featurecollection for which features will be judged
+ * @param {string} type expected GeoJSON type
+ * @param {string} name name of calling function
+ * @throws {Error} if value is not the expected type.
+ */
+function collectionOf(featurecollection, type, name) {
+    if (!name) throw new Error('.collectionOf() requires a name');
+    if (!featurecollection || featurecollection.type !== 'FeatureCollection') {
+        throw new Error('Invalid input to ' + name + ', FeatureCollection required');
+    }
+    for (var i = 0; i < featurecollection.features.length; i++) {
+        var feature = featurecollection.features[i];
+        if (!feature || feature.type !== 'Feature' || !feature.geometry) {
+            throw new Error('Invalid input to ' + name + ', Feature with geometry required');
+        }
+        if (!feature.geometry || feature.geometry.type !== type) {
+            throw new Error('Invalid input to ' + name + ': must be a ' + type + ', given ' + feature.geometry.type);
+        }
+    }
+}
+
+module.exports.geojsonType = geojsonType;
+module.exports.collectionOf = collectionOf;
+module.exports.featureOf = featureOf;
+module.exports.getCoord = getCoord;
+
+
+/***/ }),
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4703,13 +5690,13 @@ function shallowEqual(objA, objB) {
 module.exports = shallowEqual;
 
 /***/ }),
-/* 34 */
+/* 42 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__baseGetTag_js__ = __webpack_require__(131);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getPrototype_js__ = __webpack_require__(133);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__isObjectLike_js__ = __webpack_require__(138);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__baseGetTag_js__ = __webpack_require__(156);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getPrototype_js__ = __webpack_require__(158);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__isObjectLike_js__ = __webpack_require__(163);
 
 
 
@@ -4775,7 +5762,7 @@ function isPlainObject(value) {
 
 
 /***/ }),
-/* 35 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4796,7 +5783,7 @@ module.exports = ReactPropTypesSecret;
 
 
 /***/ }),
-/* 36 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4812,14 +5799,14 @@ module.exports = ReactPropTypesSecret;
 
 
 
-var DOMLazyTree = __webpack_require__(17);
-var Danger = __webpack_require__(147);
-var ReactDOMComponentTree = __webpack_require__(5);
-var ReactInstrumentation = __webpack_require__(9);
+var DOMLazyTree = __webpack_require__(19);
+var Danger = __webpack_require__(173);
+var ReactDOMComponentTree = __webpack_require__(6);
+var ReactInstrumentation = __webpack_require__(11);
 
-var createMicrosoftUnsafeLocalFunction = __webpack_require__(44);
-var setInnerHTML = __webpack_require__(31);
-var setTextContent = __webpack_require__(85);
+var createMicrosoftUnsafeLocalFunction = __webpack_require__(52);
+var setInnerHTML = __webpack_require__(35);
+var setTextContent = __webpack_require__(95);
 
 function getNodeAfter(parentNode, node) {
   // Special case for text components, which return [open, close] comments
@@ -5027,7 +6014,7 @@ module.exports = DOMChildrenOperations;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 37 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5052,7 +6039,7 @@ var DOMNamespaces = {
 module.exports = DOMNamespaces;
 
 /***/ }),
-/* 38 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5068,9 +6055,9 @@ module.exports = DOMNamespaces;
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
-var ReactErrorUtils = __webpack_require__(42);
+var ReactErrorUtils = __webpack_require__(50);
 
 var invariant = __webpack_require__(1);
 var warning = __webpack_require__(2);
@@ -5284,7 +6271,7 @@ module.exports = EventPluginUtils;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 39 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5348,7 +6335,7 @@ var KeyEscapeUtils = {
 module.exports = KeyEscapeUtils;
 
 /***/ }),
-/* 40 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5364,12 +6351,12 @@ module.exports = KeyEscapeUtils;
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
-var ReactPropTypesSecret = __webpack_require__(77);
-var propTypesFactory = __webpack_require__(63);
+var ReactPropTypesSecret = __webpack_require__(87);
+var propTypesFactory = __webpack_require__(73);
 
-var React = __webpack_require__(19);
+var React = __webpack_require__(21);
 var PropTypes = propTypesFactory(React.isValidElement);
 
 var invariant = __webpack_require__(1);
@@ -5492,7 +6479,7 @@ module.exports = LinkedValueUtils;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 41 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5509,7 +6496,7 @@ module.exports = LinkedValueUtils;
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
 var invariant = __webpack_require__(1);
 
@@ -5544,7 +6531,7 @@ module.exports = ReactComponentEnvironment;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 42 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5626,7 +6613,7 @@ module.exports = ReactErrorUtils;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 43 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5642,12 +6629,12 @@ module.exports = ReactErrorUtils;
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
-var ReactCurrentOwner = __webpack_require__(11);
-var ReactInstanceMap = __webpack_require__(24);
-var ReactInstrumentation = __webpack_require__(9);
-var ReactUpdates = __webpack_require__(10);
+var ReactCurrentOwner = __webpack_require__(13);
+var ReactInstanceMap = __webpack_require__(28);
+var ReactInstrumentation = __webpack_require__(11);
+var ReactUpdates = __webpack_require__(12);
 
 var invariant = __webpack_require__(1);
 var warning = __webpack_require__(2);
@@ -5868,7 +6855,7 @@ module.exports = ReactUpdateQueue;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 44 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5905,7 +6892,7 @@ var createMicrosoftUnsafeLocalFunction = function (func) {
 module.exports = createMicrosoftUnsafeLocalFunction;
 
 /***/ }),
-/* 45 */
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5960,7 +6947,7 @@ function getEventCharCode(nativeEvent) {
 module.exports = getEventCharCode;
 
 /***/ }),
-/* 46 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6008,7 +6995,7 @@ function getEventModifierState(nativeEvent) {
 module.exports = getEventModifierState;
 
 /***/ }),
-/* 47 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6048,7 +7035,7 @@ function getEventTarget(nativeEvent) {
 module.exports = getEventTarget;
 
 /***/ }),
-/* 48 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6064,7 +7051,7 @@ module.exports = getEventTarget;
 
 
 
-var ExecutionEnvironment = __webpack_require__(6);
+var ExecutionEnvironment = __webpack_require__(7);
 
 var useHasFeature;
 if (ExecutionEnvironment.canUseDOM) {
@@ -6113,7 +7100,7 @@ function isEventSupported(eventNameSuffix, capture) {
 module.exports = isEventSupported;
 
 /***/ }),
-/* 49 */
+/* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6160,7 +7147,7 @@ function shouldUpdateReactComponent(prevElement, nextElement) {
 module.exports = shouldUpdateReactComponent;
 
 /***/ }),
-/* 50 */
+/* 58 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6176,9 +7163,9 @@ module.exports = shouldUpdateReactComponent;
 
 
 
-var _assign = __webpack_require__(4);
+var _assign = __webpack_require__(5);
 
-var emptyFunction = __webpack_require__(8);
+var emptyFunction = __webpack_require__(10);
 var warning = __webpack_require__(2);
 
 var validateDOMNesting = emptyFunction;
@@ -6543,7 +7530,7 @@ module.exports = validateDOMNesting;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 51 */
+/* 59 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -6571,7 +7558,7 @@ function warning(message) {
 }
 
 /***/ }),
-/* 52 */
+/* 60 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6587,12 +7574,12 @@ function warning(message) {
 
 
 
-var _prodInvariant = __webpack_require__(16);
+var _prodInvariant = __webpack_require__(18);
 
-var ReactNoopUpdateQueue = __webpack_require__(53);
+var ReactNoopUpdateQueue = __webpack_require__(61);
 
-var canDefineProperty = __webpack_require__(32);
-var emptyObject = __webpack_require__(21);
+var canDefineProperty = __webpack_require__(36);
+var emptyObject = __webpack_require__(25);
 var invariant = __webpack_require__(1);
 var warning = __webpack_require__(2);
 
@@ -6695,7 +7682,7 @@ module.exports = ReactComponent;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 53 */
+/* 61 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6797,17 +7784,17 @@ module.exports = ReactNoopUpdateQueue;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 54 */
+/* 62 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* WEBPACK VAR INJECTION */(function(process) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__createStore__ = __webpack_require__(97);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__combineReducers__ = __webpack_require__(237);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__bindActionCreators__ = __webpack_require__(236);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__applyMiddleware__ = __webpack_require__(235);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__compose__ = __webpack_require__(96);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__utils_warning__ = __webpack_require__(98);
+/* WEBPACK VAR INJECTION */(function(process) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__createStore__ = __webpack_require__(107);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__combineReducers__ = __webpack_require__(263);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__bindActionCreators__ = __webpack_require__(262);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__applyMiddleware__ = __webpack_require__(261);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__compose__ = __webpack_require__(106);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__utils_warning__ = __webpack_require__(108);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "createStore", function() { return __WEBPACK_IMPORTED_MODULE_0__createStore__["b"]; });
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "combineReducers", function() { return __WEBPACK_IMPORTED_MODULE_1__combineReducers__["a"]; });
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "bindActionCreators", function() { return __WEBPACK_IMPORTED_MODULE_2__bindActionCreators__["a"]; });
@@ -6834,7 +7821,446 @@ if (process.env.NODE_ENV !== 'production' && typeof isCrushed.name === 'string' 
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
 
 /***/ }),
-/* 55 */
+/* 63 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var twoProduct = __webpack_require__(116)
+var robustSum = __webpack_require__(266)
+var robustScale = __webpack_require__(264)
+var robustSubtract = __webpack_require__(265)
+
+var NUM_EXPAND = 5
+
+var EPSILON     = 1.1102230246251565e-16
+var ERRBOUND3   = (3.0 + 16.0 * EPSILON) * EPSILON
+var ERRBOUND4   = (7.0 + 56.0 * EPSILON) * EPSILON
+
+function cofactor(m, c) {
+  var result = new Array(m.length-1)
+  for(var i=1; i<m.length; ++i) {
+    var r = result[i-1] = new Array(m.length-1)
+    for(var j=0,k=0; j<m.length; ++j) {
+      if(j === c) {
+        continue
+      }
+      r[k++] = m[i][j]
+    }
+  }
+  return result
+}
+
+function matrix(n) {
+  var result = new Array(n)
+  for(var i=0; i<n; ++i) {
+    result[i] = new Array(n)
+    for(var j=0; j<n; ++j) {
+      result[i][j] = ["m", j, "[", (n-i-1), "]"].join("")
+    }
+  }
+  return result
+}
+
+function sign(n) {
+  if(n & 1) {
+    return "-"
+  }
+  return ""
+}
+
+function generateSum(expr) {
+  if(expr.length === 1) {
+    return expr[0]
+  } else if(expr.length === 2) {
+    return ["sum(", expr[0], ",", expr[1], ")"].join("")
+  } else {
+    var m = expr.length>>1
+    return ["sum(", generateSum(expr.slice(0, m)), ",", generateSum(expr.slice(m)), ")"].join("")
+  }
+}
+
+function determinant(m) {
+  if(m.length === 2) {
+    return [["sum(prod(", m[0][0], ",", m[1][1], "),prod(-", m[0][1], ",", m[1][0], "))"].join("")]
+  } else {
+    var expr = []
+    for(var i=0; i<m.length; ++i) {
+      expr.push(["scale(", generateSum(determinant(cofactor(m, i))), ",", sign(i), m[0][i], ")"].join(""))
+    }
+    return expr
+  }
+}
+
+function orientation(n) {
+  var pos = []
+  var neg = []
+  var m = matrix(n)
+  var args = []
+  for(var i=0; i<n; ++i) {
+    if((i&1)===0) {
+      pos.push.apply(pos, determinant(cofactor(m, i)))
+    } else {
+      neg.push.apply(neg, determinant(cofactor(m, i)))
+    }
+    args.push("m" + i)
+  }
+  var posExpr = generateSum(pos)
+  var negExpr = generateSum(neg)
+  var funcName = "orientation" + n + "Exact"
+  var code = ["function ", funcName, "(", args.join(), "){var p=", posExpr, ",n=", negExpr, ",d=sub(p,n);\
+return d[d.length-1];};return ", funcName].join("")
+  var proc = new Function("sum", "prod", "scale", "sub", code)
+  return proc(robustSum, twoProduct, robustScale, robustSubtract)
+}
+
+var orientation3Exact = orientation(3)
+var orientation4Exact = orientation(4)
+
+var CACHED = [
+  function orientation0() { return 0 },
+  function orientation1() { return 0 },
+  function orientation2(a, b) { 
+    return b[0] - a[0]
+  },
+  function orientation3(a, b, c) {
+    var l = (a[1] - c[1]) * (b[0] - c[0])
+    var r = (a[0] - c[0]) * (b[1] - c[1])
+    var det = l - r
+    var s
+    if(l > 0) {
+      if(r <= 0) {
+        return det
+      } else {
+        s = l + r
+      }
+    } else if(l < 0) {
+      if(r >= 0) {
+        return det
+      } else {
+        s = -(l + r)
+      }
+    } else {
+      return det
+    }
+    var tol = ERRBOUND3 * s
+    if(det >= tol || det <= -tol) {
+      return det
+    }
+    return orientation3Exact(a, b, c)
+  },
+  function orientation4(a,b,c,d) {
+    var adx = a[0] - d[0]
+    var bdx = b[0] - d[0]
+    var cdx = c[0] - d[0]
+    var ady = a[1] - d[1]
+    var bdy = b[1] - d[1]
+    var cdy = c[1] - d[1]
+    var adz = a[2] - d[2]
+    var bdz = b[2] - d[2]
+    var cdz = c[2] - d[2]
+    var bdxcdy = bdx * cdy
+    var cdxbdy = cdx * bdy
+    var cdxady = cdx * ady
+    var adxcdy = adx * cdy
+    var adxbdy = adx * bdy
+    var bdxady = bdx * ady
+    var det = adz * (bdxcdy - cdxbdy) 
+            + bdz * (cdxady - adxcdy)
+            + cdz * (adxbdy - bdxady)
+    var permanent = (Math.abs(bdxcdy) + Math.abs(cdxbdy)) * Math.abs(adz)
+                  + (Math.abs(cdxady) + Math.abs(adxcdy)) * Math.abs(bdz)
+                  + (Math.abs(adxbdy) + Math.abs(bdxady)) * Math.abs(cdz)
+    var tol = ERRBOUND4 * permanent
+    if ((det > tol) || (-det > tol)) {
+      return det
+    }
+    return orientation4Exact(a,b,c,d)
+  }
+]
+
+function slowOrient(args) {
+  var proc = CACHED[args.length]
+  if(!proc) {
+    proc = CACHED[args.length] = orientation(args.length)
+  }
+  return proc.apply(undefined, args)
+}
+
+function generateOrientationProc() {
+  while(CACHED.length <= NUM_EXPAND) {
+    CACHED.push(orientation(CACHED.length))
+  }
+  var args = []
+  var procArgs = ["slow"]
+  for(var i=0; i<=NUM_EXPAND; ++i) {
+    args.push("a" + i)
+    procArgs.push("o" + i)
+  }
+  var code = [
+    "function getOrientation(", args.join(), "){switch(arguments.length){case 0:case 1:return 0;"
+  ]
+  for(var i=2; i<=NUM_EXPAND; ++i) {
+    code.push("case ", i, ":return o", i, "(", args.slice(0, i).join(), ");")
+  }
+  code.push("}var s=new Array(arguments.length);for(var i=0;i<arguments.length;++i){s[i]=arguments[i]};return slow(s);}return getOrientation")
+  procArgs.push(code.join(""))
+
+  var proc = Function.apply(undefined, procArgs)
+  module.exports = proc.apply(undefined, [slowOrient].concat(CACHED))
+  for(var i=0; i<=NUM_EXPAND; ++i) {
+    module.exports[i] = CACHED[i]
+  }
+}
+
+generateOrientationProc()
+
+/***/ }),
+/* 64 */
+/***/ (function(module, exports, __webpack_require__) {
+
+//http://en.wikipedia.org/wiki/Delaunay_triangulation
+//https://github.com/ironwallaby/delaunay
+var polygon = __webpack_require__(3).polygon;
+var featurecollection = __webpack_require__(3).featureCollection;
+
+/**
+ * Takes a set of {@link Point|points} and the name of a z-value property and
+ * creates a [Triangulated Irregular Network](http://en.wikipedia.org/wiki/Triangulated_irregular_network),
+ * or a TIN for short, returned as a collection of Polygons. These are often used
+ * for developing elevation contour maps or stepped heat visualizations.
+ *
+ * This triangulates the points, as well as adds properties called `a`, `b`,
+ * and `c` representing the value of the given `propertyName` at each of
+ * the points that represent the corners of the triangle.
+ *
+ * @name tin
+ * @param {FeatureCollection<Point>} points input points
+ * @param {String=} z name of the property from which to pull z values
+ * This is optional: if not given, then there will be no extra data added to the derived triangles.
+ * @return {FeatureCollection<Polygon>} TIN output
+ * @example
+ * // generate some random point data
+ * var points = turf.random('points', 30, {
+ *   bbox: [50, 30, 70, 50]
+ * });
+ * //=points
+ * // add a random property to each point between 0 and 9
+ * for (var i = 0; i < points.features.length; i++) {
+ *   points.features[i].properties.z = ~~(Math.random() * 9);
+ * }
+ * var tin = turf.tin(points, 'z')
+ * for (var i = 0; i < tin.features.length; i++) {
+ *   var properties  = tin.features[i].properties;
+ *   // roughly turn the properties of each
+ *   // triangle into a fill color
+ *   // so we can visualize the result
+ *   properties.fill = '#' + properties.a +
+ *     properties.b + properties.c;
+ * }
+ * //=tin
+ */
+module.exports = function (points, z) {
+    //break down points
+    return featurecollection(triangulate(points.features.map(function (p) {
+        var point = {
+            x: p.geometry.coordinates[0],
+            y: p.geometry.coordinates[1]
+        };
+        if (z) point.z = p.properties[z];
+        return point;
+    })).map(function (triangle) {
+        return polygon([[
+        [triangle.a.x, triangle.a.y],
+        [triangle.b.x, triangle.b.y],
+        [triangle.c.x, triangle.c.y],
+        [triangle.a.x, triangle.a.y]
+        ]], {
+            a: triangle.a.z,
+            b: triangle.b.z,
+            c: triangle.c.z
+        });
+    }));
+};
+
+function Triangle(a, b, c) {
+    this.a = a;
+    this.b = b;
+    this.c = c;
+
+    var A = b.x - a.x,
+        B = b.y - a.y,
+        C = c.x - a.x,
+        D = c.y - a.y,
+        E = A * (a.x + b.x) + B * (a.y + b.y),
+        F = C * (a.x + c.x) + D * (a.y + c.y),
+        G = 2 * (A * (c.y - b.y) - B * (c.x - b.x)),
+        minx, miny, dx, dy;
+
+    // If the points of the triangle are collinear, then just find the
+    // extremes and use the midpoint as the center of the circumcircle.
+    if (Math.abs(G) < 0.000001) {
+        minx = Math.min(a.x, b.x, c.x);
+        miny = Math.min(a.y, b.y, c.y);
+        dx = (Math.max(a.x, b.x, c.x) - minx) * 0.5;
+        dy = (Math.max(a.y, b.y, c.y) - miny) * 0.5;
+
+        this.x = minx + dx;
+        this.y = miny + dy;
+        this.r = dx * dx + dy * dy;
+    } else {
+        this.x = (D * E - B * F) / G;
+        this.y = (A * F - C * E) / G;
+        dx = this.x - a.x;
+        dy = this.y - a.y;
+        this.r = dx * dx + dy * dy;
+    }
+}
+
+function byX(a, b) {
+    return b.x - a.x;
+}
+
+function dedup(edges) {
+    var j = edges.length,
+        a, b, i, m, n;
+
+    outer:
+  while (j) {
+      b = edges[--j];
+      a = edges[--j];
+      i = j;
+      while (i) {
+          n = edges[--i];
+          m = edges[--i];
+          if ((a === m && b === n) || (a === n && b === m)) {
+              edges.splice(j, 2);
+              edges.splice(i, 2);
+              j -= 2;
+              continue outer;
+          }
+      }
+  }
+}
+
+function triangulate(vertices) {
+    // Bail if there aren't enough vertices to form any triangles.
+    if (vertices.length < 3)
+        return [];
+
+    // Ensure the vertex array is in order of descending X coordinate
+    // (which is needed to ensure a subquadratic runtime), and then find
+    // the bounding box around the points.
+    vertices.sort(byX);
+
+    var i = vertices.length - 1,
+        xmin = vertices[i].x,
+        xmax = vertices[0].x,
+        ymin = vertices[i].y,
+        ymax = ymin;
+
+    while (i--) {
+        if (vertices[i].y < ymin)
+            ymin = vertices[i].y;
+        if (vertices[i].y > ymax)
+            ymax = vertices[i].y;
+    }
+
+    //Find a supertriangle, which is a triangle that surrounds all the
+    //vertices. This is used like something of a sentinel value to remove
+    //cases in the main algorithm, and is removed before we return any
+    // results.
+
+    // Once found, put it in the "open" list. (The "open" list is for
+    // triangles who may still need to be considered; the "closed" list is
+    // for triangles which do not.)
+    var dx = xmax - xmin,
+        dy = ymax - ymin,
+        dmax = (dx > dy) ? dx : dy,
+        xmid = (xmax + xmin) * 0.5,
+        ymid = (ymax + ymin) * 0.5,
+        open = [
+            new Triangle({
+                x: xmid - 20 * dmax,
+                y: ymid - dmax,
+                __sentinel: true
+            }, {
+                x: xmid,
+                y: ymid + 20 * dmax,
+                __sentinel: true
+            }, {
+                x: xmid + 20 * dmax,
+                y: ymid - dmax,
+                __sentinel: true
+            }
+        )],
+        closed = [],
+        edges = [],
+        j, a, b;
+
+    // Incrementally add each vertex to the mesh.
+    i = vertices.length;
+    while (i--) {
+        // For each open triangle, check to see if the current point is
+        // inside it's circumcircle. If it is, remove the triangle and add
+        // it's edges to an edge list.
+        edges.length = 0;
+        j = open.length;
+        while (j--) {
+            // If this point is to the right of this triangle's circumcircle,
+            // then this triangle should never get checked again. Remove it
+            // from the open list, add it to the closed list, and skip.
+            dx = vertices[i].x - open[j].x;
+            if (dx > 0 && dx * dx > open[j].r) {
+                closed.push(open[j]);
+                open.splice(j, 1);
+                continue;
+            }
+
+            // If not, skip this triangle.
+            dy = vertices[i].y - open[j].y;
+            if (dx * dx + dy * dy > open[j].r)
+                continue;
+
+            // Remove the triangle and add it's edges to the edge list.
+            edges.push(
+        open[j].a, open[j].b,
+        open[j].b, open[j].c,
+        open[j].c, open[j].a
+      );
+            open.splice(j, 1);
+        }
+
+        // Remove any doubled edges.
+        dedup(edges);
+
+        // Add a new triangle for each edge.
+        j = edges.length;
+        while (j) {
+            b = edges[--j];
+            a = edges[--j];
+            open.push(new Triangle(a, b, vertices[i]));
+        }
+    }
+
+    // Copy any remaining open triangles to the closed list, and then
+    // remove any triangles that share a vertex with the supertriangle.
+    Array.prototype.push.apply(closed, open);
+
+    i = closed.length;
+    while (i--)
+        if (closed[i].a.__sentinel ||
+      closed[i].b.__sentinel ||
+      closed[i].c.__sentinel)
+            closed.splice(i, 1);
+
+    return closed;
+}
+
+
+/***/ }),
+/* 65 */
 /***/ (function(module, exports) {
 
 var g;
@@ -6861,8 +8287,79 @@ module.exports = g;
 
 
 /***/ }),
-/* 56 */,
-/* 57 */
+/* 66 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/*eslint global-require: 0*/
+
+/**
+ * Turf is a modular geospatial analysis engine written in JavaScript. It performs geospatial
+ * processing tasks with GeoJSON data and can be run on a server or in a browser.
+ *
+ * @module turf
+ * @summary Geospatial analysis for JavaScript
+ */
+module.exports = {
+    isolines: __webpack_require__(293),
+    convex: __webpack_require__(283),
+    within: __webpack_require__(310),
+    concave: __webpack_require__(282),
+    difference: __webpack_require__(284),
+    collect: __webpack_require__(280),
+    flip: __webpack_require__(287),
+    simplify: __webpack_require__(304),
+    bezier: __webpack_require__(275),
+    tag: __webpack_require__(306),
+    sample: __webpack_require__(303),
+    envelope: __webpack_require__(286),
+    square: __webpack_require__(114),
+    midpoint: __webpack_require__(297),
+    buffer: __webpack_require__(277),
+    center: __webpack_require__(110),
+    centroid: __webpack_require__(279),
+    combine: __webpack_require__(281),
+    distance: __webpack_require__(9),
+    explode: __webpack_require__(111),
+    bbox: __webpack_require__(37),
+    tesselate: __webpack_require__(307),
+    bboxPolygon: __webpack_require__(109),
+    inside: __webpack_require__(22),
+    intersect: __webpack_require__(290),
+    nearest: __webpack_require__(298),
+    planepoint: __webpack_require__(112),
+    random: __webpack_require__(302),
+    tin: __webpack_require__(64),
+    union: __webpack_require__(115),
+    bearing: __webpack_require__(38),
+    destination: __webpack_require__(39),
+    kinks: __webpack_require__(294),
+    pointOnSurface: __webpack_require__(300),
+    area: __webpack_require__(273),
+    along: __webpack_require__(272),
+    lineDistance: __webpack_require__(295),
+    lineSlice: __webpack_require__(296),
+    pointOnLine: __webpack_require__(113),
+    pointGrid: __webpack_require__(299),
+    squareGrid: __webpack_require__(305),
+    triangleGrid: __webpack_require__(308),
+    hexGrid: __webpack_require__(289)
+};
+
+var helpers = __webpack_require__(3);
+
+module.exports.point = helpers.point;
+module.exports.polygon = helpers.polygon;
+module.exports.lineString = helpers.lineString;
+module.exports.multiPoint = helpers.multiPoint;
+module.exports.multiPolygon = helpers.multiPolygon;
+module.exports.multiLineString = helpers.multiLineString;
+module.exports.feature = helpers.feature;
+module.exports.featureCollection = helpers.featureCollection;
+module.exports.geometryCollection = helpers.geometryCollection;
+
+
+/***/ }),
+/* 67 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6873,7 +8370,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.requestCrimes = exports.receiveCrimes = exports.RECEIVE_CRIMES = undefined;
 
-var _crime_api_util = __webpack_require__(113);
+var _crime_api_util = __webpack_require__(129);
 
 var ApiUtil = _interopRequireWildcard(_crime_api_util);
 
@@ -6899,7 +8396,7 @@ var requestCrimes = exports.requestCrimes = function requestCrimes() {
 };
 
 /***/ }),
-/* 58 */
+/* 68 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6910,7 +8407,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.requestNeighborhoods = exports.receiveNeighborhoods = exports.RECEIVE_NEIGHBORHOODS = undefined;
 
-var _neighborhoods_api_util = __webpack_require__(114);
+var _neighborhoods_api_util = __webpack_require__(130);
 
 var ApiUtil = _interopRequireWildcard(_neighborhoods_api_util);
 
@@ -6934,7 +8431,7 @@ var requestNeighborhoods = exports.requestNeighborhoods = function requestNeighb
 };
 
 /***/ }),
-/* 59 */
+/* 69 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6958,7 +8455,7 @@ var requestNeighborhoods = exports.requestNeighborhoods = function requestNeighb
  * @typechecks
  */
 
-var emptyFunction = __webpack_require__(8);
+var emptyFunction = __webpack_require__(10);
 
 /**
  * Upstream version of event listener. Does not take into account specific
@@ -7024,7 +8521,7 @@ module.exports = EventListener;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 60 */
+/* 70 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7056,7 +8553,7 @@ function focusNode(node) {
 module.exports = focusNode;
 
 /***/ }),
-/* 61 */
+/* 71 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7100,11 +8597,11 @@ function getActiveElement(doc) /*?DOMElement*/{
 module.exports = getActiveElement;
 
 /***/ }),
-/* 62 */
+/* 72 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__root_js__ = __webpack_require__(137);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__root_js__ = __webpack_require__(162);
 
 
 /** Built-in value references. */
@@ -7114,7 +8611,7 @@ var Symbol = __WEBPACK_IMPORTED_MODULE_0__root_js__["a" /* default */].Symbol;
 
 
 /***/ }),
-/* 63 */
+/* 73 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7133,7 +8630,7 @@ var Symbol = __WEBPACK_IMPORTED_MODULE_0__root_js__["a" /* default */].Symbol;
 // Therefore we re-export development-only version with all the PropTypes checks here.
 // However if one is migrating to the `prop-types` npm library, they will go through the
 // `index.js` entry point, and it will branch depending on the environment.
-var factory = __webpack_require__(64);
+var factory = __webpack_require__(74);
 module.exports = function(isValidElement) {
   // It is still allowed in 15.5.
   var throwOnDirectAccess = false;
@@ -7142,7 +8639,7 @@ module.exports = function(isValidElement) {
 
 
 /***/ }),
-/* 64 */
+/* 74 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7157,12 +8654,12 @@ module.exports = function(isValidElement) {
 
 
 
-var emptyFunction = __webpack_require__(8);
+var emptyFunction = __webpack_require__(10);
 var invariant = __webpack_require__(1);
 var warning = __webpack_require__(2);
 
-var ReactPropTypesSecret = __webpack_require__(35);
-var checkPropTypes = __webpack_require__(140);
+var ReactPropTypesSecret = __webpack_require__(43);
+var checkPropTypes = __webpack_require__(166);
 
 module.exports = function(isValidElement, throwOnDirectAccess) {
   /* global Symbol */
@@ -7662,7 +9159,7 @@ module.exports = function(isValidElement, throwOnDirectAccess) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 65 */
+/* 75 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {/**
@@ -7689,17 +9186,17 @@ if (process.env.NODE_ENV !== 'production') {
   // By explicitly using `prop-types` you are opting into new development behavior.
   // http://fb.me/prop-types-in-prod
   var throwOnDirectAccess = true;
-  module.exports = __webpack_require__(64)(isValidElement, throwOnDirectAccess);
+  module.exports = __webpack_require__(74)(isValidElement, throwOnDirectAccess);
 } else {
   // By explicitly using `prop-types` you are opting into new production behavior.
   // http://fb.me/prop-types-in-prod
-  module.exports = __webpack_require__(141)();
+  module.exports = __webpack_require__(167)();
 }
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 66 */
+/* 76 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7852,7 +9349,7 @@ var CSSProperty = {
 module.exports = CSSProperty;
 
 /***/ }),
-/* 67 */
+/* 77 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7869,11 +9366,11 @@ module.exports = CSSProperty;
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var PooledClass = __webpack_require__(14);
+var PooledClass = __webpack_require__(16);
 
 var invariant = __webpack_require__(1);
 
@@ -7977,7 +9474,7 @@ module.exports = PooledClass.addPoolingTo(CallbackQueue);
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 68 */
+/* 78 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7993,11 +9490,11 @@ module.exports = PooledClass.addPoolingTo(CallbackQueue);
 
 
 
-var DOMProperty = __webpack_require__(13);
-var ReactDOMComponentTree = __webpack_require__(5);
-var ReactInstrumentation = __webpack_require__(9);
+var DOMProperty = __webpack_require__(15);
+var ReactDOMComponentTree = __webpack_require__(6);
+var ReactInstrumentation = __webpack_require__(11);
 
-var quoteAttributeValueForBrowser = __webpack_require__(210);
+var quoteAttributeValueForBrowser = __webpack_require__(236);
 var warning = __webpack_require__(2);
 
 var VALID_ATTRIBUTE_NAME_REGEX = new RegExp('^[' + DOMProperty.ATTRIBUTE_NAME_START_CHAR + '][' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
@@ -8220,7 +9717,7 @@ module.exports = DOMPropertyOperations;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 69 */
+/* 79 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8243,7 +9740,7 @@ var ReactDOMComponentFlags = {
 module.exports = ReactDOMComponentFlags;
 
 /***/ }),
-/* 70 */
+/* 80 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8259,11 +9756,11 @@ module.exports = ReactDOMComponentFlags;
 
 
 
-var _assign = __webpack_require__(4);
+var _assign = __webpack_require__(5);
 
-var LinkedValueUtils = __webpack_require__(40);
-var ReactDOMComponentTree = __webpack_require__(5);
-var ReactUpdates = __webpack_require__(10);
+var LinkedValueUtils = __webpack_require__(48);
+var ReactDOMComponentTree = __webpack_require__(6);
+var ReactUpdates = __webpack_require__(12);
 
 var warning = __webpack_require__(2);
 
@@ -8449,7 +9946,7 @@ module.exports = ReactDOMSelect;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 71 */
+/* 81 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8484,7 +9981,7 @@ ReactEmptyComponent.injection = ReactEmptyComponentInjection;
 module.exports = ReactEmptyComponent;
 
 /***/ }),
-/* 72 */
+/* 82 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8511,7 +10008,7 @@ var ReactFeatureFlags = {
 module.exports = ReactFeatureFlags;
 
 /***/ }),
-/* 73 */
+/* 83 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8527,7 +10024,7 @@ module.exports = ReactFeatureFlags;
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
 var invariant = __webpack_require__(1);
 
@@ -8585,7 +10082,7 @@ module.exports = ReactHostComponent;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 74 */
+/* 84 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8601,11 +10098,11 @@ module.exports = ReactHostComponent;
 
 
 
-var ReactDOMSelection = __webpack_require__(165);
+var ReactDOMSelection = __webpack_require__(191);
 
-var containsNode = __webpack_require__(117);
-var focusNode = __webpack_require__(60);
-var getActiveElement = __webpack_require__(61);
+var containsNode = __webpack_require__(139);
+var focusNode = __webpack_require__(70);
+var getActiveElement = __webpack_require__(71);
 
 function isInDocument(node) {
   return containsNode(document.documentElement, node);
@@ -8714,7 +10211,7 @@ var ReactInputSelection = {
 module.exports = ReactInputSelection;
 
 /***/ }),
-/* 75 */
+/* 85 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8730,29 +10227,29 @@ module.exports = ReactInputSelection;
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
-var DOMLazyTree = __webpack_require__(17);
-var DOMProperty = __webpack_require__(13);
-var React = __webpack_require__(19);
-var ReactBrowserEventEmitter = __webpack_require__(27);
-var ReactCurrentOwner = __webpack_require__(11);
-var ReactDOMComponentTree = __webpack_require__(5);
-var ReactDOMContainerInfo = __webpack_require__(157);
-var ReactDOMFeatureFlags = __webpack_require__(159);
-var ReactFeatureFlags = __webpack_require__(72);
-var ReactInstanceMap = __webpack_require__(24);
-var ReactInstrumentation = __webpack_require__(9);
-var ReactMarkupChecksum = __webpack_require__(179);
-var ReactReconciler = __webpack_require__(18);
-var ReactUpdateQueue = __webpack_require__(43);
-var ReactUpdates = __webpack_require__(10);
+var DOMLazyTree = __webpack_require__(19);
+var DOMProperty = __webpack_require__(15);
+var React = __webpack_require__(21);
+var ReactBrowserEventEmitter = __webpack_require__(31);
+var ReactCurrentOwner = __webpack_require__(13);
+var ReactDOMComponentTree = __webpack_require__(6);
+var ReactDOMContainerInfo = __webpack_require__(183);
+var ReactDOMFeatureFlags = __webpack_require__(185);
+var ReactFeatureFlags = __webpack_require__(82);
+var ReactInstanceMap = __webpack_require__(28);
+var ReactInstrumentation = __webpack_require__(11);
+var ReactMarkupChecksum = __webpack_require__(205);
+var ReactReconciler = __webpack_require__(20);
+var ReactUpdateQueue = __webpack_require__(51);
+var ReactUpdates = __webpack_require__(12);
 
-var emptyObject = __webpack_require__(21);
-var instantiateReactComponent = __webpack_require__(83);
+var emptyObject = __webpack_require__(25);
+var instantiateReactComponent = __webpack_require__(93);
 var invariant = __webpack_require__(1);
-var setInnerHTML = __webpack_require__(31);
-var shouldUpdateReactComponent = __webpack_require__(49);
+var setInnerHTML = __webpack_require__(35);
+var shouldUpdateReactComponent = __webpack_require__(57);
 var warning = __webpack_require__(2);
 
 var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
@@ -9258,7 +10755,7 @@ module.exports = ReactMount;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 76 */
+/* 86 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9275,9 +10772,9 @@ module.exports = ReactMount;
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
-var React = __webpack_require__(19);
+var React = __webpack_require__(21);
 
 var invariant = __webpack_require__(1);
 
@@ -9304,7 +10801,7 @@ module.exports = ReactNodeTypes;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 77 */
+/* 87 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9326,7 +10823,7 @@ var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 module.exports = ReactPropTypesSecret;
 
 /***/ }),
-/* 78 */
+/* 88 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9358,7 +10855,7 @@ var ViewportMetrics = {
 module.exports = ViewportMetrics;
 
 /***/ }),
-/* 79 */
+/* 89 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9375,7 +10872,7 @@ module.exports = ViewportMetrics;
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
 var invariant = __webpack_require__(1);
 
@@ -9422,7 +10919,7 @@ module.exports = accumulateInto;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 80 */
+/* 90 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9458,7 +10955,7 @@ function forEachAccumulated(arr, cb, scope) {
 module.exports = forEachAccumulated;
 
 /***/ }),
-/* 81 */
+/* 91 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9474,7 +10971,7 @@ module.exports = forEachAccumulated;
 
 
 
-var ReactNodeTypes = __webpack_require__(76);
+var ReactNodeTypes = __webpack_require__(86);
 
 function getHostComponentFromComposite(inst) {
   var type;
@@ -9493,7 +10990,7 @@ function getHostComponentFromComposite(inst) {
 module.exports = getHostComponentFromComposite;
 
 /***/ }),
-/* 82 */
+/* 92 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9509,7 +11006,7 @@ module.exports = getHostComponentFromComposite;
 
 
 
-var ExecutionEnvironment = __webpack_require__(6);
+var ExecutionEnvironment = __webpack_require__(7);
 
 var contentKey = null;
 
@@ -9531,7 +11028,7 @@ function getTextContentAccessor() {
 module.exports = getTextContentAccessor;
 
 /***/ }),
-/* 83 */
+/* 93 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9547,14 +11044,14 @@ module.exports = getTextContentAccessor;
 
 
 
-var _prodInvariant = __webpack_require__(3),
-    _assign = __webpack_require__(4);
+var _prodInvariant = __webpack_require__(4),
+    _assign = __webpack_require__(5);
 
-var ReactCompositeComponent = __webpack_require__(154);
-var ReactEmptyComponent = __webpack_require__(71);
-var ReactHostComponent = __webpack_require__(73);
+var ReactCompositeComponent = __webpack_require__(180);
+var ReactEmptyComponent = __webpack_require__(81);
+var ReactHostComponent = __webpack_require__(83);
 
-var getNextDebugID = __webpack_require__(231);
+var getNextDebugID = __webpack_require__(257);
 var invariant = __webpack_require__(1);
 var warning = __webpack_require__(2);
 
@@ -9666,7 +11163,7 @@ module.exports = instantiateReactComponent;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 84 */
+/* 94 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9722,7 +11219,7 @@ function isTextInputElement(elem) {
 module.exports = isTextInputElement;
 
 /***/ }),
-/* 85 */
+/* 95 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9738,9 +11235,9 @@ module.exports = isTextInputElement;
 
 
 
-var ExecutionEnvironment = __webpack_require__(6);
-var escapeTextContentForBrowser = __webpack_require__(30);
-var setInnerHTML = __webpack_require__(31);
+var ExecutionEnvironment = __webpack_require__(7);
+var escapeTextContentForBrowser = __webpack_require__(34);
+var setInnerHTML = __webpack_require__(35);
 
 /**
  * Set the textContent property of a node, ensuring that whitespace is preserved
@@ -9779,7 +11276,7 @@ if (ExecutionEnvironment.canUseDOM) {
 module.exports = setTextContent;
 
 /***/ }),
-/* 86 */
+/* 96 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9795,14 +11292,14 @@ module.exports = setTextContent;
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
-var ReactCurrentOwner = __webpack_require__(11);
-var REACT_ELEMENT_TYPE = __webpack_require__(173);
+var ReactCurrentOwner = __webpack_require__(13);
+var REACT_ELEMENT_TYPE = __webpack_require__(199);
 
-var getIteratorFn = __webpack_require__(207);
+var getIteratorFn = __webpack_require__(233);
 var invariant = __webpack_require__(1);
-var KeyEscapeUtils = __webpack_require__(39);
+var KeyEscapeUtils = __webpack_require__(47);
 var warning = __webpack_require__(2);
 
 var SEPARATOR = '.';
@@ -9961,19 +11458,19 @@ module.exports = traverseAllChildren;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 87 */
+/* 97 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {/* harmony export (immutable) */ __webpack_exports__["a"] = connectAdvanced;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_hoist_non_react_statics__ = __webpack_require__(129);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_hoist_non_react_statics__ = __webpack_require__(153);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_hoist_non_react_statics___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_hoist_non_react_statics__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_invariant__ = __webpack_require__(130);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_invariant__ = __webpack_require__(155);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_invariant___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_invariant__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_Subscription__ = __webpack_require__(219);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__utils_PropTypes__ = __webpack_require__(90);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_Subscription__ = __webpack_require__(245);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__utils_PropTypes__ = __webpack_require__(100);
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -10249,14 +11746,14 @@ selectorFactory) {
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
 
 /***/ }),
-/* 88 */
+/* 98 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {/* harmony export (immutable) */ __webpack_exports__["b"] = wrapMapToPropsConstant;
 /* unused harmony export getDependsOnOwnProps */
 /* harmony export (immutable) */ __webpack_exports__["a"] = wrapMapToPropsFunc;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_verifyPlainObject__ = __webpack_require__(91);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_verifyPlainObject__ = __webpack_require__(101);
 
 
 function wrapMapToPropsConstant(getConstant) {
@@ -10327,14 +11824,14 @@ function wrapMapToPropsFunc(mapToProps, methodName) {
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
 
 /***/ }),
-/* 89 */
+/* 99 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__components_Provider__ = __webpack_require__(212);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__components_connectAdvanced__ = __webpack_require__(87);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__connect_connect__ = __webpack_require__(213);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__components_Provider__ = __webpack_require__(238);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__components_connectAdvanced__ = __webpack_require__(97);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__connect_connect__ = __webpack_require__(239);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "Provider", function() { return __WEBPACK_IMPORTED_MODULE_0__components_Provider__["a"]; });
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "createProvider", function() { return __WEBPACK_IMPORTED_MODULE_0__components_Provider__["b"]; });
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "connectAdvanced", function() { return __WEBPACK_IMPORTED_MODULE_1__components_connectAdvanced__["a"]; });
@@ -10346,13 +11843,13 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 /***/ }),
-/* 90 */
+/* 100 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return subscriptionShape; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return storeShape; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types__ = __webpack_require__(65);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types__ = __webpack_require__(75);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_prop_types__);
 
 
@@ -10370,13 +11867,13 @@ var storeShape = __WEBPACK_IMPORTED_MODULE_0_prop_types___default.a.shape({
 });
 
 /***/ }),
-/* 91 */
+/* 101 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = verifyPlainObject;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_es_isPlainObject__ = __webpack_require__(34);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__warning__ = __webpack_require__(51);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_es_isPlainObject__ = __webpack_require__(42);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__warning__ = __webpack_require__(59);
 
 
 
@@ -10387,7 +11884,7 @@ function verifyPlainObject(value, displayName, methodName) {
 }
 
 /***/ }),
-/* 92 */
+/* 102 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10412,7 +11909,7 @@ var REACT_ELEMENT_TYPE = typeof Symbol === 'function' && Symbol['for'] && Symbol
 module.exports = REACT_ELEMENT_TYPE;
 
 /***/ }),
-/* 93 */
+/* 103 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10435,14 +11932,14 @@ module.exports = REACT_ELEMENT_TYPE;
 
 
 
-var ReactCurrentOwner = __webpack_require__(11);
-var ReactComponentTreeHook = __webpack_require__(7);
-var ReactElement = __webpack_require__(15);
+var ReactCurrentOwner = __webpack_require__(13);
+var ReactComponentTreeHook = __webpack_require__(8);
+var ReactElement = __webpack_require__(17);
 
-var checkReactTypeSpec = __webpack_require__(230);
+var checkReactTypeSpec = __webpack_require__(256);
 
-var canDefineProperty = __webpack_require__(32);
-var getIteratorFn = __webpack_require__(95);
+var canDefineProperty = __webpack_require__(36);
+var getIteratorFn = __webpack_require__(105);
 var warning = __webpack_require__(2);
 
 function getDeclarationErrorAddendum() {
@@ -10671,7 +12168,7 @@ module.exports = ReactElementValidator;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 94 */
+/* 104 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10702,7 +12199,7 @@ module.exports = ReactPropTypeLocationNames;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 95 */
+/* 105 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10748,7 +12245,7 @@ function getIteratorFn(maybeIterable) {
 module.exports = getIteratorFn;
 
 /***/ }),
-/* 96 */
+/* 106 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -10789,14 +12286,14 @@ function compose() {
 }
 
 /***/ }),
-/* 97 */
+/* 107 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ActionTypes; });
 /* harmony export (immutable) */ __webpack_exports__["b"] = createStore;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_es_isPlainObject__ = __webpack_require__(34);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_symbol_observable__ = __webpack_require__(238);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_es_isPlainObject__ = __webpack_require__(42);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_symbol_observable__ = __webpack_require__(269);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_symbol_observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_symbol_observable__);
 
 
@@ -11048,7 +12545,7 @@ function createStore(reducer, preloadedState, enhancer) {
 }
 
 /***/ }),
-/* 98 */
+/* 108 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -11076,7 +12573,626 @@ function warning(message) {
 }
 
 /***/ }),
-/* 99 */
+/* 109 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var polygon = __webpack_require__(3).polygon;
+
+/**
+ * Takes a bbox and returns an equivalent {@link Polygon|polygon}.
+ *
+ * @name bboxPolygon
+ * @param {Array<number>} bbox an Array of bounding box coordinates in the form: ```[xLow, yLow, xHigh, yHigh]```
+ * @return {Feature<Polygon>} a Polygon representation of the bounding box
+ * @example
+ * var bbox = [0, 0, 10, 10];
+ *
+ * var poly = turf.bboxPolygon(bbox);
+ *
+ * //=poly
+ */
+
+module.exports = function (bbox) {
+    var lowLeft = [bbox[0], bbox[1]];
+    var topLeft = [bbox[0], bbox[3]];
+    var topRight = [bbox[2], bbox[3]];
+    var lowRight = [bbox[2], bbox[1]];
+
+    return polygon([[
+        lowLeft,
+        lowRight,
+        topRight,
+        topLeft,
+        lowLeft
+    ]]);
+};
+
+
+/***/ }),
+/* 110 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var bbox = __webpack_require__(37),
+    point = __webpack_require__(3).point;
+
+/**
+ * Takes a {@link FeatureCollection} and returns the absolute center point of all features.
+ *
+ * @name center
+ * @param {FeatureCollection} features input features
+ * @return {Feature<Point>} a Point feature at the
+ * absolute center point of all input features
+ * @example
+ * var features = {
+ *   "type": "FeatureCollection",
+ *   "features": [
+ *     {
+ *       "type": "Feature",
+ *       "properties": {},
+ *       "geometry": {
+ *         "type": "Point",
+ *         "coordinates": [-97.522259, 35.4691]
+ *       }
+ *     }, {
+ *       "type": "Feature",
+ *       "properties": {},
+ *       "geometry": {
+ *         "type": "Point",
+ *         "coordinates": [-97.502754, 35.463455]
+ *       }
+ *     }, {
+ *       "type": "Feature",
+ *       "properties": {},
+ *       "geometry": {
+ *         "type": "Point",
+ *         "coordinates": [-97.508269, 35.463245]
+ *       }
+ *     }, {
+ *       "type": "Feature",
+ *       "properties": {},
+ *       "geometry": {
+ *         "type": "Point",
+ *         "coordinates": [-97.516809, 35.465779]
+ *       }
+ *     }, {
+ *       "type": "Feature",
+ *       "properties": {},
+ *       "geometry": {
+ *         "type": "Point",
+ *         "coordinates": [-97.515372, 35.467072]
+ *       }
+ *     }, {
+ *       "type": "Feature",
+ *       "properties": {},
+ *       "geometry": {
+ *         "type": "Point",
+ *         "coordinates": [-97.509363, 35.463053]
+ *       }
+ *     }, {
+ *       "type": "Feature",
+ *       "properties": {},
+ *       "geometry": {
+ *         "type": "Point",
+ *         "coordinates": [-97.511123, 35.466601]
+ *       }
+ *     }, {
+ *       "type": "Feature",
+ *       "properties": {},
+ *       "geometry": {
+ *         "type": "Point",
+ *         "coordinates": [-97.518547, 35.469327]
+ *       }
+ *     }, {
+ *       "type": "Feature",
+ *       "properties": {},
+ *       "geometry": {
+ *         "type": "Point",
+ *         "coordinates": [-97.519706, 35.469659]
+ *       }
+ *     }, {
+ *       "type": "Feature",
+ *       "properties": {},
+ *       "geometry": {
+ *         "type": "Point",
+ *         "coordinates": [-97.517839, 35.466998]
+ *       }
+ *     }, {
+ *       "type": "Feature",
+ *       "properties": {},
+ *       "geometry": {
+ *         "type": "Point",
+ *         "coordinates": [-97.508678, 35.464942]
+ *       }
+ *     }, {
+ *       "type": "Feature",
+ *       "properties": {},
+ *       "geometry": {
+ *         "type": "Point",
+ *         "coordinates": [-97.514914, 35.463453]
+ *       }
+ *     }
+ *   ]
+ * };
+ *
+ * var centerPt = turf.center(features);
+ * centerPt.properties['marker-size'] = 'large';
+ * centerPt.properties['marker-color'] = '#000';
+ *
+ * var resultFeatures = features.features.concat(centerPt);
+ * var result = {
+ *   "type": "FeatureCollection",
+ *   "features": resultFeatures
+ * };
+ *
+ * //=result
+ */
+
+module.exports = function (layer) {
+    var ext = bbox(layer);
+    var x = (ext[0] + ext[2]) / 2;
+    var y = (ext[1] + ext[3]) / 2;
+    return point([x, y]);
+};
+
+
+/***/ }),
+/* 111 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var featureCollection = __webpack_require__(3).featureCollection;
+var each = __webpack_require__(23).coordEach;
+var point = __webpack_require__(3).point;
+
+/**
+ * Takes a feature or set of features and returns all positions as
+ * {@link Point|points}.
+ *
+ * @name explode
+ * @param {(Feature|FeatureCollection)} geojson input features
+ * @return {FeatureCollection<point>} points representing the exploded input features
+ * @throws {Error} if it encounters an unknown geometry type
+ * @example
+ * var poly = {
+ *   "type": "Feature",
+ *   "properties": {},
+ *   "geometry": {
+ *     "type": "Polygon",
+ *     "coordinates": [[
+ *       [177.434692, -17.77517],
+ *       [177.402076, -17.779093],
+ *       [177.38079, -17.803937],
+ *       [177.40242, -17.826164],
+ *       [177.438468, -17.824857],
+ *       [177.454948, -17.796746],
+ *       [177.434692, -17.77517]
+ *     ]]
+ *   }
+ * };
+ *
+ * var points = turf.explode(poly);
+ *
+ * //=poly
+ *
+ * //=points
+ */
+module.exports = function (geojson) {
+    var points = [];
+    each(geojson, function (coord) {
+        points.push(point(coord));
+    });
+    return featureCollection(points);
+};
+
+
+/***/ }),
+/* 112 */
+/***/ (function(module, exports) {
+
+/**
+ * Takes a triangular plane as a {@link Polygon}
+ * and a {@link Point} within that triangle and returns the z-value
+ * at that point. The Polygon needs to have properties `a`, `b`, and `c`
+ * that define the values at its three corners.
+ *
+ * @name planepoint
+ * @param {Feature<Point>} point the Point for which a z-value will be calculated
+ * @param {Feature<Polygon>} triangle a Polygon feature with three vertices
+ * @return {Number} the z-value for `interpolatedPoint`
+ * @example
+ * var point = {
+ *   "type": "Feature",
+ *   "properties": {},
+ *   "geometry": {
+ *     "type": "Point",
+ *     "coordinates": [-75.3221, 39.529]
+ *   }
+ * };
+ * var point = turf.point([-75.3221, 39.529]);
+ * // triangle is a polygon with "a", "b",
+ * // and "c" values representing
+ * // the values of the coordinates in order.
+ * var triangle = {
+ *   "type": "Feature",
+ *   "properties": {
+ *     "a": 11,
+ *     "b": 122,
+ *     "c": 44
+ *   },
+ *   "geometry": {
+ *     "type": "Polygon",
+ *     "coordinates": [[
+ *       [-75.1221, 39.57],
+ *       [-75.58, 39.18],
+ *       [-75.97, 39.86],
+ *       [-75.1221, 39.57]
+ *     ]]
+ *   }
+ * };
+ *
+ * var features = {
+ *   "type": "FeatureCollection",
+ *   "features": [triangle, point]
+ * };
+ *
+ * var zValue = turf.planepoint(point, triangle);
+ *
+ * //=features
+ *
+ * //=zValue
+ */
+module.exports = function (point, triangle) {
+    var x = point.geometry.coordinates[0],
+        y = point.geometry.coordinates[1],
+        x1 = triangle.geometry.coordinates[0][0][0],
+        y1 = triangle.geometry.coordinates[0][0][1],
+        z1 = triangle.properties.a,
+        x2 = triangle.geometry.coordinates[0][1][0],
+        y2 = triangle.geometry.coordinates[0][1][1],
+        z2 = triangle.properties.b,
+        x3 = triangle.geometry.coordinates[0][2][0],
+        y3 = triangle.geometry.coordinates[0][2][1],
+        z3 = triangle.properties.c;
+
+    var z = (z3 * (x - x1) * (y - y2) + z1 * (x - x2) * (y - y3) + z2 * (x - x3) * (y - y1) -
+      z2 * (x - x1) * (y - y3) - z3 * (x - x2) * (y - y1) - z1 * (x - x3) * (y - y2)) /
+      ((x - x1) * (y - y2) + (x - x2) * (y - y3) + (x - x3) * (y - y1) -
+       (x - x1) * (y - y3) - (x - x2) * (y - y1) - (x - x3) * (y - y2));
+
+    return z;
+};
+
+
+/***/ }),
+/* 113 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var distance = __webpack_require__(9);
+var point = __webpack_require__(3).point;
+var bearing = __webpack_require__(38);
+var destination = __webpack_require__(39);
+
+/**
+ * Takes a {@link Point} and a {@link LineString} and calculates the closest Point on the LineString.
+ *
+ * @name pointOnLine
+ * @param {Feature<LineString>} line line to snap to
+ * @param {Feature<Point>} point point to snap from
+ * @return {Feature<Point>} closest point on the `line` to `point`
+ * @example
+ * var line = {
+ *   "type": "Feature",
+ *   "properties": {},
+ *   "geometry": {
+ *     "type": "LineString",
+ *     "coordinates": [
+ *       [-77.031669, 38.878605],
+ *       [-77.029609, 38.881946],
+ *       [-77.020339, 38.884084],
+ *       [-77.025661, 38.885821],
+ *       [-77.021884, 38.889563],
+ *       [-77.019824, 38.892368]
+ *     ]
+ *   }
+ * };
+ * var pt = {
+ *   "type": "Feature",
+ *   "properties": {},
+ *   "geometry": {
+ *     "type": "Point",
+ *     "coordinates": [-77.037076, 38.884017]
+ *   }
+ * };
+ *
+ * var snapped = turf.pointOnLine(line, pt);
+ * snapped.properties['marker-color'] = '#00f'
+ *
+ * var result = {
+ *   "type": "FeatureCollection",
+ *   "features": [line, pt, snapped]
+ * };
+ *
+ * //=result
+ */
+
+module.exports = function (line, pt) {
+    var coords;
+    if (line.type === 'Feature') {
+        coords = line.geometry.coordinates;
+    } else if (line.type === 'LineString') {
+        coords = line.coordinates;
+    } else {
+        throw new Error('input must be a LineString Feature or Geometry');
+    }
+
+    return pointOnLine(pt, coords);
+};
+
+function pointOnLine(pt, coords) {
+    var units = 'miles';
+    var closestPt = point([Infinity, Infinity], {
+        dist: Infinity
+    });
+    for (var i = 0; i < coords.length - 1; i++) {
+        var start = point(coords[i]);
+        var stop = point(coords[i + 1]);
+        //start
+        start.properties.dist = distance(pt, start, units);
+        //stop
+        stop.properties.dist = distance(pt, stop, units);
+        //perpendicular
+        var heightDistance = Math.max(start.properties.dist, stop.properties.dist);
+        var direction = bearing(start, stop);
+        var perpendicularPt1 = destination(pt, heightDistance, direction + 90, units);
+        var perpendicularPt2 = destination(pt, heightDistance, direction - 90, units);
+        var intersect = lineIntersects(
+        perpendicularPt1.geometry.coordinates[0],
+        perpendicularPt1.geometry.coordinates[1],
+        perpendicularPt2.geometry.coordinates[0],
+        perpendicularPt2.geometry.coordinates[1],
+        start.geometry.coordinates[0],
+        start.geometry.coordinates[1],
+        stop.geometry.coordinates[0],
+        stop.geometry.coordinates[1]
+        );
+        var intersectPt;
+        if (intersect) {
+            intersectPt = point(intersect);
+            intersectPt.properties.dist = distance(pt, intersectPt, units);
+        }
+
+        if (start.properties.dist < closestPt.properties.dist) {
+            closestPt = start;
+            closestPt.properties.index = i;
+        }
+        if (stop.properties.dist < closestPt.properties.dist) {
+            closestPt = stop;
+            closestPt.properties.index = i;
+        }
+        if (intersectPt && intersectPt.properties.dist < closestPt.properties.dist) {
+            closestPt = intersectPt;
+            closestPt.properties.index = i;
+        }
+    }
+
+    return closestPt;
+}
+
+// modified from http://jsfiddle.net/justin_c_rounds/Gd2S2/light/
+function lineIntersects(line1StartX, line1StartY, line1EndX, line1EndY, line2StartX, line2StartY, line2EndX, line2EndY) {
+    // if the lines intersect, the result contains the x and y of the intersection (treating the lines as infinite) and booleans for whether line segment 1 or line segment 2 contain the point
+    var denominator, a, b, numerator1, numerator2;
+    var result = {
+        x: null,
+        y: null,
+        onLine1: false,
+        onLine2: false
+    };
+    denominator = ((line2EndY - line2StartY) * (line1EndX - line1StartX)) - ((line2EndX - line2StartX) * (line1EndY - line1StartY));
+    if (denominator === 0) {
+        if (result.x !== null && result.y !== null) {
+            return result;
+        } else {
+            return false;
+        }
+    }
+    a = line1StartY - line2StartY;
+    b = line1StartX - line2StartX;
+    numerator1 = ((line2EndX - line2StartX) * a) - ((line2EndY - line2StartY) * b);
+    numerator2 = ((line1EndX - line1StartX) * a) - ((line1EndY - line1StartY) * b);
+    a = numerator1 / denominator;
+    b = numerator2 / denominator;
+
+    // if we cast these lines infinitely in both directions, they intersect here:
+    result.x = line1StartX + (a * (line1EndX - line1StartX));
+    result.y = line1StartY + (a * (line1EndY - line1StartY));
+
+    // if line1 is a segment and line2 is infinite, they intersect if:
+    if (a > 0 && a < 1) {
+        result.onLine1 = true;
+    }
+    // if line2 is a segment and line1 is infinite, they intersect if:
+    if (b > 0 && b < 1) {
+        result.onLine2 = true;
+    }
+    // if line1 and line2 are segments, they intersect if both of the above are true
+    if (result.onLine1 && result.onLine2) {
+        return [result.x, result.y];
+    } else {
+        return false;
+    }
+}
+
+
+/***/ }),
+/* 114 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var distance = __webpack_require__(9);
+
+/**
+ * Takes a bounding box and calculates the minimum square bounding box that
+ * would contain the input.
+ *
+ * @name square
+ * @param {Array<number>} bbox a bounding box
+ * @return {Array<number>} a square surrounding `bbox`
+ * @example
+ * var bbox = [-20,-20,-15,0];
+ *
+ * var squared = turf.square(bbox);
+ *
+ * var features = {
+ *   "type": "FeatureCollection",
+ *   "features": [
+ *     turf.bboxPolygon(bbox),
+ *     turf.bboxPolygon(squared)
+ *   ]
+ * };
+ *
+ * //=features
+ */
+module.exports = function (bbox) {
+    var horizontalDistance = distance(bbox.slice(0, 2), [bbox[2], bbox[1]], 'miles');
+    var verticalDistance = distance(bbox.slice(0, 2), [bbox[0], bbox[3]], 'miles');
+    if (horizontalDistance >= verticalDistance) {
+        var verticalMidpoint = (bbox[1] + bbox[3]) / 2;
+        return [
+            bbox[0],
+            verticalMidpoint - ((bbox[2] - bbox[0]) / 2),
+            bbox[2],
+            verticalMidpoint + ((bbox[2] - bbox[0]) / 2)
+        ];
+    } else {
+        var horizontalMidpoint = (bbox[0] + bbox[2]) / 2;
+        return [
+            horizontalMidpoint - ((bbox[3] - bbox[1]) / 2),
+            bbox[1],
+            horizontalMidpoint + ((bbox[3] - bbox[1]) / 2),
+            bbox[3]
+        ];
+    }
+};
+
+
+/***/ }),
+/* 115 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// look here for help http://svn.osgeo.org/grass/grass/branches/releasebranch_6_4/vector/v.overlay/main.c
+//must be array of polygons
+
+// depend on jsts for now https://github.com/bjornharrtell/jsts/blob/master/examples/overlay.html
+
+var jsts = __webpack_require__(309);
+
+/**
+ * Takes two {@link Polygon|polygons} and returns a combined polygon. If the input polygons are not contiguous, this function returns a {@link MultiPolygon} feature.
+ *
+ * @name union
+ * @param {Feature<Polygon>} poly1 input polygon
+ * @param {Feature<Polygon>} poly2 another input polygon
+ * @return {Feature<(Polygon|MultiPolygon)>} a combined {@link Polygon} or {@link MultiPolygon} feature
+ * @example
+ * var poly1 = {
+ *   "type": "Feature",
+ *   "properties": {
+ *     "fill": "#0f0"
+ *   },
+ *   "geometry": {
+ *     "type": "Polygon",
+ *     "coordinates": [[
+ *       [-82.574787, 35.594087],
+ *       [-82.574787, 35.615581],
+ *       [-82.545261, 35.615581],
+ *       [-82.545261, 35.594087],
+ *       [-82.574787, 35.594087]
+ *     ]]
+ *   }
+ * };
+ * var poly2 = {
+ *   "type": "Feature",
+ *   "properties": {
+ *     "fill": "#00f"
+ *   },
+ *   "geometry": {
+ *     "type": "Polygon",
+ *     "coordinates": [[
+ *       [-82.560024, 35.585153],
+ *       [-82.560024, 35.602602],
+ *       [-82.52964, 35.602602],
+ *       [-82.52964, 35.585153],
+ *       [-82.560024, 35.585153]
+ *     ]]
+ *   }
+ * };
+ * var polygons = {
+ *   "type": "FeatureCollection",
+ *   "features": [poly1, poly2]
+ * };
+ *
+ * var union = turf.union(poly1, poly2);
+ *
+ * //=polygons
+ *
+ * //=union
+ */
+module.exports = function (poly1, poly2) {
+    var reader = new jsts.io.GeoJSONReader();
+    var a = reader.read(JSON.stringify(poly1.geometry));
+    var b = reader.read(JSON.stringify(poly2.geometry));
+    var union = a.union(b);
+    var writer = new jsts.io.GeoJSONWriter();
+
+    union = writer.write(union);
+    return {
+        type: 'Feature',
+        geometry: union,
+        properties: poly1.properties
+    };
+};
+
+
+/***/ }),
+/* 116 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = twoProduct
+
+var SPLITTER = +(Math.pow(2, 27) + 1.0)
+
+function twoProduct(a, b, result) {
+  var x = a * b
+
+  var c = SPLITTER * a
+  var abig = c - a
+  var ahi = c - abig
+  var alo = a - ahi
+
+  var d = SPLITTER * b
+  var bbig = d - b
+  var bhi = d - bbig
+  var blo = b - bhi
+
+  var err1 = x - (ahi * bhi)
+  var err2 = err1 - (alo * bhi)
+  var err3 = err2 - (ahi * blo)
+
+  var y = alo * blo - err3
+
+  if(result) {
+    result[0] = y
+    result[1] = x
+    return result
+  }
+
+  return [ y, x ]
+}
+
+/***/ }),
+/* 117 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11088,13 +13204,13 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _react = __webpack_require__(20);
+var _react = __webpack_require__(24);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactRedux = __webpack_require__(89);
+var _reactRedux = __webpack_require__(99);
 
-var _map_container = __webpack_require__(107);
+var _map_container = __webpack_require__(123);
 
 var _map_container2 = _interopRequireDefault(_map_container);
 
@@ -11124,7 +13240,8 @@ var App = function (_React$Component) {
         _react2.default.createElement(
           'div',
           { id: 'map' },
-          _react2.default.createElement(_map_container2.default, null)
+          _react2.default.createElement(_map_container2.default, null),
+          _react2.default.createElement('ul', { id: 'map-overlay' })
         )
       );
     }
@@ -11136,7 +13253,7 @@ var App = function (_React$Component) {
 exports.default = App;
 
 /***/ }),
-/* 100 */
+/* 118 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11146,13 +13263,13 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _redux = __webpack_require__(54);
+var _redux = __webpack_require__(62);
 
-var _reduxThunk = __webpack_require__(234);
+var _reduxThunk = __webpack_require__(260);
 
 var _reduxThunk2 = _interopRequireDefault(_reduxThunk);
 
-var _root_reducer = __webpack_require__(112);
+var _root_reducer = __webpack_require__(128);
 
 var _root_reducer2 = _interopRequireDefault(_root_reducer);
 
@@ -11166,21 +13283,127 @@ var configureStore = function configureStore() {
 exports.default = configureStore;
 
 /***/ }),
-/* 101 */
+/* 119 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-module.exports = __webpack_require__(155);
+module.exports = __webpack_require__(181);
 
 
 /***/ }),
-/* 102 */,
-/* 103 */,
-/* 104 */,
-/* 105 */,
-/* 106 */
+/* 120 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = affineHull
+
+var orient = __webpack_require__(63)
+
+function linearlyIndependent(points, d) {
+  var nhull = new Array(d+1)
+  for(var i=0; i<points.length; ++i) {
+    nhull[i] = points[i]
+  }
+  for(var i=0; i<=points.length; ++i) {
+    for(var j=points.length; j<=d; ++j) {
+      var x = new Array(d)
+      for(var k=0; k<d; ++k) {
+        x[k] = Math.pow(j+1-i, k)
+      }
+      nhull[j] = x
+    }
+    var o = orient.apply(void 0, nhull)
+    if(o) {
+      return true
+    }
+  }
+  return false
+}
+
+function affineHull(points) {
+  var n = points.length
+  if(n === 0) {
+    return []
+  }
+  if(n === 1) {
+    return [0]
+  }
+  var d = points[0].length
+  var frame = [ points[0] ]
+  var index = [ 0 ]
+  for(var i=1; i<n; ++i) {
+    frame.push(points[i])
+    if(!linearlyIndependent(frame, d)) {
+      frame.pop()
+      continue
+    }
+    index.push(i)
+    if(index.length === d+1) {
+      return index
+    }
+  }
+  return index
+}
+
+/***/ }),
+/* 121 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getBbox = getBbox;
+exports.countCrimes = countCrimes;
+exports.findDuplicateCrimes = findDuplicateCrimes;
+
+var _turf = __webpack_require__(66);
+
+var _turf2 = _interopRequireDefault(_turf);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function getBbox(feature) {
+  var coords = _turf2.default.bbox(feature);
+  return [[coords[0], coords[1]], [coords[2], coords[3]]];
+}
+
+function countCrimes(crimes, neighborhood, displayCounts, name) {
+  var counts = {};
+  crimes.forEach(function (crime) {
+    if (_turf2.default.inside(crime, neighborhood)) {
+      var crimeType = crime.properties.category;
+      counts[crimeType] = counts[crimeType] + 1 || 1;
+    }
+  });
+  displayCounts(counts, name);
+  return counts;
+}
+
+function findDuplicateCrimes(crimes, hoods) {
+  var tr = crimes.filter(function (c) {
+    return _turf2.default.inside(c, hoods['Treasure Island']);
+  });
+}
+
+// export function mergeCrimes(hoods, crimes) {
+//   let collected, hCollection, cCollection;
+//   hCollection = { 'features': hoods };
+//   cCollection = { 'features': crimes };
+//   console.log('made it here...');
+//   collected = turf.collect(hCollection, cCollection, 'category', 'values');
+//   console.log('MADE IT OUT YEAH!');
+//   console.log(collected);
+// }
+
+/***/ }),
+/* 122 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11192,19 +13415,19 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _react = __webpack_require__(20);
+var _react = __webpack_require__(24);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _mapboxGl = __webpack_require__(139);
+var _mapboxGl = __webpack_require__(164);
 
 var _mapboxGl2 = _interopRequireDefault(_mapboxGl);
 
-var _map_layer = __webpack_require__(108);
+var _map_layer = __webpack_require__(124);
 
 var _map_layer2 = _interopRequireDefault(_map_layer);
 
-var _gis_calculations = __webpack_require__(322);
+var _gis_calculations = __webpack_require__(121);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -11315,15 +13538,30 @@ var DataMap = function (_React$Component) {
   }, {
     key: 'memoizeNeighborhood',
     value: function memoizeNeighborhood(name) {
-      var hoodGeometry = this.state.neighborhoodMemo[name];
-      if (hoodGeometry) {
-        console.log(hoodGeometry);
-        return hoodGeometry;
+      var existingMemo = this.state.neighborhoodMemo[name];
+      if (existingMemo) {
+        return existingMemo;
+      } else {
+        var counts = (0, _gis_calculations.countCrimes)(this.props.crimes, this.props.neighborhoods[name], this.displayCounts, name);
+        this.setState({ neighborhoodMemo: _defineProperty({}, name, counts) });
+        return counts;
       }
-      var counts = (0, _gis_calculations.countCrimes)(this.props.crimes, this.props.neighborhoods[name]);
-      this.setState({ neighborhoodMemo: _defineProperty({}, name, counts) });
-      console.log(counts);
-      return counts;
+    }
+  }, {
+    key: 'displayCounts',
+    value: function displayCounts(counts, name) {
+      var overlay = document.getElementById('map-overlay');
+      var title = document.createElement('h1');
+      overlay.innerHTML = '';
+      title.innerHTML = name;
+      overlay.appendChild(title);
+      for (var category in counts) {
+        var row = document.createElement('li');
+        row.innerHTML = category + ': ' + counts[category];
+        overlay.appendChild(row);
+      }
+      overlay.style.display = 'block';
+      return overlay;
     }
   }, {
     key: 'addLayer',
@@ -11385,7 +13623,7 @@ var DataMap = function (_React$Component) {
 exports.default = DataMap;
 
 /***/ }),
-/* 107 */
+/* 123 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11395,13 +13633,13 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _reactRedux = __webpack_require__(89);
+var _reactRedux = __webpack_require__(99);
 
-var _crime_actions = __webpack_require__(57);
+var _crime_actions = __webpack_require__(67);
 
-var _neighborhoods_actions = __webpack_require__(58);
+var _neighborhoods_actions = __webpack_require__(68);
 
-var _map = __webpack_require__(106);
+var _map = __webpack_require__(122);
 
 var _map2 = _interopRequireDefault(_map);
 
@@ -11430,7 +13668,7 @@ var mapDispatchToProps = function mapDispatchToProps(dispatch) {
 exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(_map2.default);
 
 /***/ }),
-/* 108 */
+/* 124 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11579,29 +13817,35 @@ exports.default = createLayer;
 // }
 
 /***/ }),
-/* 109 */
+/* 125 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _reactDom = __webpack_require__(101);
+var _reactDom = __webpack_require__(119);
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
 
-var _react = __webpack_require__(20);
+var _react = __webpack_require__(24);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _store = __webpack_require__(100);
+var _store = __webpack_require__(118);
 
 var _store2 = _interopRequireDefault(_store);
 
-var _app = __webpack_require__(99);
+var _app = __webpack_require__(117);
 
 var _app2 = _interopRequireDefault(_app);
 
+var _turf = __webpack_require__(66);
+
+var _turf2 = _interopRequireDefault(_turf);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+window.inside = _turf2.default.inside;
 
 window.addEventListener("DOMContentLoaded", function () {
   var root = document.getElementById("root");
@@ -11611,7 +13855,7 @@ window.addEventListener("DOMContentLoaded", function () {
 });
 
 /***/ }),
-/* 110 */
+/* 126 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11621,7 +13865,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _crime_actions = __webpack_require__(57);
+var _crime_actions = __webpack_require__(67);
 
 var CrimeReducer = function CrimeReducer() {
   var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
@@ -11689,7 +13933,7 @@ function toTitleCase(str) {
 exports.default = CrimeReducer;
 
 /***/ }),
-/* 111 */
+/* 127 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11699,7 +13943,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _neighborhoods_actions = __webpack_require__(58);
+var _neighborhoods_actions = __webpack_require__(68);
 
 var NeighborhoodReducer = function NeighborhoodReducer() {
   var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -11735,7 +13979,7 @@ function convertToGeoJSON(dataset) {
 exports.default = NeighborhoodReducer;
 
 /***/ }),
-/* 112 */
+/* 128 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11745,13 +13989,13 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _redux = __webpack_require__(54);
+var _redux = __webpack_require__(62);
 
-var _crime_reducer = __webpack_require__(110);
+var _crime_reducer = __webpack_require__(126);
 
 var _crime_reducer2 = _interopRequireDefault(_crime_reducer);
 
-var _neighborhoods_reducer = __webpack_require__(111);
+var _neighborhoods_reducer = __webpack_require__(127);
 
 var _neighborhoods_reducer2 = _interopRequireDefault(_neighborhoods_reducer);
 
@@ -11765,7 +14009,7 @@ var RootReducer = (0, _redux.combineReducers)({
 exports.default = RootReducer;
 
 /***/ }),
-/* 113 */
+/* 129 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11798,7 +14042,7 @@ var params = violentCrime.map(function (category) {
 var appToken = 'Eb5er7pn8pszkiDz2g9g7oQmp';
 
 /***/ }),
-/* 114 */
+/* 130 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11820,7 +14064,1023 @@ var fetchNeighborhoods = exports.fetchNeighborhoods = function fetchNeighborhood
 var appToken = 'Eb5er7pn8pszkiDz2g9g7oQmp';
 
 /***/ }),
-/* 115 */
+/* 131 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * Bit twiddling hacks for JavaScript.
+ *
+ * Author: Mikola Lysenko
+ *
+ * Ported from Stanford bit twiddling hack library:
+ *    http://graphics.stanford.edu/~seander/bithacks.html
+ */
+
+ "use restrict";
+
+//Number of bits in an integer
+var INT_BITS = 32;
+
+//Constants
+exports.INT_BITS  = INT_BITS;
+exports.INT_MAX   =  0x7fffffff;
+exports.INT_MIN   = -1<<(INT_BITS-1);
+
+//Returns -1, 0, +1 depending on sign of x
+exports.sign = function(v) {
+  return (v > 0) - (v < 0);
+}
+
+//Computes absolute value of integer
+exports.abs = function(v) {
+  var mask = v >> (INT_BITS-1);
+  return (v ^ mask) - mask;
+}
+
+//Computes minimum of integers x and y
+exports.min = function(x, y) {
+  return y ^ ((x ^ y) & -(x < y));
+}
+
+//Computes maximum of integers x and y
+exports.max = function(x, y) {
+  return x ^ ((x ^ y) & -(x < y));
+}
+
+//Checks if a number is a power of two
+exports.isPow2 = function(v) {
+  return !(v & (v-1)) && (!!v);
+}
+
+//Computes log base 2 of v
+exports.log2 = function(v) {
+  var r, shift;
+  r =     (v > 0xFFFF) << 4; v >>>= r;
+  shift = (v > 0xFF  ) << 3; v >>>= shift; r |= shift;
+  shift = (v > 0xF   ) << 2; v >>>= shift; r |= shift;
+  shift = (v > 0x3   ) << 1; v >>>= shift; r |= shift;
+  return r | (v >> 1);
+}
+
+//Computes log base 10 of v
+exports.log10 = function(v) {
+  return  (v >= 1000000000) ? 9 : (v >= 100000000) ? 8 : (v >= 10000000) ? 7 :
+          (v >= 1000000) ? 6 : (v >= 100000) ? 5 : (v >= 10000) ? 4 :
+          (v >= 1000) ? 3 : (v >= 100) ? 2 : (v >= 10) ? 1 : 0;
+}
+
+//Counts number of bits
+exports.popCount = function(v) {
+  v = v - ((v >>> 1) & 0x55555555);
+  v = (v & 0x33333333) + ((v >>> 2) & 0x33333333);
+  return ((v + (v >>> 4) & 0xF0F0F0F) * 0x1010101) >>> 24;
+}
+
+//Counts number of trailing zeros
+function countTrailingZeros(v) {
+  var c = 32;
+  v &= -v;
+  if (v) c--;
+  if (v & 0x0000FFFF) c -= 16;
+  if (v & 0x00FF00FF) c -= 8;
+  if (v & 0x0F0F0F0F) c -= 4;
+  if (v & 0x33333333) c -= 2;
+  if (v & 0x55555555) c -= 1;
+  return c;
+}
+exports.countTrailingZeros = countTrailingZeros;
+
+//Rounds to next power of 2
+exports.nextPow2 = function(v) {
+  v += v === 0;
+  --v;
+  v |= v >>> 1;
+  v |= v >>> 2;
+  v |= v >>> 4;
+  v |= v >>> 8;
+  v |= v >>> 16;
+  return v + 1;
+}
+
+//Rounds down to previous power of 2
+exports.prevPow2 = function(v) {
+  v |= v >>> 1;
+  v |= v >>> 2;
+  v |= v >>> 4;
+  v |= v >>> 8;
+  v |= v >>> 16;
+  return v - (v>>>1);
+}
+
+//Computes parity of word
+exports.parity = function(v) {
+  v ^= v >>> 16;
+  v ^= v >>> 8;
+  v ^= v >>> 4;
+  v &= 0xf;
+  return (0x6996 >>> v) & 1;
+}
+
+var REVERSE_TABLE = new Array(256);
+
+(function(tab) {
+  for(var i=0; i<256; ++i) {
+    var v = i, r = i, s = 7;
+    for (v >>>= 1; v; v >>>= 1) {
+      r <<= 1;
+      r |= v & 1;
+      --s;
+    }
+    tab[i] = (r << s) & 0xff;
+  }
+})(REVERSE_TABLE);
+
+//Reverse bits in a 32 bit word
+exports.reverse = function(v) {
+  return  (REVERSE_TABLE[ v         & 0xff] << 24) |
+          (REVERSE_TABLE[(v >>> 8)  & 0xff] << 16) |
+          (REVERSE_TABLE[(v >>> 16) & 0xff] << 8)  |
+           REVERSE_TABLE[(v >>> 24) & 0xff];
+}
+
+//Interleave bits of 2 coordinates with 16 bits.  Useful for fast quadtree codes
+exports.interleave2 = function(x, y) {
+  x &= 0xFFFF;
+  x = (x | (x << 8)) & 0x00FF00FF;
+  x = (x | (x << 4)) & 0x0F0F0F0F;
+  x = (x | (x << 2)) & 0x33333333;
+  x = (x | (x << 1)) & 0x55555555;
+
+  y &= 0xFFFF;
+  y = (y | (y << 8)) & 0x00FF00FF;
+  y = (y | (y << 4)) & 0x0F0F0F0F;
+  y = (y | (y << 2)) & 0x33333333;
+  y = (y | (y << 1)) & 0x55555555;
+
+  return x | (y << 1);
+}
+
+//Extracts the nth interleaved component
+exports.deinterleave2 = function(v, n) {
+  v = (v >>> n) & 0x55555555;
+  v = (v | (v >>> 1))  & 0x33333333;
+  v = (v | (v >>> 2))  & 0x0F0F0F0F;
+  v = (v | (v >>> 4))  & 0x00FF00FF;
+  v = (v | (v >>> 16)) & 0x000FFFF;
+  return (v << 16) >> 16;
+}
+
+
+//Interleave bits of 3 coordinates, each with 10 bits.  Useful for fast octree codes
+exports.interleave3 = function(x, y, z) {
+  x &= 0x3FF;
+  x  = (x | (x<<16)) & 4278190335;
+  x  = (x | (x<<8))  & 251719695;
+  x  = (x | (x<<4))  & 3272356035;
+  x  = (x | (x<<2))  & 1227133513;
+
+  y &= 0x3FF;
+  y  = (y | (y<<16)) & 4278190335;
+  y  = (y | (y<<8))  & 251719695;
+  y  = (y | (y<<4))  & 3272356035;
+  y  = (y | (y<<2))  & 1227133513;
+  x |= (y << 1);
+  
+  z &= 0x3FF;
+  z  = (z | (z<<16)) & 4278190335;
+  z  = (z | (z<<8))  & 251719695;
+  z  = (z | (z<<4))  & 3272356035;
+  z  = (z | (z<<2))  & 1227133513;
+  
+  return x | (z << 2);
+}
+
+//Extracts nth interleaved component of a 3-tuple
+exports.deinterleave3 = function(v, n) {
+  v = (v >>> n)       & 1227133513;
+  v = (v | (v>>>2))   & 3272356035;
+  v = (v | (v>>>4))   & 251719695;
+  v = (v | (v>>>8))   & 4278190335;
+  v = (v | (v>>>16))  & 0x3FF;
+  return (v<<22)>>22;
+}
+
+//Computes next combination in colexicographic order (this is mistakenly called nextPermutation on the bit twiddling hacks page)
+exports.nextCombination = function(v) {
+  var t = v | (v - 1);
+  return (t + 1) | (((~t & -~t) - 1) >>> (countTrailingZeros(v) + 1));
+}
+
+
+
+/***/ }),
+/* 132 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var convexHull1d = __webpack_require__(133)
+var convexHull2d = __webpack_require__(134)
+var convexHullnd = __webpack_require__(135)
+
+module.exports = convexHull
+
+function convexHull(points) {
+  var n = points.length
+  if(n === 0) {
+    return []
+  } else if(n === 1) {
+    return [[0]]
+  }
+  var d = points[0].length
+  if(d === 0) {
+    return []
+  } else if(d === 1) {
+    return convexHull1d(points)
+  } else if(d === 2) {
+    return convexHull2d(points)
+  }
+  return convexHullnd(points, d)
+}
+
+/***/ }),
+/* 133 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = convexHull1d
+
+function convexHull1d(points) {
+  var lo = 0
+  var hi = 0
+  for(var i=1; i<points.length; ++i) {
+    if(points[i][0] < points[lo][0]) {
+      lo = i
+    }
+    if(points[i][0] > points[hi][0]) {
+      hi = i
+    }
+  }
+  if(lo < hi) {
+    return [[lo], [hi]]
+  } else if(lo > hi) {
+    return [[hi], [lo]]
+  } else {
+    return [[lo]]
+  }
+}
+
+/***/ }),
+/* 134 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = convexHull2D
+
+var monotoneHull = __webpack_require__(165)
+
+function convexHull2D(points) {
+  var hull = monotoneHull(points)
+  var h = hull.length
+  if(h <= 2) {
+    return []
+  }
+  var edges = new Array(h)
+  var a = hull[h-1]
+  for(var i=0; i<h; ++i) {
+    var b = hull[i]
+    edges[i] = [a,b]
+    a = b
+  }
+  return edges
+}
+
+
+/***/ }),
+/* 135 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = convexHullnD
+
+var ich = __webpack_require__(154)
+var aff = __webpack_require__(120)
+
+function permute(points, front) {
+  var n = points.length
+  var npoints = new Array(n)
+  for(var i=0; i<front.length; ++i) {
+    npoints[i] = points[front[i]]
+  }
+  var ptr = front.length
+  for(var i=0; i<n; ++i) {
+    if(front.indexOf(i) < 0) {
+      npoints[ptr++] = points[i]
+    }
+  }
+  return npoints
+}
+
+function invPermute(cells, front) {
+  var nc = cells.length
+  var nf = front.length
+  for(var i=0; i<nc; ++i) {
+    var c = cells[i]
+    for(var j=0; j<c.length; ++j) {
+      var x = c[j]
+      if(x < nf) {
+        c[j] = front[x]
+      } else {
+        x = x - nf
+        for(var k=0; k<nf; ++k) {
+          if(x >= front[k]) {
+            x += 1
+          }
+        }
+        c[j] = x
+      }
+    }
+  }
+  return cells
+}
+
+function convexHullnD(points, d) {
+  try {
+    return ich(points, true)
+  } catch(e) {
+    //If point set is degenerate, try to find a basis and rerun it
+    var ah = aff(points)
+    if(ah.length <= d) {
+      //No basis, no try
+      return []
+    }
+    var npoints = permute(points, ah)
+    var nhull   = ich(npoints, true)
+    return invPermute(nhull, ah)
+  }
+}
+
+/***/ }),
+/* 136 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = earcut;
+
+function earcut(data, holeIndices, dim) {
+
+    dim = dim || 2;
+
+    var hasHoles = holeIndices && holeIndices.length,
+        outerLen = hasHoles ? holeIndices[0] * dim : data.length,
+        outerNode = linkedList(data, 0, outerLen, dim, true),
+        triangles = [];
+
+    if (!outerNode) return triangles;
+
+    var minX, minY, maxX, maxY, x, y, size;
+
+    if (hasHoles) outerNode = eliminateHoles(data, holeIndices, outerNode, dim);
+
+    // if the shape is not too simple, we'll use z-order curve hash later; calculate polygon bbox
+    if (data.length > 80 * dim) {
+        minX = maxX = data[0];
+        minY = maxY = data[1];
+
+        for (var i = dim; i < outerLen; i += dim) {
+            x = data[i];
+            y = data[i + 1];
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+        }
+
+        // minX, minY and size are later used to transform coords into integers for z-order calculation
+        size = Math.max(maxX - minX, maxY - minY);
+    }
+
+    earcutLinked(outerNode, triangles, dim, minX, minY, size);
+
+    return triangles;
+}
+
+// create a circular doubly linked list from polygon points in the specified winding order
+function linkedList(data, start, end, dim, clockwise) {
+    var i, last;
+
+    if (clockwise === (signedArea(data, start, end, dim) > 0)) {
+        for (i = start; i < end; i += dim) last = insertNode(i, data[i], data[i + 1], last);
+    } else {
+        for (i = end - dim; i >= start; i -= dim) last = insertNode(i, data[i], data[i + 1], last);
+    }
+
+    if (last && equals(last, last.next)) {
+        removeNode(last);
+        last = last.next;
+    }
+
+    return last;
+}
+
+// eliminate colinear or duplicate points
+function filterPoints(start, end) {
+    if (!start) return start;
+    if (!end) end = start;
+
+    var p = start,
+        again;
+    do {
+        again = false;
+
+        if (!p.steiner && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
+            removeNode(p);
+            p = end = p.prev;
+            if (p === p.next) return null;
+            again = true;
+
+        } else {
+            p = p.next;
+        }
+    } while (again || p !== end);
+
+    return end;
+}
+
+// main ear slicing loop which triangulates a polygon (given as a linked list)
+function earcutLinked(ear, triangles, dim, minX, minY, size, pass) {
+    if (!ear) return;
+
+    // interlink polygon nodes in z-order
+    if (!pass && size) indexCurve(ear, minX, minY, size);
+
+    var stop = ear,
+        prev, next;
+
+    // iterate through ears, slicing them one by one
+    while (ear.prev !== ear.next) {
+        prev = ear.prev;
+        next = ear.next;
+
+        if (size ? isEarHashed(ear, minX, minY, size) : isEar(ear)) {
+            // cut off the triangle
+            triangles.push(prev.i / dim);
+            triangles.push(ear.i / dim);
+            triangles.push(next.i / dim);
+
+            removeNode(ear);
+
+            // skipping the next vertice leads to less sliver triangles
+            ear = next.next;
+            stop = next.next;
+
+            continue;
+        }
+
+        ear = next;
+
+        // if we looped through the whole remaining polygon and can't find any more ears
+        if (ear === stop) {
+            // try filtering points and slicing again
+            if (!pass) {
+                earcutLinked(filterPoints(ear), triangles, dim, minX, minY, size, 1);
+
+            // if this didn't work, try curing all small self-intersections locally
+            } else if (pass === 1) {
+                ear = cureLocalIntersections(ear, triangles, dim);
+                earcutLinked(ear, triangles, dim, minX, minY, size, 2);
+
+            // as a last resort, try splitting the remaining polygon into two
+            } else if (pass === 2) {
+                splitEarcut(ear, triangles, dim, minX, minY, size);
+            }
+
+            break;
+        }
+    }
+}
+
+// check whether a polygon node forms a valid ear with adjacent nodes
+function isEar(ear) {
+    var a = ear.prev,
+        b = ear,
+        c = ear.next;
+
+    if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
+
+    // now make sure we don't have other points inside the potential ear
+    var p = ear.next.next;
+
+    while (p !== ear.prev) {
+        if (pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+            area(p.prev, p, p.next) >= 0) return false;
+        p = p.next;
+    }
+
+    return true;
+}
+
+function isEarHashed(ear, minX, minY, size) {
+    var a = ear.prev,
+        b = ear,
+        c = ear.next;
+
+    if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
+
+    // triangle bbox; min & max are calculated like this for speed
+    var minTX = a.x < b.x ? (a.x < c.x ? a.x : c.x) : (b.x < c.x ? b.x : c.x),
+        minTY = a.y < b.y ? (a.y < c.y ? a.y : c.y) : (b.y < c.y ? b.y : c.y),
+        maxTX = a.x > b.x ? (a.x > c.x ? a.x : c.x) : (b.x > c.x ? b.x : c.x),
+        maxTY = a.y > b.y ? (a.y > c.y ? a.y : c.y) : (b.y > c.y ? b.y : c.y);
+
+    // z-order range for the current triangle bbox;
+    var minZ = zOrder(minTX, minTY, minX, minY, size),
+        maxZ = zOrder(maxTX, maxTY, minX, minY, size);
+
+    // first look for points inside the triangle in increasing z-order
+    var p = ear.nextZ;
+
+    while (p && p.z <= maxZ) {
+        if (p !== ear.prev && p !== ear.next &&
+            pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+            area(p.prev, p, p.next) >= 0) return false;
+        p = p.nextZ;
+    }
+
+    // then look for points in decreasing z-order
+    p = ear.prevZ;
+
+    while (p && p.z >= minZ) {
+        if (p !== ear.prev && p !== ear.next &&
+            pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+            area(p.prev, p, p.next) >= 0) return false;
+        p = p.prevZ;
+    }
+
+    return true;
+}
+
+// go through all polygon nodes and cure small local self-intersections
+function cureLocalIntersections(start, triangles, dim) {
+    var p = start;
+    do {
+        var a = p.prev,
+            b = p.next.next;
+
+        if (!equals(a, b) && intersects(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
+
+            triangles.push(a.i / dim);
+            triangles.push(p.i / dim);
+            triangles.push(b.i / dim);
+
+            // remove two nodes involved
+            removeNode(p);
+            removeNode(p.next);
+
+            p = start = b;
+        }
+        p = p.next;
+    } while (p !== start);
+
+    return p;
+}
+
+// try splitting polygon into two and triangulate them independently
+function splitEarcut(start, triangles, dim, minX, minY, size) {
+    // look for a valid diagonal that divides the polygon into two
+    var a = start;
+    do {
+        var b = a.next.next;
+        while (b !== a.prev) {
+            if (a.i !== b.i && isValidDiagonal(a, b)) {
+                // split the polygon in two by the diagonal
+                var c = splitPolygon(a, b);
+
+                // filter colinear points around the cuts
+                a = filterPoints(a, a.next);
+                c = filterPoints(c, c.next);
+
+                // run earcut on each half
+                earcutLinked(a, triangles, dim, minX, minY, size);
+                earcutLinked(c, triangles, dim, minX, minY, size);
+                return;
+            }
+            b = b.next;
+        }
+        a = a.next;
+    } while (a !== start);
+}
+
+// link every hole into the outer loop, producing a single-ring polygon without holes
+function eliminateHoles(data, holeIndices, outerNode, dim) {
+    var queue = [],
+        i, len, start, end, list;
+
+    for (i = 0, len = holeIndices.length; i < len; i++) {
+        start = holeIndices[i] * dim;
+        end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
+        list = linkedList(data, start, end, dim, false);
+        if (list === list.next) list.steiner = true;
+        queue.push(getLeftmost(list));
+    }
+
+    queue.sort(compareX);
+
+    // process holes from left to right
+    for (i = 0; i < queue.length; i++) {
+        eliminateHole(queue[i], outerNode);
+        outerNode = filterPoints(outerNode, outerNode.next);
+    }
+
+    return outerNode;
+}
+
+function compareX(a, b) {
+    return a.x - b.x;
+}
+
+// find a bridge between vertices that connects hole with an outer ring and and link it
+function eliminateHole(hole, outerNode) {
+    outerNode = findHoleBridge(hole, outerNode);
+    if (outerNode) {
+        var b = splitPolygon(outerNode, hole);
+        filterPoints(b, b.next);
+    }
+}
+
+// David Eberly's algorithm for finding a bridge between hole and outer polygon
+function findHoleBridge(hole, outerNode) {
+    var p = outerNode,
+        hx = hole.x,
+        hy = hole.y,
+        qx = -Infinity,
+        m;
+
+    // find a segment intersected by a ray from the hole's leftmost point to the left;
+    // segment's endpoint with lesser x will be potential connection point
+    do {
+        if (hy <= p.y && hy >= p.next.y) {
+            var x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
+            if (x <= hx && x > qx) {
+                qx = x;
+                if (x === hx) {
+                    if (hy === p.y) return p;
+                    if (hy === p.next.y) return p.next;
+                }
+                m = p.x < p.next.x ? p : p.next;
+            }
+        }
+        p = p.next;
+    } while (p !== outerNode);
+
+    if (!m) return null;
+
+    if (hx === qx) return m.prev; // hole touches outer segment; pick lower endpoint
+
+    // look for points inside the triangle of hole point, segment intersection and endpoint;
+    // if there are no points found, we have a valid connection;
+    // otherwise choose the point of the minimum angle with the ray as connection point
+
+    var stop = m,
+        mx = m.x,
+        my = m.y,
+        tanMin = Infinity,
+        tan;
+
+    p = m.next;
+
+    while (p !== stop) {
+        if (hx >= p.x && p.x >= mx &&
+                pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
+
+            tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
+
+            if ((tan < tanMin || (tan === tanMin && p.x > m.x)) && locallyInside(p, hole)) {
+                m = p;
+                tanMin = tan;
+            }
+        }
+
+        p = p.next;
+    }
+
+    return m;
+}
+
+// interlink polygon nodes in z-order
+function indexCurve(start, minX, minY, size) {
+    var p = start;
+    do {
+        if (p.z === null) p.z = zOrder(p.x, p.y, minX, minY, size);
+        p.prevZ = p.prev;
+        p.nextZ = p.next;
+        p = p.next;
+    } while (p !== start);
+
+    p.prevZ.nextZ = null;
+    p.prevZ = null;
+
+    sortLinked(p);
+}
+
+// Simon Tatham's linked list merge sort algorithm
+// http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
+function sortLinked(list) {
+    var i, p, q, e, tail, numMerges, pSize, qSize,
+        inSize = 1;
+
+    do {
+        p = list;
+        list = null;
+        tail = null;
+        numMerges = 0;
+
+        while (p) {
+            numMerges++;
+            q = p;
+            pSize = 0;
+            for (i = 0; i < inSize; i++) {
+                pSize++;
+                q = q.nextZ;
+                if (!q) break;
+            }
+
+            qSize = inSize;
+
+            while (pSize > 0 || (qSize > 0 && q)) {
+
+                if (pSize === 0) {
+                    e = q;
+                    q = q.nextZ;
+                    qSize--;
+                } else if (qSize === 0 || !q) {
+                    e = p;
+                    p = p.nextZ;
+                    pSize--;
+                } else if (p.z <= q.z) {
+                    e = p;
+                    p = p.nextZ;
+                    pSize--;
+                } else {
+                    e = q;
+                    q = q.nextZ;
+                    qSize--;
+                }
+
+                if (tail) tail.nextZ = e;
+                else list = e;
+
+                e.prevZ = tail;
+                tail = e;
+            }
+
+            p = q;
+        }
+
+        tail.nextZ = null;
+        inSize *= 2;
+
+    } while (numMerges > 1);
+
+    return list;
+}
+
+// z-order of a point given coords and size of the data bounding box
+function zOrder(x, y, minX, minY, size) {
+    // coords are transformed into non-negative 15-bit integer range
+    x = 32767 * (x - minX) / size;
+    y = 32767 * (y - minY) / size;
+
+    x = (x | (x << 8)) & 0x00FF00FF;
+    x = (x | (x << 4)) & 0x0F0F0F0F;
+    x = (x | (x << 2)) & 0x33333333;
+    x = (x | (x << 1)) & 0x55555555;
+
+    y = (y | (y << 8)) & 0x00FF00FF;
+    y = (y | (y << 4)) & 0x0F0F0F0F;
+    y = (y | (y << 2)) & 0x33333333;
+    y = (y | (y << 1)) & 0x55555555;
+
+    return x | (y << 1);
+}
+
+// find the leftmost node of a polygon ring
+function getLeftmost(start) {
+    var p = start,
+        leftmost = start;
+    do {
+        if (p.x < leftmost.x) leftmost = p;
+        p = p.next;
+    } while (p !== start);
+
+    return leftmost;
+}
+
+// check if a point lies within a convex triangle
+function pointInTriangle(ax, ay, bx, by, cx, cy, px, py) {
+    return (cx - px) * (ay - py) - (ax - px) * (cy - py) >= 0 &&
+           (ax - px) * (by - py) - (bx - px) * (ay - py) >= 0 &&
+           (bx - px) * (cy - py) - (cx - px) * (by - py) >= 0;
+}
+
+// check if a diagonal between two polygon nodes is valid (lies in polygon interior)
+function isValidDiagonal(a, b) {
+    return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) &&
+           locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b);
+}
+
+// signed area of a triangle
+function area(p, q, r) {
+    return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+}
+
+// check if two points are equal
+function equals(p1, p2) {
+    return p1.x === p2.x && p1.y === p2.y;
+}
+
+// check if two segments intersect
+function intersects(p1, q1, p2, q2) {
+    if ((equals(p1, q1) && equals(p2, q2)) ||
+        (equals(p1, q2) && equals(p2, q1))) return true;
+    return area(p1, q1, p2) > 0 !== area(p1, q1, q2) > 0 &&
+           area(p2, q2, p1) > 0 !== area(p2, q2, q1) > 0;
+}
+
+// check if a polygon diagonal intersects any polygon segments
+function intersectsPolygon(a, b) {
+    var p = a;
+    do {
+        if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i &&
+                intersects(p, p.next, a, b)) return true;
+        p = p.next;
+    } while (p !== a);
+
+    return false;
+}
+
+// check if a polygon diagonal is locally inside the polygon
+function locallyInside(a, b) {
+    return area(a.prev, a, a.next) < 0 ?
+        area(a, b, a.next) >= 0 && area(a, a.prev, b) >= 0 :
+        area(a, b, a.prev) < 0 || area(a, a.next, b) < 0;
+}
+
+// check if the middle point of a polygon diagonal is inside the polygon
+function middleInside(a, b) {
+    var p = a,
+        inside = false,
+        px = (a.x + b.x) / 2,
+        py = (a.y + b.y) / 2;
+    do {
+        if (((p.y > py) !== (p.next.y > py)) && (px < (p.next.x - p.x) * (py - p.y) / (p.next.y - p.y) + p.x))
+            inside = !inside;
+        p = p.next;
+    } while (p !== a);
+
+    return inside;
+}
+
+// link two polygon vertices with a bridge; if the vertices belong to the same ring, it splits polygon into two;
+// if one belongs to the outer ring and another to a hole, it merges it into a single ring
+function splitPolygon(a, b) {
+    var a2 = new Node(a.i, a.x, a.y),
+        b2 = new Node(b.i, b.x, b.y),
+        an = a.next,
+        bp = b.prev;
+
+    a.next = b;
+    b.prev = a;
+
+    a2.next = an;
+    an.prev = a2;
+
+    b2.next = a2;
+    a2.prev = b2;
+
+    bp.next = b2;
+    b2.prev = bp;
+
+    return b2;
+}
+
+// create a node and optionally link it with previous one (in a circular doubly linked list)
+function insertNode(i, x, y, last) {
+    var p = new Node(i, x, y);
+
+    if (!last) {
+        p.prev = p;
+        p.next = p;
+
+    } else {
+        p.next = last.next;
+        p.prev = last;
+        last.next.prev = p;
+        last.next = p;
+    }
+    return p;
+}
+
+function removeNode(p) {
+    p.next.prev = p.prev;
+    p.prev.next = p.next;
+
+    if (p.prevZ) p.prevZ.nextZ = p.nextZ;
+    if (p.nextZ) p.nextZ.prevZ = p.prevZ;
+}
+
+function Node(i, x, y) {
+    // vertice index in coordinates array
+    this.i = i;
+
+    // vertex coordinates
+    this.x = x;
+    this.y = y;
+
+    // previous and next vertice nodes in a polygon ring
+    this.prev = null;
+    this.next = null;
+
+    // z-order curve value
+    this.z = null;
+
+    // previous and next nodes in z-order
+    this.prevZ = null;
+    this.nextZ = null;
+
+    // indicates whether this is a steiner point
+    this.steiner = false;
+}
+
+// return a percentage difference between the polygon area and its triangulation area;
+// used to verify correctness of triangulation
+earcut.deviation = function (data, holeIndices, dim, triangles) {
+    var hasHoles = holeIndices && holeIndices.length;
+    var outerLen = hasHoles ? holeIndices[0] * dim : data.length;
+
+    var polygonArea = Math.abs(signedArea(data, 0, outerLen, dim));
+    if (hasHoles) {
+        for (var i = 0, len = holeIndices.length; i < len; i++) {
+            var start = holeIndices[i] * dim;
+            var end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
+            polygonArea -= Math.abs(signedArea(data, start, end, dim));
+        }
+    }
+
+    var trianglesArea = 0;
+    for (i = 0; i < triangles.length; i += 3) {
+        var a = triangles[i] * dim;
+        var b = triangles[i + 1] * dim;
+        var c = triangles[i + 2] * dim;
+        trianglesArea += Math.abs(
+            (data[a] - data[c]) * (data[b + 1] - data[a + 1]) -
+            (data[a] - data[b]) * (data[c + 1] - data[a + 1]));
+    }
+
+    return polygonArea === 0 && trianglesArea === 0 ? 0 :
+        Math.abs((trianglesArea - polygonArea) / polygonArea);
+};
+
+function signedArea(data, start, end, dim) {
+    var sum = 0;
+    for (var i = start, j = end - dim; i < end; i += dim) {
+        sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
+        j = i;
+    }
+    return sum;
+}
+
+// turn a polygon in a multi-dimensional array form (e.g. as in GeoJSON) into a form Earcut accepts
+earcut.flatten = function (data) {
+    var dim = data[0][0].length,
+        result = {vertices: [], holes: [], dimensions: dim},
+        holeIndex = 0;
+
+    for (var i = 0; i < data.length; i++) {
+        for (var j = 0; j < data[i].length; j++) {
+            for (var d = 0; d < dim; d++) result.vertices.push(data[i][j][d]);
+        }
+        if (i > 0) {
+            holeIndex += data[i - 1].length;
+            result.holes.push(holeIndex);
+        }
+    }
+    return result;
+};
+
+
+/***/ }),
+/* 137 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11857,7 +15117,7 @@ function camelize(string) {
 module.exports = camelize;
 
 /***/ }),
-/* 116 */
+/* 138 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11874,7 +15134,7 @@ module.exports = camelize;
 
 
 
-var camelize = __webpack_require__(115);
+var camelize = __webpack_require__(137);
 
 var msPattern = /^-ms-/;
 
@@ -11902,7 +15162,7 @@ function camelizeStyleName(string) {
 module.exports = camelizeStyleName;
 
 /***/ }),
-/* 117 */
+/* 139 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11919,7 +15179,7 @@ module.exports = camelizeStyleName;
  * 
  */
 
-var isTextNode = __webpack_require__(125);
+var isTextNode = __webpack_require__(147);
 
 /*eslint-disable no-bitwise */
 
@@ -11947,7 +15207,7 @@ function containsNode(outerNode, innerNode) {
 module.exports = containsNode;
 
 /***/ }),
-/* 118 */
+/* 140 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12080,7 +15340,7 @@ module.exports = createArrayFromMixed;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 119 */
+/* 141 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12099,10 +15359,10 @@ module.exports = createArrayFromMixed;
 
 /*eslint-disable fb-www/unsafe-html*/
 
-var ExecutionEnvironment = __webpack_require__(6);
+var ExecutionEnvironment = __webpack_require__(7);
 
-var createArrayFromMixed = __webpack_require__(118);
-var getMarkupWrap = __webpack_require__(120);
+var createArrayFromMixed = __webpack_require__(140);
+var getMarkupWrap = __webpack_require__(142);
 var invariant = __webpack_require__(1);
 
 /**
@@ -12170,7 +15430,7 @@ module.exports = createNodesFromMarkup;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 120 */
+/* 142 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12188,7 +15448,7 @@ module.exports = createNodesFromMarkup;
 
 /*eslint-disable fb-www/unsafe-html */
 
-var ExecutionEnvironment = __webpack_require__(6);
+var ExecutionEnvironment = __webpack_require__(7);
 
 var invariant = __webpack_require__(1);
 
@@ -12271,7 +15531,7 @@ module.exports = getMarkupWrap;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 121 */
+/* 143 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12315,7 +15575,7 @@ function getUnboundedScrollPosition(scrollable) {
 module.exports = getUnboundedScrollPosition;
 
 /***/ }),
-/* 122 */
+/* 144 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12353,7 +15613,7 @@ function hyphenate(string) {
 module.exports = hyphenate;
 
 /***/ }),
-/* 123 */
+/* 145 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12370,7 +15630,7 @@ module.exports = hyphenate;
 
 
 
-var hyphenate = __webpack_require__(122);
+var hyphenate = __webpack_require__(144);
 
 var msPattern = /^ms-/;
 
@@ -12397,7 +15657,7 @@ function hyphenateStyleName(string) {
 module.exports = hyphenateStyleName;
 
 /***/ }),
-/* 124 */
+/* 146 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12427,7 +15687,7 @@ function isNode(object) {
 module.exports = isNode;
 
 /***/ }),
-/* 125 */
+/* 147 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12444,7 +15704,7 @@ module.exports = isNode;
  * @typechecks
  */
 
-var isNode = __webpack_require__(124);
+var isNode = __webpack_require__(146);
 
 /**
  * @param {*} object The object to check.
@@ -12457,7 +15717,7 @@ function isTextNode(object) {
 module.exports = isTextNode;
 
 /***/ }),
-/* 126 */
+/* 148 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12492,7 +15752,7 @@ function memoizeStringOnly(callback) {
 module.exports = memoizeStringOnly;
 
 /***/ }),
-/* 127 */
+/* 149 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12509,7 +15769,7 @@ module.exports = memoizeStringOnly;
 
 
 
-var ExecutionEnvironment = __webpack_require__(6);
+var ExecutionEnvironment = __webpack_require__(7);
 
 var performance;
 
@@ -12520,7 +15780,7 @@ if (ExecutionEnvironment.canUseDOM) {
 module.exports = performance || {};
 
 /***/ }),
-/* 128 */
+/* 150 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12537,7 +15797,7 @@ module.exports = performance || {};
  * @typechecks
  */
 
-var performance = __webpack_require__(127);
+var performance = __webpack_require__(149);
 
 var performanceNow;
 
@@ -12559,7 +15819,165 @@ if (performance.now) {
 module.exports = performanceNow;
 
 /***/ }),
-/* 129 */
+/* 151 */
+/***/ (function(module, exports) {
+
+module.exports = normalize;
+
+var types = {
+    Point: 'geometry',
+    MultiPoint: 'geometry',
+    LineString: 'geometry',
+    MultiLineString: 'geometry',
+    Polygon: 'geometry',
+    MultiPolygon: 'geometry',
+    GeometryCollection: 'geometry',
+    Feature: 'feature',
+    FeatureCollection: 'featurecollection'
+};
+
+/**
+ * Normalize a GeoJSON feature into a FeatureCollection.
+ *
+ * @param {object} gj geojson data
+ * @returns {object} normalized geojson data
+ */
+function normalize(gj) {
+    if (!gj || !gj.type) return null;
+    var type = types[gj.type];
+    if (!type) return null;
+
+    if (type === 'geometry') {
+        return {
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                properties: {},
+                geometry: gj
+            }]
+        };
+    } else if (type === 'feature') {
+        return {
+            type: 'FeatureCollection',
+            features: [gj]
+        };
+    } else if (type === 'featurecollection') {
+        return gj;
+    }
+}
+
+
+/***/ }),
+/* 152 */
+/***/ (function(module, exports) {
+
+module.exports = function() {
+    throw new Error('call .point() or .polygon() instead');
+};
+
+function position(bbox) {
+    if (bbox) return coordInBBBOX(bbox);
+    else return [lon(), lat()];
+}
+
+module.exports.position = position;
+
+module.exports.point = function(count, bbox) {
+    var features = [];
+    for (i = 0; i < count; i++) {
+        features.push(feature(bbox ? point(position(bbox)) : point()));
+    }
+    return collection(features);
+};
+
+module.exports.polygon = function(count, num_vertices, max_radial_length, bbox) {
+    if (typeof num_vertices !== 'number') num_vertices = 10;
+    if (typeof max_radial_length !== 'number') max_radial_length = 10;
+    var features = [];
+    for (i = 0; i < count; i++) {
+        var vertices = [],
+            circle_offsets = Array.apply(null,
+                new Array(num_vertices + 1)).map(Math.random);
+
+        circle_offsets.forEach(sumOffsets);
+        circle_offsets.forEach(scaleOffsets);
+        vertices[vertices.length - 1] = vertices[0]; // close the ring
+
+        // center the polygon around something
+        vertices = vertices.map(vertexToCoordinate(position(bbox)));
+        features.push(feature(polygon([vertices])));
+    }
+
+    function sumOffsets(cur, index, arr) {
+        arr[index] = (index > 0) ? cur + arr[index - 1] : cur;
+    }
+
+    function scaleOffsets(cur, index) {
+        cur = cur * 2 * Math.PI / circle_offsets[circle_offsets.length - 1];
+        var radial_scaler = Math.random();
+        vertices.push([
+            radial_scaler * max_radial_length * Math.sin(cur),
+            radial_scaler * max_radial_length * Math.cos(cur)
+        ]);
+    }
+
+    return collection(features);
+};
+
+
+function vertexToCoordinate(hub) {
+    return function(cur, index) { return [cur[0] + hub[0], cur[1] + hub[1]]; };
+}
+
+function rnd() { return Math.random() - 0.5; }
+function lon() { return rnd() * 360; }
+function lat() { return rnd() * 180; }
+
+function point(coordinates) {
+    return {
+        type: 'Point',
+        coordinates: coordinates || [lon(), lat()]
+    };
+}
+
+function coordInBBBOX(bbox) {
+    return [
+        (Math.random() * (bbox[2] - bbox[0])) + bbox[0],
+        (Math.random() * (bbox[3] - bbox[1])) + bbox[1]];
+}
+
+function pointInBBBOX() {
+    return {
+        type: 'Point',
+        coordinates: [lon(), lat()]
+    };
+}
+
+function polygon(coordinates) {
+    return {
+        type: 'Polygon',
+        coordinates: coordinates
+    };
+}
+
+function feature(geom) {
+    return {
+        type: 'Feature',
+        geometry: geom,
+        properties: {}
+    };
+}
+
+function collection(f) {
+    return {
+        type: 'FeatureCollection',
+        features: f
+    };
+}
+
+
+/***/ }),
+/* 153 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12616,7 +16034,459 @@ module.exports = function hoistNonReactStatics(targetComponent, sourceComponent,
 
 
 /***/ }),
-/* 130 */
+/* 154 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+//High level idea:
+// 1. Use Clarkson's incremental construction to find convex hull
+// 2. Point location in triangulation by jump and walk
+
+module.exports = incrementalConvexHull
+
+var orient = __webpack_require__(63)
+var compareCell = __webpack_require__(267).compareCells
+
+function compareInt(a, b) {
+  return a - b
+}
+
+function Simplex(vertices, adjacent, boundary) {
+  this.vertices = vertices
+  this.adjacent = adjacent
+  this.boundary = boundary
+  this.lastVisited = -1
+}
+
+Simplex.prototype.flip = function() {
+  var t = this.vertices[0]
+  this.vertices[0] = this.vertices[1]
+  this.vertices[1] = t
+  var u = this.adjacent[0]
+  this.adjacent[0] = this.adjacent[1]
+  this.adjacent[1] = u
+}
+
+function GlueFacet(vertices, cell, index) {
+  this.vertices = vertices
+  this.cell = cell
+  this.index = index
+}
+
+function compareGlue(a, b) {
+  return compareCell(a.vertices, b.vertices)
+}
+
+function bakeOrient(d) {
+  var code = ["function orient(){var tuple=this.tuple;return test("]
+  for(var i=0; i<=d; ++i) {
+    if(i > 0) {
+      code.push(",")
+    }
+    code.push("tuple[", i, "]")
+  }
+  code.push(")}return orient")
+  var proc = new Function("test", code.join(""))
+  var test = orient[d+1]
+  if(!test) {
+    test = orient
+  }
+  return proc(test)
+}
+
+var BAKED = []
+
+function Triangulation(dimension, vertices, simplices) {
+  this.dimension = dimension
+  this.vertices = vertices
+  this.simplices = simplices
+  this.interior = simplices.filter(function(c) {
+    return !c.boundary
+  })
+
+  this.tuple = new Array(dimension+1)
+  for(var i=0; i<=dimension; ++i) {
+    this.tuple[i] = this.vertices[i]
+  }
+
+  var o = BAKED[dimension]
+  if(!o) {
+    o = BAKED[dimension] = bakeOrient(dimension)
+  }
+  this.orient = o
+}
+
+var proto = Triangulation.prototype
+
+//Degenerate situation where we are on boundary, but coplanar to face
+proto.handleBoundaryDegeneracy = function(cell, point) {
+  var d = this.dimension
+  var n = this.vertices.length - 1
+  var tuple = this.tuple
+  var verts = this.vertices
+
+  //Dumb solution: Just do dfs from boundary cell until we find any peak, or terminate
+  var toVisit = [ cell ]
+  cell.lastVisited = -n
+  while(toVisit.length > 0) {
+    cell = toVisit.pop()
+    var cellVerts = cell.vertices
+    var cellAdj = cell.adjacent
+    for(var i=0; i<=d; ++i) {
+      var neighbor = cellAdj[i]
+      if(!neighbor.boundary || neighbor.lastVisited <= -n) {
+        continue
+      }
+      var nv = neighbor.vertices
+      for(var j=0; j<=d; ++j) {
+        var vv = nv[j]
+        if(vv < 0) {
+          tuple[j] = point
+        } else {
+          tuple[j] = verts[vv]
+        }
+      }
+      var o = this.orient()
+      if(o > 0) {
+        return neighbor
+      }
+      neighbor.lastVisited = -n
+      if(o === 0) {
+        toVisit.push(neighbor)
+      }
+    }
+  }
+  return null
+}
+
+proto.walk = function(point, random) {
+  //Alias local properties
+  var n = this.vertices.length - 1
+  var d = this.dimension
+  var verts = this.vertices
+  var tuple = this.tuple
+
+  //Compute initial jump cell
+  var initIndex = random ? (this.interior.length * Math.random())|0 : (this.interior.length-1)
+  var cell = this.interior[ initIndex ]
+
+  //Start walking
+outerLoop:
+  while(!cell.boundary) {
+    var cellVerts = cell.vertices
+    var cellAdj = cell.adjacent
+
+    for(var i=0; i<=d; ++i) {
+      tuple[i] = verts[cellVerts[i]]
+    }
+    cell.lastVisited = n
+
+    //Find farthest adjacent cell
+    for(var i=0; i<=d; ++i) {
+      var neighbor = cellAdj[i]
+      if(neighbor.lastVisited >= n) {
+        continue
+      }
+      var prev = tuple[i]
+      tuple[i] = point
+      var o = this.orient()
+      tuple[i] = prev
+      if(o < 0) {
+        cell = neighbor
+        continue outerLoop
+      } else {
+        if(!neighbor.boundary) {
+          neighbor.lastVisited = n
+        } else {
+          neighbor.lastVisited = -n
+        }
+      }
+    }
+    return
+  }
+
+  return cell
+}
+
+proto.addPeaks = function(point, cell) {
+  var n = this.vertices.length - 1
+  var d = this.dimension
+  var verts = this.vertices
+  var tuple = this.tuple
+  var interior = this.interior
+  var simplices = this.simplices
+
+  //Walking finished at boundary, time to add peaks
+  var tovisit = [ cell ]
+
+  //Stretch initial boundary cell into a peak
+  cell.lastVisited = n
+  cell.vertices[cell.vertices.indexOf(-1)] = n
+  cell.boundary = false
+  interior.push(cell)
+
+  //Record a list of all new boundaries created by added peaks so we can glue them together when we are all done
+  var glueFacets = []
+
+  //Do a traversal of the boundary walking outward from starting peak
+  while(tovisit.length > 0) {
+    //Pop off peak and walk over adjacent cells
+    var cell = tovisit.pop()
+    var cellVerts = cell.vertices
+    var cellAdj = cell.adjacent
+    var indexOfN = cellVerts.indexOf(n)
+    if(indexOfN < 0) {
+      continue
+    }
+
+    for(var i=0; i<=d; ++i) {
+      if(i === indexOfN) {
+        continue
+      }
+
+      //For each boundary neighbor of the cell
+      var neighbor = cellAdj[i]
+      if(!neighbor.boundary || neighbor.lastVisited >= n) {
+        continue
+      }
+
+      var nv = neighbor.vertices
+
+      //Test if neighbor is a peak
+      if(neighbor.lastVisited !== -n) {      
+        //Compute orientation of p relative to each boundary peak
+        var indexOfNeg1 = 0
+        for(var j=0; j<=d; ++j) {
+          if(nv[j] < 0) {
+            indexOfNeg1 = j
+            tuple[j] = point
+          } else {
+            tuple[j] = verts[nv[j]]
+          }
+        }
+        var o = this.orient()
+
+        //Test if neighbor cell is also a peak
+        if(o > 0) {
+          nv[indexOfNeg1] = n
+          neighbor.boundary = false
+          interior.push(neighbor)
+          tovisit.push(neighbor)
+          neighbor.lastVisited = n
+          continue
+        } else {
+          neighbor.lastVisited = -n
+        }
+      }
+
+      var na = neighbor.adjacent
+
+      //Otherwise, replace neighbor with new face
+      var vverts = cellVerts.slice()
+      var vadj = cellAdj.slice()
+      var ncell = new Simplex(vverts, vadj, true)
+      simplices.push(ncell)
+
+      //Connect to neighbor
+      var opposite = na.indexOf(cell)
+      if(opposite < 0) {
+        continue
+      }
+      na[opposite] = ncell
+      vadj[indexOfN] = neighbor
+
+      //Connect to cell
+      vverts[i] = -1
+      vadj[i] = cell
+      cellAdj[i] = ncell
+
+      //Flip facet
+      ncell.flip()
+
+      //Add to glue list
+      for(var j=0; j<=d; ++j) {
+        var uu = vverts[j]
+        if(uu < 0 || uu === n) {
+          continue
+        }
+        var nface = new Array(d-1)
+        var nptr = 0
+        for(var k=0; k<=d; ++k) {
+          var vv = vverts[k]
+          if(vv < 0 || k === j) {
+            continue
+          }
+          nface[nptr++] = vv
+        }
+        glueFacets.push(new GlueFacet(nface, ncell, j))
+      }
+    }
+  }
+
+  //Glue boundary facets together
+  glueFacets.sort(compareGlue)
+
+  for(var i=0; i+1<glueFacets.length; i+=2) {
+    var a = glueFacets[i]
+    var b = glueFacets[i+1]
+    var ai = a.index
+    var bi = b.index
+    if(ai < 0 || bi < 0) {
+      continue
+    }
+    a.cell.adjacent[a.index] = b.cell
+    b.cell.adjacent[b.index] = a.cell
+  }
+}
+
+proto.insert = function(point, random) {
+  //Add point
+  var verts = this.vertices
+  verts.push(point)
+
+  var cell = this.walk(point, random)
+  if(!cell) {
+    return
+  }
+
+  //Alias local properties
+  var d = this.dimension
+  var tuple = this.tuple
+
+  //Degenerate case: If point is coplanar to cell, then walk until we find a non-degenerate boundary
+  for(var i=0; i<=d; ++i) {
+    var vv = cell.vertices[i]
+    if(vv < 0) {
+      tuple[i] = point
+    } else {
+      tuple[i] = verts[vv]
+    }
+  }
+  var o = this.orient(tuple)
+  if(o < 0) {
+    return
+  } else if(o === 0) {
+    cell = this.handleBoundaryDegeneracy(cell, point)
+    if(!cell) {
+      return
+    }
+  }
+
+  //Add peaks
+  this.addPeaks(point, cell)
+}
+
+//Extract all boundary cells
+proto.boundary = function() {
+  var d = this.dimension
+  var boundary = []
+  var cells = this.simplices
+  var nc = cells.length
+  for(var i=0; i<nc; ++i) {
+    var c = cells[i]
+    if(c.boundary) {
+      var bcell = new Array(d)
+      var cv = c.vertices
+      var ptr = 0
+      var parity = 0
+      for(var j=0; j<=d; ++j) {
+        if(cv[j] >= 0) {
+          bcell[ptr++] = cv[j]
+        } else {
+          parity = j&1
+        }
+      }
+      if(parity === (d&1)) {
+        var t = bcell[0]
+        bcell[0] = bcell[1]
+        bcell[1] = t
+      }
+      boundary.push(bcell)
+    }
+  }
+  return boundary
+}
+
+function incrementalConvexHull(points, randomSearch) {
+  var n = points.length
+  if(n === 0) {
+    throw new Error("Must have at least d+1 points")
+  }
+  var d = points[0].length
+  if(n <= d) {
+    throw new Error("Must input at least d+1 points")
+  }
+
+  //FIXME: This could be degenerate, but need to select d+1 non-coplanar points to bootstrap process
+  var initialSimplex = points.slice(0, d+1)
+
+  //Make sure initial simplex is positively oriented
+  var o = orient.apply(void 0, initialSimplex)
+  if(o === 0) {
+    throw new Error("Input not in general position")
+  }
+  var initialCoords = new Array(d+1)
+  for(var i=0; i<=d; ++i) {
+    initialCoords[i] = i
+  }
+  if(o < 0) {
+    initialCoords[0] = 1
+    initialCoords[1] = 0
+  }
+
+  //Create initial topological index, glue pointers together (kind of messy)
+  var initialCell = new Simplex(initialCoords, new Array(d+1), false)
+  var boundary = initialCell.adjacent
+  var list = new Array(d+2)
+  for(var i=0; i<=d; ++i) {
+    var verts = initialCoords.slice()
+    for(var j=0; j<=d; ++j) {
+      if(j === i) {
+        verts[j] = -1
+      }
+    }
+    var t = verts[0]
+    verts[0] = verts[1]
+    verts[1] = t
+    var cell = new Simplex(verts, new Array(d+1), true)
+    boundary[i] = cell
+    list[i] = cell
+  }
+  list[d+1] = initialCell
+  for(var i=0; i<=d; ++i) {
+    var verts = boundary[i].vertices
+    var adj = boundary[i].adjacent
+    for(var j=0; j<=d; ++j) {
+      var v = verts[j]
+      if(v < 0) {
+        adj[j] = initialCell
+        continue
+      }
+      for(var k=0; k<=d; ++k) {
+        if(boundary[k].vertices.indexOf(v) < 0) {
+          adj[j] = boundary[k]
+        }
+      }
+    }
+  }
+
+  //Initialize triangles
+  var triangles = new Triangulation(d, initialSimplex, list)
+
+  //Insert remaining points
+  var useRandom = !!randomSearch
+  for(var i=d+1; i<n; ++i) {
+    triangles.insert(points[i], useRandom)
+  }
+  
+  //Extract boundary cells
+  return triangles.boundary()
+}
+
+/***/ }),
+/* 155 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12675,13 +16545,13 @@ module.exports = invariant;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 131 */
+/* 156 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Symbol_js__ = __webpack_require__(62);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getRawTag_js__ = __webpack_require__(134);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__objectToString_js__ = __webpack_require__(135);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Symbol_js__ = __webpack_require__(72);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__getRawTag_js__ = __webpack_require__(159);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__objectToString_js__ = __webpack_require__(160);
 
 
 
@@ -12713,7 +16583,7 @@ function baseGetTag(value) {
 
 
 /***/ }),
-/* 132 */
+/* 157 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -12722,14 +16592,14 @@ var freeGlobal = typeof global == 'object' && global && global.Object === Object
 
 /* harmony default export */ __webpack_exports__["a"] = (freeGlobal);
 
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(55)))
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(65)))
 
 /***/ }),
-/* 133 */
+/* 158 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__overArg_js__ = __webpack_require__(136);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__overArg_js__ = __webpack_require__(161);
 
 
 /** Built-in value references. */
@@ -12739,11 +16609,11 @@ var getPrototype = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__overArg_js
 
 
 /***/ }),
-/* 134 */
+/* 159 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Symbol_js__ = __webpack_require__(62);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Symbol_js__ = __webpack_require__(72);
 
 
 /** Used for built-in method references. */
@@ -12793,7 +16663,7 @@ function getRawTag(value) {
 
 
 /***/ }),
-/* 135 */
+/* 160 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -12822,7 +16692,7 @@ function objectToString(value) {
 
 
 /***/ }),
-/* 136 */
+/* 161 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -12844,11 +16714,11 @@ function overArg(func, transform) {
 
 
 /***/ }),
-/* 137 */
+/* 162 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__freeGlobal_js__ = __webpack_require__(132);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__freeGlobal_js__ = __webpack_require__(157);
 
 
 /** Detect free variable `self`. */
@@ -12861,7 +16731,7 @@ var root = __WEBPACK_IMPORTED_MODULE_0__freeGlobal_js__["a" /* default */] || fr
 
 
 /***/ }),
-/* 138 */
+/* 163 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -12897,7 +16767,7 @@ function isObjectLike(value) {
 
 
 /***/ }),
-/* 139 */
+/* 164 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {var require;var require;(function(f){if(true){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.mapboxgl = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return require(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
@@ -13351,10 +17221,97 @@ module.exports={"$version":8,"$root":{"version":{"required":true,"type":"enum","
 
 
 //# sourceMappingURL=mapbox-gl.js.map
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(55)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(65)))
 
 /***/ }),
-/* 140 */
+/* 165 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = monotoneConvexHull2D
+
+var orient = __webpack_require__(63)[3]
+
+function monotoneConvexHull2D(points) {
+  var n = points.length
+
+  if(n < 3) {
+    var result = new Array(n)
+    for(var i=0; i<n; ++i) {
+      result[i] = i
+    }
+
+    if(n === 2 &&
+       points[0][0] === points[1][0] &&
+       points[0][1] === points[1][1]) {
+      return [0]
+    }
+
+    return result
+  }
+
+  //Sort point indices along x-axis
+  var sorted = new Array(n)
+  for(var i=0; i<n; ++i) {
+    sorted[i] = i
+  }
+  sorted.sort(function(a,b) {
+    var d = points[a][0]-points[b][0]
+    if(d) {
+      return d
+    }
+    return points[a][1] - points[b][1]
+  })
+
+  //Construct upper and lower hulls
+  var lower = [sorted[0], sorted[1]]
+  var upper = [sorted[0], sorted[1]]
+
+  for(var i=2; i<n; ++i) {
+    var idx = sorted[i]
+    var p   = points[idx]
+
+    //Insert into lower list
+    var m = lower.length
+    while(m > 1 && orient(
+        points[lower[m-2]], 
+        points[lower[m-1]], 
+        p) <= 0) {
+      m -= 1
+      lower.pop()
+    }
+    lower.push(idx)
+
+    //Insert into upper list
+    m = upper.length
+    while(m > 1 && orient(
+        points[upper[m-2]], 
+        points[upper[m-1]], 
+        p) >= 0) {
+      m -= 1
+      upper.pop()
+    }
+    upper.push(idx)
+  }
+
+  //Merge lists together
+  var result = new Array(upper.length + lower.length - 2)
+  var ptr    = 0
+  for(var i=0, nl=lower.length; i<nl; ++i) {
+    result[ptr++] = lower[i]
+  }
+  for(var j=upper.length-2; j>0; --j) {
+    result[ptr++] = upper[j]
+  }
+
+  //Return result
+  return result
+}
+
+/***/ }),
+/* 166 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13372,7 +17329,7 @@ module.exports={"$version":8,"$root":{"version":{"required":true,"type":"enum","
 if (process.env.NODE_ENV !== 'production') {
   var invariant = __webpack_require__(1);
   var warning = __webpack_require__(2);
-  var ReactPropTypesSecret = __webpack_require__(35);
+  var ReactPropTypesSecret = __webpack_require__(43);
   var loggedTypeFailures = {};
 }
 
@@ -13423,7 +17380,7 @@ module.exports = checkPropTypes;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 141 */
+/* 167 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13438,9 +17395,9 @@ module.exports = checkPropTypes;
 
 
 
-var emptyFunction = __webpack_require__(8);
+var emptyFunction = __webpack_require__(10);
 var invariant = __webpack_require__(1);
-var ReactPropTypesSecret = __webpack_require__(35);
+var ReactPropTypesSecret = __webpack_require__(43);
 
 module.exports = function() {
   function shim(props, propName, componentName, location, propFullName, secret) {
@@ -13489,7 +17446,7 @@ module.exports = function() {
 
 
 /***/ }),
-/* 142 */
+/* 168 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13568,7 +17525,7 @@ var ARIADOMPropertyConfig = {
 module.exports = ARIADOMPropertyConfig;
 
 /***/ }),
-/* 143 */
+/* 169 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13584,9 +17541,9 @@ module.exports = ARIADOMPropertyConfig;
 
 
 
-var ReactDOMComponentTree = __webpack_require__(5);
+var ReactDOMComponentTree = __webpack_require__(6);
 
-var focusNode = __webpack_require__(60);
+var focusNode = __webpack_require__(70);
 
 var AutoFocusUtils = {
   focusDOMComponent: function () {
@@ -13597,7 +17554,7 @@ var AutoFocusUtils = {
 module.exports = AutoFocusUtils;
 
 /***/ }),
-/* 144 */
+/* 170 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13613,11 +17570,11 @@ module.exports = AutoFocusUtils;
 
 
 
-var EventPropagators = __webpack_require__(23);
-var ExecutionEnvironment = __webpack_require__(6);
-var FallbackCompositionState = __webpack_require__(150);
-var SyntheticCompositionEvent = __webpack_require__(193);
-var SyntheticInputEvent = __webpack_require__(196);
+var EventPropagators = __webpack_require__(27);
+var ExecutionEnvironment = __webpack_require__(7);
+var FallbackCompositionState = __webpack_require__(176);
+var SyntheticCompositionEvent = __webpack_require__(219);
+var SyntheticInputEvent = __webpack_require__(222);
 
 var END_KEYCODES = [9, 13, 27, 32]; // Tab, Return, Esc, Space
 var START_KEYCODE = 229;
@@ -13987,7 +17944,7 @@ var BeforeInputEventPlugin = {
 module.exports = BeforeInputEventPlugin;
 
 /***/ }),
-/* 145 */
+/* 171 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14003,14 +17960,14 @@ module.exports = BeforeInputEventPlugin;
 
 
 
-var CSSProperty = __webpack_require__(66);
-var ExecutionEnvironment = __webpack_require__(6);
-var ReactInstrumentation = __webpack_require__(9);
+var CSSProperty = __webpack_require__(76);
+var ExecutionEnvironment = __webpack_require__(7);
+var ReactInstrumentation = __webpack_require__(11);
 
-var camelizeStyleName = __webpack_require__(116);
-var dangerousStyleValue = __webpack_require__(203);
-var hyphenateStyleName = __webpack_require__(123);
-var memoizeStringOnly = __webpack_require__(126);
+var camelizeStyleName = __webpack_require__(138);
+var dangerousStyleValue = __webpack_require__(229);
+var hyphenateStyleName = __webpack_require__(145);
+var memoizeStringOnly = __webpack_require__(148);
 var warning = __webpack_require__(2);
 
 var processStyleName = memoizeStringOnly(function (styleName) {
@@ -14202,7 +18159,7 @@ module.exports = CSSPropertyOperations;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 146 */
+/* 172 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14218,16 +18175,16 @@ module.exports = CSSPropertyOperations;
 
 
 
-var EventPluginHub = __webpack_require__(22);
-var EventPropagators = __webpack_require__(23);
-var ExecutionEnvironment = __webpack_require__(6);
-var ReactDOMComponentTree = __webpack_require__(5);
-var ReactUpdates = __webpack_require__(10);
-var SyntheticEvent = __webpack_require__(12);
+var EventPluginHub = __webpack_require__(26);
+var EventPropagators = __webpack_require__(27);
+var ExecutionEnvironment = __webpack_require__(7);
+var ReactDOMComponentTree = __webpack_require__(6);
+var ReactUpdates = __webpack_require__(12);
+var SyntheticEvent = __webpack_require__(14);
 
-var getEventTarget = __webpack_require__(47);
-var isEventSupported = __webpack_require__(48);
-var isTextInputElement = __webpack_require__(84);
+var getEventTarget = __webpack_require__(55);
+var isEventSupported = __webpack_require__(56);
+var isTextInputElement = __webpack_require__(94);
 
 var eventTypes = {
   change: {
@@ -14553,7 +18510,7 @@ var ChangeEventPlugin = {
 module.exports = ChangeEventPlugin;
 
 /***/ }),
-/* 147 */
+/* 173 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14569,13 +18526,13 @@ module.exports = ChangeEventPlugin;
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
-var DOMLazyTree = __webpack_require__(17);
-var ExecutionEnvironment = __webpack_require__(6);
+var DOMLazyTree = __webpack_require__(19);
+var ExecutionEnvironment = __webpack_require__(7);
 
-var createNodesFromMarkup = __webpack_require__(119);
-var emptyFunction = __webpack_require__(8);
+var createNodesFromMarkup = __webpack_require__(141);
+var emptyFunction = __webpack_require__(10);
 var invariant = __webpack_require__(1);
 
 var Danger = {
@@ -14607,7 +18564,7 @@ module.exports = Danger;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 148 */
+/* 174 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14638,7 +18595,7 @@ var DefaultEventPluginOrder = ['ResponderEventPlugin', 'SimpleEventPlugin', 'Tap
 module.exports = DefaultEventPluginOrder;
 
 /***/ }),
-/* 149 */
+/* 175 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14654,9 +18611,9 @@ module.exports = DefaultEventPluginOrder;
 
 
 
-var EventPropagators = __webpack_require__(23);
-var ReactDOMComponentTree = __webpack_require__(5);
-var SyntheticMouseEvent = __webpack_require__(28);
+var EventPropagators = __webpack_require__(27);
+var ReactDOMComponentTree = __webpack_require__(6);
+var SyntheticMouseEvent = __webpack_require__(32);
 
 var eventTypes = {
   mouseEnter: {
@@ -14743,7 +18700,7 @@ var EnterLeaveEventPlugin = {
 module.exports = EnterLeaveEventPlugin;
 
 /***/ }),
-/* 150 */
+/* 176 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14759,11 +18716,11 @@ module.exports = EnterLeaveEventPlugin;
 
 
 
-var _assign = __webpack_require__(4);
+var _assign = __webpack_require__(5);
 
-var PooledClass = __webpack_require__(14);
+var PooledClass = __webpack_require__(16);
 
-var getTextContentAccessor = __webpack_require__(82);
+var getTextContentAccessor = __webpack_require__(92);
 
 /**
  * This helper class stores information about text content of a target node,
@@ -14843,7 +18800,7 @@ PooledClass.addPoolingTo(FallbackCompositionState);
 module.exports = FallbackCompositionState;
 
 /***/ }),
-/* 151 */
+/* 177 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14859,7 +18816,7 @@ module.exports = FallbackCompositionState;
 
 
 
-var DOMProperty = __webpack_require__(13);
+var DOMProperty = __webpack_require__(15);
 
 var MUST_USE_PROPERTY = DOMProperty.injection.MUST_USE_PROPERTY;
 var HAS_BOOLEAN_VALUE = DOMProperty.injection.HAS_BOOLEAN_VALUE;
@@ -15084,7 +19041,7 @@ var HTMLDOMPropertyConfig = {
 module.exports = HTMLDOMPropertyConfig;
 
 /***/ }),
-/* 152 */
+/* 178 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15100,12 +19057,12 @@ module.exports = HTMLDOMPropertyConfig;
 
 
 
-var ReactReconciler = __webpack_require__(18);
+var ReactReconciler = __webpack_require__(20);
 
-var instantiateReactComponent = __webpack_require__(83);
-var KeyEscapeUtils = __webpack_require__(39);
-var shouldUpdateReactComponent = __webpack_require__(49);
-var traverseAllChildren = __webpack_require__(86);
+var instantiateReactComponent = __webpack_require__(93);
+var KeyEscapeUtils = __webpack_require__(47);
+var shouldUpdateReactComponent = __webpack_require__(57);
+var traverseAllChildren = __webpack_require__(96);
 var warning = __webpack_require__(2);
 
 var ReactComponentTreeHook;
@@ -15116,7 +19073,7 @@ if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 't
   // https://github.com/facebook/react/issues/7240
   // Remove the inline requires when we don't need them anymore:
   // https://github.com/facebook/react/pull/7178
-  ReactComponentTreeHook = __webpack_require__(7);
+  ReactComponentTreeHook = __webpack_require__(8);
 }
 
 function instantiateChild(childInstances, child, name, selfDebugID) {
@@ -15124,7 +19081,7 @@ function instantiateChild(childInstances, child, name, selfDebugID) {
   var keyUnique = childInstances[name] === undefined;
   if (process.env.NODE_ENV !== 'production') {
     if (!ReactComponentTreeHook) {
-      ReactComponentTreeHook = __webpack_require__(7);
+      ReactComponentTreeHook = __webpack_require__(8);
     }
     if (!keyUnique) {
       process.env.NODE_ENV !== 'production' ? warning(false, 'flattenChildren(...): Encountered two children with the same key, ' + '`%s`. Child keys must be unique; when two children share a key, only ' + 'the first child will be used.%s', KeyEscapeUtils.unescape(name), ReactComponentTreeHook.getStackAddendumByID(selfDebugID)) : void 0;
@@ -15244,7 +19201,7 @@ module.exports = ReactChildReconciler;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 153 */
+/* 179 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15260,8 +19217,8 @@ module.exports = ReactChildReconciler;
 
 
 
-var DOMChildrenOperations = __webpack_require__(36);
-var ReactDOMIDOperations = __webpack_require__(160);
+var DOMChildrenOperations = __webpack_require__(44);
+var ReactDOMIDOperations = __webpack_require__(186);
 
 /**
  * Abstracts away all functionality of the reconciler that requires knowledge of
@@ -15279,7 +19236,7 @@ var ReactComponentBrowserEnvironment = {
 module.exports = ReactComponentBrowserEnvironment;
 
 /***/ }),
-/* 154 */
+/* 180 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15295,26 +19252,26 @@ module.exports = ReactComponentBrowserEnvironment;
 
 
 
-var _prodInvariant = __webpack_require__(3),
-    _assign = __webpack_require__(4);
+var _prodInvariant = __webpack_require__(4),
+    _assign = __webpack_require__(5);
 
-var React = __webpack_require__(19);
-var ReactComponentEnvironment = __webpack_require__(41);
-var ReactCurrentOwner = __webpack_require__(11);
-var ReactErrorUtils = __webpack_require__(42);
-var ReactInstanceMap = __webpack_require__(24);
-var ReactInstrumentation = __webpack_require__(9);
-var ReactNodeTypes = __webpack_require__(76);
-var ReactReconciler = __webpack_require__(18);
+var React = __webpack_require__(21);
+var ReactComponentEnvironment = __webpack_require__(49);
+var ReactCurrentOwner = __webpack_require__(13);
+var ReactErrorUtils = __webpack_require__(50);
+var ReactInstanceMap = __webpack_require__(28);
+var ReactInstrumentation = __webpack_require__(11);
+var ReactNodeTypes = __webpack_require__(86);
+var ReactReconciler = __webpack_require__(20);
 
 if (process.env.NODE_ENV !== 'production') {
-  var checkReactTypeSpec = __webpack_require__(202);
+  var checkReactTypeSpec = __webpack_require__(228);
 }
 
-var emptyObject = __webpack_require__(21);
+var emptyObject = __webpack_require__(25);
 var invariant = __webpack_require__(1);
-var shallowEqual = __webpack_require__(33);
-var shouldUpdateReactComponent = __webpack_require__(49);
+var shallowEqual = __webpack_require__(41);
+var shouldUpdateReactComponent = __webpack_require__(57);
 var warning = __webpack_require__(2);
 
 var CompositeTypes = {
@@ -16187,7 +20144,7 @@ module.exports = ReactCompositeComponent;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 155 */
+/* 181 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -16205,16 +20162,16 @@ module.exports = ReactCompositeComponent;
 
 
 
-var ReactDOMComponentTree = __webpack_require__(5);
-var ReactDefaultInjection = __webpack_require__(172);
-var ReactMount = __webpack_require__(75);
-var ReactReconciler = __webpack_require__(18);
-var ReactUpdates = __webpack_require__(10);
-var ReactVersion = __webpack_require__(187);
+var ReactDOMComponentTree = __webpack_require__(6);
+var ReactDefaultInjection = __webpack_require__(198);
+var ReactMount = __webpack_require__(85);
+var ReactReconciler = __webpack_require__(20);
+var ReactUpdates = __webpack_require__(12);
+var ReactVersion = __webpack_require__(213);
 
-var findDOMNode = __webpack_require__(204);
-var getHostComponentFromComposite = __webpack_require__(81);
-var renderSubtreeIntoContainer = __webpack_require__(211);
+var findDOMNode = __webpack_require__(230);
+var getHostComponentFromComposite = __webpack_require__(91);
+var renderSubtreeIntoContainer = __webpack_require__(237);
 var warning = __webpack_require__(2);
 
 ReactDefaultInjection.inject();
@@ -16254,7 +20211,7 @@ if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' && typeof __REACT_DEVT
 }
 
 if (process.env.NODE_ENV !== 'production') {
-  var ExecutionEnvironment = __webpack_require__(6);
+  var ExecutionEnvironment = __webpack_require__(7);
   if (ExecutionEnvironment.canUseDOM && window.top === window.self) {
 
     // First check if devtools is not installed
@@ -16290,10 +20247,10 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 if (process.env.NODE_ENV !== 'production') {
-  var ReactInstrumentation = __webpack_require__(9);
-  var ReactDOMUnknownPropertyHook = __webpack_require__(169);
-  var ReactDOMNullInputValuePropHook = __webpack_require__(163);
-  var ReactDOMInvalidARIAHook = __webpack_require__(162);
+  var ReactInstrumentation = __webpack_require__(11);
+  var ReactDOMUnknownPropertyHook = __webpack_require__(195);
+  var ReactDOMNullInputValuePropHook = __webpack_require__(189);
+  var ReactDOMInvalidARIAHook = __webpack_require__(188);
 
   ReactInstrumentation.debugTool.addHook(ReactDOMUnknownPropertyHook);
   ReactInstrumentation.debugTool.addHook(ReactDOMNullInputValuePropHook);
@@ -16304,7 +20261,7 @@ module.exports = ReactDOM;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 156 */
+/* 182 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -16322,34 +20279,34 @@ module.exports = ReactDOM;
 
 
 
-var _prodInvariant = __webpack_require__(3),
-    _assign = __webpack_require__(4);
+var _prodInvariant = __webpack_require__(4),
+    _assign = __webpack_require__(5);
 
-var AutoFocusUtils = __webpack_require__(143);
-var CSSPropertyOperations = __webpack_require__(145);
-var DOMLazyTree = __webpack_require__(17);
-var DOMNamespaces = __webpack_require__(37);
-var DOMProperty = __webpack_require__(13);
-var DOMPropertyOperations = __webpack_require__(68);
-var EventPluginHub = __webpack_require__(22);
-var EventPluginRegistry = __webpack_require__(26);
-var ReactBrowserEventEmitter = __webpack_require__(27);
-var ReactDOMComponentFlags = __webpack_require__(69);
-var ReactDOMComponentTree = __webpack_require__(5);
-var ReactDOMInput = __webpack_require__(161);
-var ReactDOMOption = __webpack_require__(164);
-var ReactDOMSelect = __webpack_require__(70);
-var ReactDOMTextarea = __webpack_require__(167);
-var ReactInstrumentation = __webpack_require__(9);
-var ReactMultiChild = __webpack_require__(180);
-var ReactServerRenderingTransaction = __webpack_require__(185);
+var AutoFocusUtils = __webpack_require__(169);
+var CSSPropertyOperations = __webpack_require__(171);
+var DOMLazyTree = __webpack_require__(19);
+var DOMNamespaces = __webpack_require__(45);
+var DOMProperty = __webpack_require__(15);
+var DOMPropertyOperations = __webpack_require__(78);
+var EventPluginHub = __webpack_require__(26);
+var EventPluginRegistry = __webpack_require__(30);
+var ReactBrowserEventEmitter = __webpack_require__(31);
+var ReactDOMComponentFlags = __webpack_require__(79);
+var ReactDOMComponentTree = __webpack_require__(6);
+var ReactDOMInput = __webpack_require__(187);
+var ReactDOMOption = __webpack_require__(190);
+var ReactDOMSelect = __webpack_require__(80);
+var ReactDOMTextarea = __webpack_require__(193);
+var ReactInstrumentation = __webpack_require__(11);
+var ReactMultiChild = __webpack_require__(206);
+var ReactServerRenderingTransaction = __webpack_require__(211);
 
-var emptyFunction = __webpack_require__(8);
-var escapeTextContentForBrowser = __webpack_require__(30);
+var emptyFunction = __webpack_require__(10);
+var escapeTextContentForBrowser = __webpack_require__(34);
 var invariant = __webpack_require__(1);
-var isEventSupported = __webpack_require__(48);
-var shallowEqual = __webpack_require__(33);
-var validateDOMNesting = __webpack_require__(50);
+var isEventSupported = __webpack_require__(56);
+var shallowEqual = __webpack_require__(41);
+var validateDOMNesting = __webpack_require__(58);
 var warning = __webpack_require__(2);
 
 var Flags = ReactDOMComponentFlags;
@@ -17311,7 +21268,7 @@ module.exports = ReactDOMComponent;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 157 */
+/* 183 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17327,7 +21284,7 @@ module.exports = ReactDOMComponent;
 
 
 
-var validateDOMNesting = __webpack_require__(50);
+var validateDOMNesting = __webpack_require__(58);
 
 var DOC_NODE_TYPE = 9;
 
@@ -17350,7 +21307,7 @@ module.exports = ReactDOMContainerInfo;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 158 */
+/* 184 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17366,10 +21323,10 @@ module.exports = ReactDOMContainerInfo;
 
 
 
-var _assign = __webpack_require__(4);
+var _assign = __webpack_require__(5);
 
-var DOMLazyTree = __webpack_require__(17);
-var ReactDOMComponentTree = __webpack_require__(5);
+var DOMLazyTree = __webpack_require__(19);
+var ReactDOMComponentTree = __webpack_require__(6);
 
 var ReactDOMEmptyComponent = function (instantiate) {
   // ReactCompositeComponent uses this:
@@ -17415,7 +21372,7 @@ _assign(ReactDOMEmptyComponent.prototype, {
 module.exports = ReactDOMEmptyComponent;
 
 /***/ }),
-/* 159 */
+/* 185 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17439,7 +21396,7 @@ var ReactDOMFeatureFlags = {
 module.exports = ReactDOMFeatureFlags;
 
 /***/ }),
-/* 160 */
+/* 186 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17455,8 +21412,8 @@ module.exports = ReactDOMFeatureFlags;
 
 
 
-var DOMChildrenOperations = __webpack_require__(36);
-var ReactDOMComponentTree = __webpack_require__(5);
+var DOMChildrenOperations = __webpack_require__(44);
+var ReactDOMComponentTree = __webpack_require__(6);
 
 /**
  * Operations used to process updates to DOM nodes.
@@ -17478,7 +21435,7 @@ var ReactDOMIDOperations = {
 module.exports = ReactDOMIDOperations;
 
 /***/ }),
-/* 161 */
+/* 187 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17494,13 +21451,13 @@ module.exports = ReactDOMIDOperations;
 
 
 
-var _prodInvariant = __webpack_require__(3),
-    _assign = __webpack_require__(4);
+var _prodInvariant = __webpack_require__(4),
+    _assign = __webpack_require__(5);
 
-var DOMPropertyOperations = __webpack_require__(68);
-var LinkedValueUtils = __webpack_require__(40);
-var ReactDOMComponentTree = __webpack_require__(5);
-var ReactUpdates = __webpack_require__(10);
+var DOMPropertyOperations = __webpack_require__(78);
+var LinkedValueUtils = __webpack_require__(48);
+var ReactDOMComponentTree = __webpack_require__(6);
+var ReactUpdates = __webpack_require__(12);
 
 var invariant = __webpack_require__(1);
 var warning = __webpack_require__(2);
@@ -17769,7 +21726,7 @@ module.exports = ReactDOMInput;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 162 */
+/* 188 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17785,8 +21742,8 @@ module.exports = ReactDOMInput;
 
 
 
-var DOMProperty = __webpack_require__(13);
-var ReactComponentTreeHook = __webpack_require__(7);
+var DOMProperty = __webpack_require__(15);
+var ReactComponentTreeHook = __webpack_require__(8);
 
 var warning = __webpack_require__(2);
 
@@ -17868,7 +21825,7 @@ module.exports = ReactDOMInvalidARIAHook;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 163 */
+/* 189 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17884,7 +21841,7 @@ module.exports = ReactDOMInvalidARIAHook;
 
 
 
-var ReactComponentTreeHook = __webpack_require__(7);
+var ReactComponentTreeHook = __webpack_require__(8);
 
 var warning = __webpack_require__(2);
 
@@ -17917,7 +21874,7 @@ module.exports = ReactDOMNullInputValuePropHook;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 164 */
+/* 190 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -17933,11 +21890,11 @@ module.exports = ReactDOMNullInputValuePropHook;
 
 
 
-var _assign = __webpack_require__(4);
+var _assign = __webpack_require__(5);
 
-var React = __webpack_require__(19);
-var ReactDOMComponentTree = __webpack_require__(5);
-var ReactDOMSelect = __webpack_require__(70);
+var React = __webpack_require__(21);
+var ReactDOMComponentTree = __webpack_require__(6);
+var ReactDOMSelect = __webpack_require__(80);
 
 var warning = __webpack_require__(2);
 var didWarnInvalidOptionChildren = false;
@@ -18046,7 +22003,7 @@ module.exports = ReactDOMOption;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 165 */
+/* 191 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -18062,10 +22019,10 @@ module.exports = ReactDOMOption;
 
 
 
-var ExecutionEnvironment = __webpack_require__(6);
+var ExecutionEnvironment = __webpack_require__(7);
 
-var getNodeForCharacterOffset = __webpack_require__(208);
-var getTextContentAccessor = __webpack_require__(82);
+var getNodeForCharacterOffset = __webpack_require__(234);
+var getTextContentAccessor = __webpack_require__(92);
 
 /**
  * While `isCollapsed` is available on the Selection object and `collapsed`
@@ -18263,7 +22220,7 @@ var ReactDOMSelection = {
 module.exports = ReactDOMSelection;
 
 /***/ }),
-/* 166 */
+/* 192 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -18279,16 +22236,16 @@ module.exports = ReactDOMSelection;
 
 
 
-var _prodInvariant = __webpack_require__(3),
-    _assign = __webpack_require__(4);
+var _prodInvariant = __webpack_require__(4),
+    _assign = __webpack_require__(5);
 
-var DOMChildrenOperations = __webpack_require__(36);
-var DOMLazyTree = __webpack_require__(17);
-var ReactDOMComponentTree = __webpack_require__(5);
+var DOMChildrenOperations = __webpack_require__(44);
+var DOMLazyTree = __webpack_require__(19);
+var ReactDOMComponentTree = __webpack_require__(6);
 
-var escapeTextContentForBrowser = __webpack_require__(30);
+var escapeTextContentForBrowser = __webpack_require__(34);
 var invariant = __webpack_require__(1);
-var validateDOMNesting = __webpack_require__(50);
+var validateDOMNesting = __webpack_require__(58);
 
 /**
  * Text nodes violate a couple assumptions that React makes about components:
@@ -18433,7 +22390,7 @@ module.exports = ReactDOMTextComponent;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 167 */
+/* 193 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -18449,12 +22406,12 @@ module.exports = ReactDOMTextComponent;
 
 
 
-var _prodInvariant = __webpack_require__(3),
-    _assign = __webpack_require__(4);
+var _prodInvariant = __webpack_require__(4),
+    _assign = __webpack_require__(5);
 
-var LinkedValueUtils = __webpack_require__(40);
-var ReactDOMComponentTree = __webpack_require__(5);
-var ReactUpdates = __webpack_require__(10);
+var LinkedValueUtils = __webpack_require__(48);
+var ReactDOMComponentTree = __webpack_require__(6);
+var ReactUpdates = __webpack_require__(12);
 
 var invariant = __webpack_require__(1);
 var warning = __webpack_require__(2);
@@ -18599,7 +22556,7 @@ module.exports = ReactDOMTextarea;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 168 */
+/* 194 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -18615,7 +22572,7 @@ module.exports = ReactDOMTextarea;
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
 var invariant = __webpack_require__(1);
 
@@ -18741,7 +22698,7 @@ module.exports = {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 169 */
+/* 195 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -18757,9 +22714,9 @@ module.exports = {
 
 
 
-var DOMProperty = __webpack_require__(13);
-var EventPluginRegistry = __webpack_require__(26);
-var ReactComponentTreeHook = __webpack_require__(7);
+var DOMProperty = __webpack_require__(15);
+var EventPluginRegistry = __webpack_require__(30);
+var ReactComponentTreeHook = __webpack_require__(8);
 
 var warning = __webpack_require__(2);
 
@@ -18859,7 +22816,7 @@ module.exports = ReactDOMUnknownPropertyHook;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 170 */
+/* 196 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -18876,12 +22833,12 @@ module.exports = ReactDOMUnknownPropertyHook;
 
 
 
-var ReactInvalidSetStateWarningHook = __webpack_require__(178);
-var ReactHostOperationHistoryHook = __webpack_require__(176);
-var ReactComponentTreeHook = __webpack_require__(7);
-var ExecutionEnvironment = __webpack_require__(6);
+var ReactInvalidSetStateWarningHook = __webpack_require__(204);
+var ReactHostOperationHistoryHook = __webpack_require__(202);
+var ReactComponentTreeHook = __webpack_require__(8);
+var ExecutionEnvironment = __webpack_require__(7);
 
-var performanceNow = __webpack_require__(128);
+var performanceNow = __webpack_require__(150);
 var warning = __webpack_require__(2);
 
 var hooks = [];
@@ -19224,7 +23181,7 @@ module.exports = ReactDebugTool;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 171 */
+/* 197 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19240,12 +23197,12 @@ module.exports = ReactDebugTool;
 
 
 
-var _assign = __webpack_require__(4);
+var _assign = __webpack_require__(5);
 
-var ReactUpdates = __webpack_require__(10);
-var Transaction = __webpack_require__(29);
+var ReactUpdates = __webpack_require__(12);
+var Transaction = __webpack_require__(33);
 
-var emptyFunction = __webpack_require__(8);
+var emptyFunction = __webpack_require__(10);
 
 var RESET_BATCHED_UPDATES = {
   initialize: emptyFunction,
@@ -19297,7 +23254,7 @@ var ReactDefaultBatchingStrategy = {
 module.exports = ReactDefaultBatchingStrategy;
 
 /***/ }),
-/* 172 */
+/* 198 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19313,25 +23270,25 @@ module.exports = ReactDefaultBatchingStrategy;
 
 
 
-var ARIADOMPropertyConfig = __webpack_require__(142);
-var BeforeInputEventPlugin = __webpack_require__(144);
-var ChangeEventPlugin = __webpack_require__(146);
-var DefaultEventPluginOrder = __webpack_require__(148);
-var EnterLeaveEventPlugin = __webpack_require__(149);
-var HTMLDOMPropertyConfig = __webpack_require__(151);
-var ReactComponentBrowserEnvironment = __webpack_require__(153);
-var ReactDOMComponent = __webpack_require__(156);
-var ReactDOMComponentTree = __webpack_require__(5);
-var ReactDOMEmptyComponent = __webpack_require__(158);
-var ReactDOMTreeTraversal = __webpack_require__(168);
-var ReactDOMTextComponent = __webpack_require__(166);
-var ReactDefaultBatchingStrategy = __webpack_require__(171);
-var ReactEventListener = __webpack_require__(175);
-var ReactInjection = __webpack_require__(177);
-var ReactReconcileTransaction = __webpack_require__(183);
-var SVGDOMPropertyConfig = __webpack_require__(188);
-var SelectEventPlugin = __webpack_require__(189);
-var SimpleEventPlugin = __webpack_require__(190);
+var ARIADOMPropertyConfig = __webpack_require__(168);
+var BeforeInputEventPlugin = __webpack_require__(170);
+var ChangeEventPlugin = __webpack_require__(172);
+var DefaultEventPluginOrder = __webpack_require__(174);
+var EnterLeaveEventPlugin = __webpack_require__(175);
+var HTMLDOMPropertyConfig = __webpack_require__(177);
+var ReactComponentBrowserEnvironment = __webpack_require__(179);
+var ReactDOMComponent = __webpack_require__(182);
+var ReactDOMComponentTree = __webpack_require__(6);
+var ReactDOMEmptyComponent = __webpack_require__(184);
+var ReactDOMTreeTraversal = __webpack_require__(194);
+var ReactDOMTextComponent = __webpack_require__(192);
+var ReactDefaultBatchingStrategy = __webpack_require__(197);
+var ReactEventListener = __webpack_require__(201);
+var ReactInjection = __webpack_require__(203);
+var ReactReconcileTransaction = __webpack_require__(209);
+var SVGDOMPropertyConfig = __webpack_require__(214);
+var SelectEventPlugin = __webpack_require__(215);
+var SimpleEventPlugin = __webpack_require__(216);
 
 var alreadyInjected = false;
 
@@ -19388,7 +23345,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 173 */
+/* 199 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19413,7 +23370,7 @@ var REACT_ELEMENT_TYPE = typeof Symbol === 'function' && Symbol['for'] && Symbol
 module.exports = REACT_ELEMENT_TYPE;
 
 /***/ }),
-/* 174 */
+/* 200 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19429,7 +23386,7 @@ module.exports = REACT_ELEMENT_TYPE;
 
 
 
-var EventPluginHub = __webpack_require__(22);
+var EventPluginHub = __webpack_require__(26);
 
 function runEventQueueInBatch(events) {
   EventPluginHub.enqueueEvents(events);
@@ -19451,7 +23408,7 @@ var ReactEventEmitterMixin = {
 module.exports = ReactEventEmitterMixin;
 
 /***/ }),
-/* 175 */
+/* 201 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19467,16 +23424,16 @@ module.exports = ReactEventEmitterMixin;
 
 
 
-var _assign = __webpack_require__(4);
+var _assign = __webpack_require__(5);
 
-var EventListener = __webpack_require__(59);
-var ExecutionEnvironment = __webpack_require__(6);
-var PooledClass = __webpack_require__(14);
-var ReactDOMComponentTree = __webpack_require__(5);
-var ReactUpdates = __webpack_require__(10);
+var EventListener = __webpack_require__(69);
+var ExecutionEnvironment = __webpack_require__(7);
+var PooledClass = __webpack_require__(16);
+var ReactDOMComponentTree = __webpack_require__(6);
+var ReactUpdates = __webpack_require__(12);
 
-var getEventTarget = __webpack_require__(47);
-var getUnboundedScrollPosition = __webpack_require__(121);
+var getEventTarget = __webpack_require__(55);
+var getUnboundedScrollPosition = __webpack_require__(143);
 
 /**
  * Find the deepest React component completely containing the root of the
@@ -19611,7 +23568,7 @@ var ReactEventListener = {
 module.exports = ReactEventListener;
 
 /***/ }),
-/* 176 */
+/* 202 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19650,7 +23607,7 @@ var ReactHostOperationHistoryHook = {
 module.exports = ReactHostOperationHistoryHook;
 
 /***/ }),
-/* 177 */
+/* 203 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19666,14 +23623,14 @@ module.exports = ReactHostOperationHistoryHook;
 
 
 
-var DOMProperty = __webpack_require__(13);
-var EventPluginHub = __webpack_require__(22);
-var EventPluginUtils = __webpack_require__(38);
-var ReactComponentEnvironment = __webpack_require__(41);
-var ReactEmptyComponent = __webpack_require__(71);
-var ReactBrowserEventEmitter = __webpack_require__(27);
-var ReactHostComponent = __webpack_require__(73);
-var ReactUpdates = __webpack_require__(10);
+var DOMProperty = __webpack_require__(15);
+var EventPluginHub = __webpack_require__(26);
+var EventPluginUtils = __webpack_require__(46);
+var ReactComponentEnvironment = __webpack_require__(49);
+var ReactEmptyComponent = __webpack_require__(81);
+var ReactBrowserEventEmitter = __webpack_require__(31);
+var ReactHostComponent = __webpack_require__(83);
+var ReactUpdates = __webpack_require__(12);
 
 var ReactInjection = {
   Component: ReactComponentEnvironment.injection,
@@ -19689,7 +23646,7 @@ var ReactInjection = {
 module.exports = ReactInjection;
 
 /***/ }),
-/* 178 */
+/* 204 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19732,7 +23689,7 @@ module.exports = ReactInvalidSetStateWarningHook;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 179 */
+/* 205 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19748,7 +23705,7 @@ module.exports = ReactInvalidSetStateWarningHook;
 
 
 
-var adler32 = __webpack_require__(201);
+var adler32 = __webpack_require__(227);
 
 var TAG_END = /\/?>/;
 var COMMENT_START = /^<\!\-\-/;
@@ -19787,7 +23744,7 @@ var ReactMarkupChecksum = {
 module.exports = ReactMarkupChecksum;
 
 /***/ }),
-/* 180 */
+/* 206 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19803,18 +23760,18 @@ module.exports = ReactMarkupChecksum;
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
-var ReactComponentEnvironment = __webpack_require__(41);
-var ReactInstanceMap = __webpack_require__(24);
-var ReactInstrumentation = __webpack_require__(9);
+var ReactComponentEnvironment = __webpack_require__(49);
+var ReactInstanceMap = __webpack_require__(28);
+var ReactInstrumentation = __webpack_require__(11);
 
-var ReactCurrentOwner = __webpack_require__(11);
-var ReactReconciler = __webpack_require__(18);
-var ReactChildReconciler = __webpack_require__(152);
+var ReactCurrentOwner = __webpack_require__(13);
+var ReactReconciler = __webpack_require__(20);
+var ReactChildReconciler = __webpack_require__(178);
 
-var emptyFunction = __webpack_require__(8);
-var flattenChildren = __webpack_require__(205);
+var emptyFunction = __webpack_require__(10);
+var flattenChildren = __webpack_require__(231);
 var invariant = __webpack_require__(1);
 
 /**
@@ -20243,7 +24200,7 @@ module.exports = ReactMultiChild;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 181 */
+/* 207 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20260,7 +24217,7 @@ module.exports = ReactMultiChild;
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
 var invariant = __webpack_require__(1);
 
@@ -20343,7 +24300,7 @@ module.exports = ReactOwner;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 182 */
+/* 208 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20374,7 +24331,7 @@ module.exports = ReactPropTypeLocationNames;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 183 */
+/* 209 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20390,15 +24347,15 @@ module.exports = ReactPropTypeLocationNames;
 
 
 
-var _assign = __webpack_require__(4);
+var _assign = __webpack_require__(5);
 
-var CallbackQueue = __webpack_require__(67);
-var PooledClass = __webpack_require__(14);
-var ReactBrowserEventEmitter = __webpack_require__(27);
-var ReactInputSelection = __webpack_require__(74);
-var ReactInstrumentation = __webpack_require__(9);
-var Transaction = __webpack_require__(29);
-var ReactUpdateQueue = __webpack_require__(43);
+var CallbackQueue = __webpack_require__(77);
+var PooledClass = __webpack_require__(16);
+var ReactBrowserEventEmitter = __webpack_require__(31);
+var ReactInputSelection = __webpack_require__(84);
+var ReactInstrumentation = __webpack_require__(11);
+var Transaction = __webpack_require__(33);
+var ReactUpdateQueue = __webpack_require__(51);
 
 /**
  * Ensures that, when possible, the selection range (currently selected text
@@ -20558,7 +24515,7 @@ module.exports = ReactReconcileTransaction;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 184 */
+/* 210 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20575,7 +24532,7 @@ module.exports = ReactReconcileTransaction;
 
 
 
-var ReactOwner = __webpack_require__(181);
+var ReactOwner = __webpack_require__(207);
 
 var ReactRef = {};
 
@@ -20652,7 +24609,7 @@ ReactRef.detachRefs = function (instance, element) {
 module.exports = ReactRef;
 
 /***/ }),
-/* 185 */
+/* 211 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20668,12 +24625,12 @@ module.exports = ReactRef;
 
 
 
-var _assign = __webpack_require__(4);
+var _assign = __webpack_require__(5);
 
-var PooledClass = __webpack_require__(14);
-var Transaction = __webpack_require__(29);
-var ReactInstrumentation = __webpack_require__(9);
-var ReactServerUpdateQueue = __webpack_require__(186);
+var PooledClass = __webpack_require__(16);
+var Transaction = __webpack_require__(33);
+var ReactInstrumentation = __webpack_require__(11);
+var ReactServerUpdateQueue = __webpack_require__(212);
 
 /**
  * Executed within the scope of the `Transaction` instance. Consider these as
@@ -20748,7 +24705,7 @@ module.exports = ReactServerRenderingTransaction;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 186 */
+/* 212 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20767,7 +24724,7 @@ module.exports = ReactServerRenderingTransaction;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var ReactUpdateQueue = __webpack_require__(43);
+var ReactUpdateQueue = __webpack_require__(51);
 
 var warning = __webpack_require__(2);
 
@@ -20893,7 +24850,7 @@ module.exports = ReactServerUpdateQueue;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 187 */
+/* 213 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20912,7 +24869,7 @@ module.exports = ReactServerUpdateQueue;
 module.exports = '15.5.4';
 
 /***/ }),
-/* 188 */
+/* 214 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21219,7 +25176,7 @@ Object.keys(ATTRS).forEach(function (key) {
 module.exports = SVGDOMPropertyConfig;
 
 /***/ }),
-/* 189 */
+/* 215 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21235,15 +25192,15 @@ module.exports = SVGDOMPropertyConfig;
 
 
 
-var EventPropagators = __webpack_require__(23);
-var ExecutionEnvironment = __webpack_require__(6);
-var ReactDOMComponentTree = __webpack_require__(5);
-var ReactInputSelection = __webpack_require__(74);
-var SyntheticEvent = __webpack_require__(12);
+var EventPropagators = __webpack_require__(27);
+var ExecutionEnvironment = __webpack_require__(7);
+var ReactDOMComponentTree = __webpack_require__(6);
+var ReactInputSelection = __webpack_require__(84);
+var SyntheticEvent = __webpack_require__(14);
 
-var getActiveElement = __webpack_require__(61);
-var isTextInputElement = __webpack_require__(84);
-var shallowEqual = __webpack_require__(33);
+var getActiveElement = __webpack_require__(71);
+var isTextInputElement = __webpack_require__(94);
+var shallowEqual = __webpack_require__(41);
 
 var skipSelectionChangeEvent = ExecutionEnvironment.canUseDOM && 'documentMode' in document && document.documentMode <= 11;
 
@@ -21415,7 +25372,7 @@ var SelectEventPlugin = {
 module.exports = SelectEventPlugin;
 
 /***/ }),
-/* 190 */
+/* 216 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21432,25 +25389,25 @@ module.exports = SelectEventPlugin;
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
-var EventListener = __webpack_require__(59);
-var EventPropagators = __webpack_require__(23);
-var ReactDOMComponentTree = __webpack_require__(5);
-var SyntheticAnimationEvent = __webpack_require__(191);
-var SyntheticClipboardEvent = __webpack_require__(192);
-var SyntheticEvent = __webpack_require__(12);
-var SyntheticFocusEvent = __webpack_require__(195);
-var SyntheticKeyboardEvent = __webpack_require__(197);
-var SyntheticMouseEvent = __webpack_require__(28);
-var SyntheticDragEvent = __webpack_require__(194);
-var SyntheticTouchEvent = __webpack_require__(198);
-var SyntheticTransitionEvent = __webpack_require__(199);
-var SyntheticUIEvent = __webpack_require__(25);
-var SyntheticWheelEvent = __webpack_require__(200);
+var EventListener = __webpack_require__(69);
+var EventPropagators = __webpack_require__(27);
+var ReactDOMComponentTree = __webpack_require__(6);
+var SyntheticAnimationEvent = __webpack_require__(217);
+var SyntheticClipboardEvent = __webpack_require__(218);
+var SyntheticEvent = __webpack_require__(14);
+var SyntheticFocusEvent = __webpack_require__(221);
+var SyntheticKeyboardEvent = __webpack_require__(223);
+var SyntheticMouseEvent = __webpack_require__(32);
+var SyntheticDragEvent = __webpack_require__(220);
+var SyntheticTouchEvent = __webpack_require__(224);
+var SyntheticTransitionEvent = __webpack_require__(225);
+var SyntheticUIEvent = __webpack_require__(29);
+var SyntheticWheelEvent = __webpack_require__(226);
 
-var emptyFunction = __webpack_require__(8);
-var getEventCharCode = __webpack_require__(45);
+var emptyFunction = __webpack_require__(10);
+var getEventCharCode = __webpack_require__(53);
 var invariant = __webpack_require__(1);
 
 /**
@@ -21649,7 +25606,7 @@ module.exports = SimpleEventPlugin;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 191 */
+/* 217 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21665,7 +25622,7 @@ module.exports = SimpleEventPlugin;
 
 
 
-var SyntheticEvent = __webpack_require__(12);
+var SyntheticEvent = __webpack_require__(14);
 
 /**
  * @interface Event
@@ -21693,7 +25650,7 @@ SyntheticEvent.augmentClass(SyntheticAnimationEvent, AnimationEventInterface);
 module.exports = SyntheticAnimationEvent;
 
 /***/ }),
-/* 192 */
+/* 218 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21709,7 +25666,7 @@ module.exports = SyntheticAnimationEvent;
 
 
 
-var SyntheticEvent = __webpack_require__(12);
+var SyntheticEvent = __webpack_require__(14);
 
 /**
  * @interface Event
@@ -21736,7 +25693,7 @@ SyntheticEvent.augmentClass(SyntheticClipboardEvent, ClipboardEventInterface);
 module.exports = SyntheticClipboardEvent;
 
 /***/ }),
-/* 193 */
+/* 219 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21752,7 +25709,7 @@ module.exports = SyntheticClipboardEvent;
 
 
 
-var SyntheticEvent = __webpack_require__(12);
+var SyntheticEvent = __webpack_require__(14);
 
 /**
  * @interface Event
@@ -21777,7 +25734,7 @@ SyntheticEvent.augmentClass(SyntheticCompositionEvent, CompositionEventInterface
 module.exports = SyntheticCompositionEvent;
 
 /***/ }),
-/* 194 */
+/* 220 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21793,7 +25750,7 @@ module.exports = SyntheticCompositionEvent;
 
 
 
-var SyntheticMouseEvent = __webpack_require__(28);
+var SyntheticMouseEvent = __webpack_require__(32);
 
 /**
  * @interface DragEvent
@@ -21818,7 +25775,7 @@ SyntheticMouseEvent.augmentClass(SyntheticDragEvent, DragEventInterface);
 module.exports = SyntheticDragEvent;
 
 /***/ }),
-/* 195 */
+/* 221 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21834,7 +25791,7 @@ module.exports = SyntheticDragEvent;
 
 
 
-var SyntheticUIEvent = __webpack_require__(25);
+var SyntheticUIEvent = __webpack_require__(29);
 
 /**
  * @interface FocusEvent
@@ -21859,7 +25816,7 @@ SyntheticUIEvent.augmentClass(SyntheticFocusEvent, FocusEventInterface);
 module.exports = SyntheticFocusEvent;
 
 /***/ }),
-/* 196 */
+/* 222 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21875,7 +25832,7 @@ module.exports = SyntheticFocusEvent;
 
 
 
-var SyntheticEvent = __webpack_require__(12);
+var SyntheticEvent = __webpack_require__(14);
 
 /**
  * @interface Event
@@ -21901,7 +25858,7 @@ SyntheticEvent.augmentClass(SyntheticInputEvent, InputEventInterface);
 module.exports = SyntheticInputEvent;
 
 /***/ }),
-/* 197 */
+/* 223 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21917,11 +25874,11 @@ module.exports = SyntheticInputEvent;
 
 
 
-var SyntheticUIEvent = __webpack_require__(25);
+var SyntheticUIEvent = __webpack_require__(29);
 
-var getEventCharCode = __webpack_require__(45);
-var getEventKey = __webpack_require__(206);
-var getEventModifierState = __webpack_require__(46);
+var getEventCharCode = __webpack_require__(53);
+var getEventKey = __webpack_require__(232);
+var getEventModifierState = __webpack_require__(54);
 
 /**
  * @interface KeyboardEvent
@@ -21990,7 +25947,7 @@ SyntheticUIEvent.augmentClass(SyntheticKeyboardEvent, KeyboardEventInterface);
 module.exports = SyntheticKeyboardEvent;
 
 /***/ }),
-/* 198 */
+/* 224 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22006,9 +25963,9 @@ module.exports = SyntheticKeyboardEvent;
 
 
 
-var SyntheticUIEvent = __webpack_require__(25);
+var SyntheticUIEvent = __webpack_require__(29);
 
-var getEventModifierState = __webpack_require__(46);
+var getEventModifierState = __webpack_require__(54);
 
 /**
  * @interface TouchEvent
@@ -22040,7 +25997,7 @@ SyntheticUIEvent.augmentClass(SyntheticTouchEvent, TouchEventInterface);
 module.exports = SyntheticTouchEvent;
 
 /***/ }),
-/* 199 */
+/* 225 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22056,7 +26013,7 @@ module.exports = SyntheticTouchEvent;
 
 
 
-var SyntheticEvent = __webpack_require__(12);
+var SyntheticEvent = __webpack_require__(14);
 
 /**
  * @interface Event
@@ -22084,7 +26041,7 @@ SyntheticEvent.augmentClass(SyntheticTransitionEvent, TransitionEventInterface);
 module.exports = SyntheticTransitionEvent;
 
 /***/ }),
-/* 200 */
+/* 226 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22100,7 +26057,7 @@ module.exports = SyntheticTransitionEvent;
 
 
 
-var SyntheticMouseEvent = __webpack_require__(28);
+var SyntheticMouseEvent = __webpack_require__(32);
 
 /**
  * @interface WheelEvent
@@ -22143,7 +26100,7 @@ SyntheticMouseEvent.augmentClass(SyntheticWheelEvent, WheelEventInterface);
 module.exports = SyntheticWheelEvent;
 
 /***/ }),
-/* 201 */
+/* 227 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22192,7 +26149,7 @@ function adler32(data) {
 module.exports = adler32;
 
 /***/ }),
-/* 202 */
+/* 228 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22208,10 +26165,10 @@ module.exports = adler32;
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
-var ReactPropTypeLocationNames = __webpack_require__(182);
-var ReactPropTypesSecret = __webpack_require__(77);
+var ReactPropTypeLocationNames = __webpack_require__(208);
+var ReactPropTypesSecret = __webpack_require__(87);
 
 var invariant = __webpack_require__(1);
 var warning = __webpack_require__(2);
@@ -22224,7 +26181,7 @@ if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 't
   // https://github.com/facebook/react/issues/7240
   // Remove the inline requires when we don't need them anymore:
   // https://github.com/facebook/react/pull/7178
-  ReactComponentTreeHook = __webpack_require__(7);
+  ReactComponentTreeHook = __webpack_require__(8);
 }
 
 var loggedTypeFailures = {};
@@ -22266,7 +26223,7 @@ function checkReactTypeSpec(typeSpecs, values, location, componentName, element,
 
         if (process.env.NODE_ENV !== 'production') {
           if (!ReactComponentTreeHook) {
-            ReactComponentTreeHook = __webpack_require__(7);
+            ReactComponentTreeHook = __webpack_require__(8);
           }
           if (debugID !== null) {
             componentStackInfo = ReactComponentTreeHook.getStackAddendumByID(debugID);
@@ -22285,7 +26242,7 @@ module.exports = checkReactTypeSpec;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 203 */
+/* 229 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22301,7 +26258,7 @@ module.exports = checkReactTypeSpec;
 
 
 
-var CSSProperty = __webpack_require__(66);
+var CSSProperty = __webpack_require__(76);
 var warning = __webpack_require__(2);
 
 var isUnitlessNumber = CSSProperty.isUnitlessNumber;
@@ -22370,7 +26327,7 @@ module.exports = dangerousStyleValue;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 204 */
+/* 230 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22386,13 +26343,13 @@ module.exports = dangerousStyleValue;
 
 
 
-var _prodInvariant = __webpack_require__(3);
+var _prodInvariant = __webpack_require__(4);
 
-var ReactCurrentOwner = __webpack_require__(11);
-var ReactDOMComponentTree = __webpack_require__(5);
-var ReactInstanceMap = __webpack_require__(24);
+var ReactCurrentOwner = __webpack_require__(13);
+var ReactDOMComponentTree = __webpack_require__(6);
+var ReactInstanceMap = __webpack_require__(28);
 
-var getHostComponentFromComposite = __webpack_require__(81);
+var getHostComponentFromComposite = __webpack_require__(91);
 var invariant = __webpack_require__(1);
 var warning = __webpack_require__(2);
 
@@ -22436,7 +26393,7 @@ module.exports = findDOMNode;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 205 */
+/* 231 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22453,8 +26410,8 @@ module.exports = findDOMNode;
 
 
 
-var KeyEscapeUtils = __webpack_require__(39);
-var traverseAllChildren = __webpack_require__(86);
+var KeyEscapeUtils = __webpack_require__(47);
+var traverseAllChildren = __webpack_require__(96);
 var warning = __webpack_require__(2);
 
 var ReactComponentTreeHook;
@@ -22465,7 +26422,7 @@ if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 't
   // https://github.com/facebook/react/issues/7240
   // Remove the inline requires when we don't need them anymore:
   // https://github.com/facebook/react/pull/7178
-  ReactComponentTreeHook = __webpack_require__(7);
+  ReactComponentTreeHook = __webpack_require__(8);
 }
 
 /**
@@ -22481,7 +26438,7 @@ function flattenSingleChildIntoContext(traverseContext, child, name, selfDebugID
     var keyUnique = result[name] === undefined;
     if (process.env.NODE_ENV !== 'production') {
       if (!ReactComponentTreeHook) {
-        ReactComponentTreeHook = __webpack_require__(7);
+        ReactComponentTreeHook = __webpack_require__(8);
       }
       if (!keyUnique) {
         process.env.NODE_ENV !== 'production' ? warning(false, 'flattenChildren(...): Encountered two children with the same key, ' + '`%s`. Child keys must be unique; when two children share a key, only ' + 'the first child will be used.%s', KeyEscapeUtils.unescape(name), ReactComponentTreeHook.getStackAddendumByID(selfDebugID)) : void 0;
@@ -22518,7 +26475,7 @@ module.exports = flattenChildren;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 206 */
+/* 232 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22534,7 +26491,7 @@ module.exports = flattenChildren;
 
 
 
-var getEventCharCode = __webpack_require__(45);
+var getEventCharCode = __webpack_require__(53);
 
 /**
  * Normalization of deprecated HTML5 `key` values
@@ -22625,7 +26582,7 @@ function getEventKey(nativeEvent) {
 module.exports = getEventKey;
 
 /***/ }),
-/* 207 */
+/* 233 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22671,7 +26628,7 @@ function getIteratorFn(maybeIterable) {
 module.exports = getIteratorFn;
 
 /***/ }),
-/* 208 */
+/* 234 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22750,7 +26707,7 @@ function getNodeForCharacterOffset(root, offset) {
 module.exports = getNodeForCharacterOffset;
 
 /***/ }),
-/* 209 */
+/* 235 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22766,7 +26723,7 @@ module.exports = getNodeForCharacterOffset;
 
 
 
-var ExecutionEnvironment = __webpack_require__(6);
+var ExecutionEnvironment = __webpack_require__(7);
 
 /**
  * Generate a mapping of standard vendor prefixes using the defined style property and event name.
@@ -22856,7 +26813,7 @@ function getVendorPrefixedEventName(eventName) {
 module.exports = getVendorPrefixedEventName;
 
 /***/ }),
-/* 210 */
+/* 236 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22872,7 +26829,7 @@ module.exports = getVendorPrefixedEventName;
 
 
 
-var escapeTextContentForBrowser = __webpack_require__(30);
+var escapeTextContentForBrowser = __webpack_require__(34);
 
 /**
  * Escapes attribute value to prevent scripting attacks.
@@ -22887,7 +26844,7 @@ function quoteAttributeValueForBrowser(value) {
 module.exports = quoteAttributeValueForBrowser;
 
 /***/ }),
-/* 211 */
+/* 237 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22903,22 +26860,22 @@ module.exports = quoteAttributeValueForBrowser;
 
 
 
-var ReactMount = __webpack_require__(75);
+var ReactMount = __webpack_require__(85);
 
 module.exports = ReactMount.renderSubtreeIntoContainer;
 
 /***/ }),
-/* 212 */
+/* 238 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {/* harmony export (immutable) */ __webpack_exports__["b"] = createProvider;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_prop_types__ = __webpack_require__(65);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_prop_types__ = __webpack_require__(75);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_prop_types___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_prop_types__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_PropTypes__ = __webpack_require__(90);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_warning__ = __webpack_require__(51);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_PropTypes__ = __webpack_require__(100);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_warning__ = __webpack_require__(59);
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -22995,17 +26952,17 @@ function createProvider() {
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
 
 /***/ }),
-/* 213 */
+/* 239 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export createConnect */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__components_connectAdvanced__ = __webpack_require__(87);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_shallowEqual__ = __webpack_require__(220);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__mapDispatchToProps__ = __webpack_require__(214);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__mapStateToProps__ = __webpack_require__(215);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__mergeProps__ = __webpack_require__(216);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__selectorFactory__ = __webpack_require__(217);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__components_connectAdvanced__ = __webpack_require__(97);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_shallowEqual__ = __webpack_require__(246);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__mapDispatchToProps__ = __webpack_require__(240);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__mapStateToProps__ = __webpack_require__(241);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__mergeProps__ = __webpack_require__(242);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__selectorFactory__ = __webpack_require__(243);
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
@@ -23111,15 +27068,15 @@ function createConnect() {
 /* harmony default export */ __webpack_exports__["a"] = (createConnect());
 
 /***/ }),
-/* 214 */
+/* 240 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export whenMapDispatchToPropsIsFunction */
 /* unused harmony export whenMapDispatchToPropsIsMissing */
 /* unused harmony export whenMapDispatchToPropsIsObject */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_redux__ = __webpack_require__(54);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__wrapMapToProps__ = __webpack_require__(88);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_redux__ = __webpack_require__(62);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__wrapMapToProps__ = __webpack_require__(98);
 
 
 
@@ -23142,13 +27099,13 @@ function whenMapDispatchToPropsIsObject(mapDispatchToProps) {
 /* harmony default export */ __webpack_exports__["a"] = ([whenMapDispatchToPropsIsFunction, whenMapDispatchToPropsIsMissing, whenMapDispatchToPropsIsObject]);
 
 /***/ }),
-/* 215 */
+/* 241 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* unused harmony export whenMapStateToPropsIsFunction */
 /* unused harmony export whenMapStateToPropsIsMissing */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__wrapMapToProps__ = __webpack_require__(88);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__wrapMapToProps__ = __webpack_require__(98);
 
 
 function whenMapStateToPropsIsFunction(mapStateToProps) {
@@ -23164,7 +27121,7 @@ function whenMapStateToPropsIsMissing(mapStateToProps) {
 /* harmony default export */ __webpack_exports__["a"] = ([whenMapStateToPropsIsFunction, whenMapStateToPropsIsMissing]);
 
 /***/ }),
-/* 216 */
+/* 242 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -23172,7 +27129,7 @@ function whenMapStateToPropsIsMissing(mapStateToProps) {
 /* unused harmony export wrapMergePropsFunc */
 /* unused harmony export whenMergePropsIsFunction */
 /* unused harmony export whenMergePropsIsOmitted */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_verifyPlainObject__ = __webpack_require__(91);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_verifyPlainObject__ = __webpack_require__(101);
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 
@@ -23221,14 +27178,14 @@ function whenMergePropsIsOmitted(mergeProps) {
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
 
 /***/ }),
-/* 217 */
+/* 243 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {/* unused harmony export impureFinalPropsSelectorFactory */
 /* unused harmony export pureFinalPropsSelectorFactory */
 /* harmony export (immutable) */ __webpack_exports__["a"] = finalPropsSelectorFactory;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__verifySubselectors__ = __webpack_require__(218);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__verifySubselectors__ = __webpack_require__(244);
 function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
 
 
@@ -23334,12 +27291,12 @@ function finalPropsSelectorFactory(dispatch, _ref2) {
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
 
 /***/ }),
-/* 218 */
+/* 244 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = verifySubselectors;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_warning__ = __webpack_require__(51);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_warning__ = __webpack_require__(59);
 
 
 function verify(selector, methodName, displayName) {
@@ -23359,7 +27316,7 @@ function verifySubselectors(mapStateToProps, mapDispatchToProps, mergeProps, dis
 }
 
 /***/ }),
-/* 219 */
+/* 245 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -23455,7 +27412,7 @@ var Subscription = function () {
 
 
 /***/ }),
-/* 220 */
+/* 246 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -23492,7 +27449,7 @@ function shallowEqual(objA, objB) {
 }
 
 /***/ }),
-/* 221 */
+/* 247 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -23556,7 +27513,7 @@ var KeyEscapeUtils = {
 module.exports = KeyEscapeUtils;
 
 /***/ }),
-/* 222 */
+/* 248 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -23573,7 +27530,7 @@ module.exports = KeyEscapeUtils;
 
 
 
-var _prodInvariant = __webpack_require__(16);
+var _prodInvariant = __webpack_require__(18);
 
 var invariant = __webpack_require__(1);
 
@@ -23674,7 +27631,7 @@ module.exports = PooledClass;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 223 */
+/* 249 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -23690,11 +27647,11 @@ module.exports = PooledClass;
 
 
 
-var PooledClass = __webpack_require__(222);
-var ReactElement = __webpack_require__(15);
+var PooledClass = __webpack_require__(248);
+var ReactElement = __webpack_require__(17);
 
-var emptyFunction = __webpack_require__(8);
-var traverseAllChildren = __webpack_require__(233);
+var emptyFunction = __webpack_require__(10);
+var traverseAllChildren = __webpack_require__(259);
 
 var twoArgumentPooler = PooledClass.twoArgumentPooler;
 var fourArgumentPooler = PooledClass.fourArgumentPooler;
@@ -23870,7 +27827,7 @@ var ReactChildren = {
 module.exports = ReactChildren;
 
 /***/ }),
-/* 224 */
+/* 250 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -23886,15 +27843,15 @@ module.exports = ReactChildren;
 
 
 
-var _prodInvariant = __webpack_require__(16),
-    _assign = __webpack_require__(4);
+var _prodInvariant = __webpack_require__(18),
+    _assign = __webpack_require__(5);
 
-var ReactComponent = __webpack_require__(52);
-var ReactElement = __webpack_require__(15);
-var ReactPropTypeLocationNames = __webpack_require__(94);
-var ReactNoopUpdateQueue = __webpack_require__(53);
+var ReactComponent = __webpack_require__(60);
+var ReactElement = __webpack_require__(17);
+var ReactPropTypeLocationNames = __webpack_require__(104);
+var ReactNoopUpdateQueue = __webpack_require__(61);
 
-var emptyObject = __webpack_require__(21);
+var emptyObject = __webpack_require__(25);
 var invariant = __webpack_require__(1);
 var warning = __webpack_require__(2);
 
@@ -24599,7 +28556,7 @@ module.exports = ReactClass;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 225 */
+/* 251 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24615,7 +28572,7 @@ module.exports = ReactClass;
 
 
 
-var ReactElement = __webpack_require__(15);
+var ReactElement = __webpack_require__(17);
 
 /**
  * Create a factory that creates HTML tag elements.
@@ -24624,7 +28581,7 @@ var ReactElement = __webpack_require__(15);
  */
 var createDOMFactory = ReactElement.createFactory;
 if (process.env.NODE_ENV !== 'production') {
-  var ReactElementValidator = __webpack_require__(93);
+  var ReactElementValidator = __webpack_require__(103);
   createDOMFactory = ReactElementValidator.createFactory;
 }
 
@@ -24775,7 +28732,7 @@ module.exports = ReactDOMFactories;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 226 */
+/* 252 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24791,15 +28748,15 @@ module.exports = ReactDOMFactories;
 
 
 
-var _require = __webpack_require__(15),
+var _require = __webpack_require__(17),
     isValidElement = _require.isValidElement;
 
-var factory = __webpack_require__(63);
+var factory = __webpack_require__(73);
 
 module.exports = factory(isValidElement);
 
 /***/ }),
-/* 227 */
+/* 253 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24821,7 +28778,7 @@ var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 module.exports = ReactPropTypesSecret;
 
 /***/ }),
-/* 228 */
+/* 254 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24837,12 +28794,12 @@ module.exports = ReactPropTypesSecret;
 
 
 
-var _assign = __webpack_require__(4);
+var _assign = __webpack_require__(5);
 
-var ReactComponent = __webpack_require__(52);
-var ReactNoopUpdateQueue = __webpack_require__(53);
+var ReactComponent = __webpack_require__(60);
+var ReactNoopUpdateQueue = __webpack_require__(61);
 
-var emptyObject = __webpack_require__(21);
+var emptyObject = __webpack_require__(25);
 
 /**
  * Base class helpers for the updating state of a component.
@@ -24868,7 +28825,7 @@ ReactPureComponent.prototype.isPureReactComponent = true;
 module.exports = ReactPureComponent;
 
 /***/ }),
-/* 229 */
+/* 255 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24887,7 +28844,7 @@ module.exports = ReactPureComponent;
 module.exports = '15.5.4';
 
 /***/ }),
-/* 230 */
+/* 256 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24903,10 +28860,10 @@ module.exports = '15.5.4';
 
 
 
-var _prodInvariant = __webpack_require__(16);
+var _prodInvariant = __webpack_require__(18);
 
-var ReactPropTypeLocationNames = __webpack_require__(94);
-var ReactPropTypesSecret = __webpack_require__(227);
+var ReactPropTypeLocationNames = __webpack_require__(104);
+var ReactPropTypesSecret = __webpack_require__(253);
 
 var invariant = __webpack_require__(1);
 var warning = __webpack_require__(2);
@@ -24919,7 +28876,7 @@ if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 't
   // https://github.com/facebook/react/issues/7240
   // Remove the inline requires when we don't need them anymore:
   // https://github.com/facebook/react/pull/7178
-  ReactComponentTreeHook = __webpack_require__(7);
+  ReactComponentTreeHook = __webpack_require__(8);
 }
 
 var loggedTypeFailures = {};
@@ -24961,7 +28918,7 @@ function checkReactTypeSpec(typeSpecs, values, location, componentName, element,
 
         if (process.env.NODE_ENV !== 'production') {
           if (!ReactComponentTreeHook) {
-            ReactComponentTreeHook = __webpack_require__(7);
+            ReactComponentTreeHook = __webpack_require__(8);
           }
           if (debugID !== null) {
             componentStackInfo = ReactComponentTreeHook.getStackAddendumByID(debugID);
@@ -24980,7 +28937,7 @@ module.exports = checkReactTypeSpec;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 231 */
+/* 257 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25006,7 +28963,7 @@ function getNextDebugID() {
 module.exports = getNextDebugID;
 
 /***/ }),
-/* 232 */
+/* 258 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25021,9 +28978,9 @@ module.exports = getNextDebugID;
  */
 
 
-var _prodInvariant = __webpack_require__(16);
+var _prodInvariant = __webpack_require__(18);
 
-var ReactElement = __webpack_require__(15);
+var ReactElement = __webpack_require__(17);
 
 var invariant = __webpack_require__(1);
 
@@ -25050,7 +29007,7 @@ module.exports = onlyChild;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 233 */
+/* 259 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25066,14 +29023,14 @@ module.exports = onlyChild;
 
 
 
-var _prodInvariant = __webpack_require__(16);
+var _prodInvariant = __webpack_require__(18);
 
-var ReactCurrentOwner = __webpack_require__(11);
-var REACT_ELEMENT_TYPE = __webpack_require__(92);
+var ReactCurrentOwner = __webpack_require__(13);
+var REACT_ELEMENT_TYPE = __webpack_require__(102);
 
-var getIteratorFn = __webpack_require__(95);
+var getIteratorFn = __webpack_require__(105);
 var invariant = __webpack_require__(1);
-var KeyEscapeUtils = __webpack_require__(221);
+var KeyEscapeUtils = __webpack_require__(247);
 var warning = __webpack_require__(2);
 
 var SEPARATOR = '.';
@@ -25232,7 +29189,7 @@ module.exports = traverseAllChildren;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 234 */
+/* 260 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25261,12 +29218,12 @@ thunk.withExtraArgument = createThunkMiddleware;
 exports['default'] = thunk;
 
 /***/ }),
-/* 235 */
+/* 261 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = applyMiddleware;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__compose__ = __webpack_require__(96);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__compose__ = __webpack_require__(106);
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 
@@ -25317,7 +29274,7 @@ function applyMiddleware() {
 }
 
 /***/ }),
-/* 236 */
+/* 262 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -25371,14 +29328,14 @@ function bindActionCreators(actionCreators, dispatch) {
 }
 
 /***/ }),
-/* 237 */
+/* 263 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {/* harmony export (immutable) */ __webpack_exports__["a"] = combineReducers;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__createStore__ = __webpack_require__(97);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash_es_isPlainObject__ = __webpack_require__(34);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_warning__ = __webpack_require__(98);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__createStore__ = __webpack_require__(107);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash_es_isPlainObject__ = __webpack_require__(42);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__utils_warning__ = __webpack_require__(108);
 
 
 
@@ -25511,3929 +29468,14 @@ function combineReducers(reducers) {
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(0)))
 
 /***/ }),
-/* 238 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(239);
-
-
-/***/ }),
-/* 239 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(global, module) {
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _ponyfill = __webpack_require__(240);
-
-var _ponyfill2 = _interopRequireDefault(_ponyfill);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var root; /* global window */
-
-
-if (typeof self !== 'undefined') {
-  root = self;
-} else if (typeof window !== 'undefined') {
-  root = window;
-} else if (typeof global !== 'undefined') {
-  root = global;
-} else if (true) {
-  root = module;
-} else {
-  root = Function('return this')();
-}
-
-var result = (0, _ponyfill2['default'])(root);
-exports['default'] = result;
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(55), __webpack_require__(241)(module)))
-
-/***/ }),
-/* 240 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-exports['default'] = symbolObservablePonyfill;
-function symbolObservablePonyfill(root) {
-	var result;
-	var _Symbol = root.Symbol;
-
-	if (typeof _Symbol === 'function') {
-		if (_Symbol.observable) {
-			result = _Symbol.observable;
-		} else {
-			result = _Symbol('observable');
-			_Symbol.observable = result;
-		}
-	} else {
-		result = '@@observable';
-	}
-
-	return result;
-};
-
-/***/ }),
-/* 241 */
-/***/ (function(module, exports) {
-
-module.exports = function(module) {
-	if(!module.webpackPolyfill) {
-		module.deprecate = function() {};
-		module.paths = [];
-		// module.parent = undefined by default
-		if(!module.children) module.children = [];
-		Object.defineProperty(module, "loaded", {
-			enumerable: true,
-			get: function() {
-				return module.l;
-			}
-		});
-		Object.defineProperty(module, "id", {
-			enumerable: true,
-			get: function() {
-				return module.i;
-			}
-		});
-		module.webpackPolyfill = 1;
-	}
-	return module;
-};
-
-
-/***/ }),
-/* 242 */
-/***/ (function(module, exports) {
-
-/**
- * Wraps a GeoJSON {@link Geometry} in a GeoJSON {@link Feature}.
- *
- * @name feature
- * @param {Geometry} geometry input geometry
- * @param {Object} properties properties
- * @returns {FeatureCollection} a FeatureCollection of input features
- * @example
- * var geometry = {
- *      "type": "Point",
- *      "coordinates": [
- *        67.5,
- *        32.84267363195431
- *      ]
- *    }
- *
- * var feature = turf.feature(geometry);
- *
- * //=feature
- */
-function feature(geometry, properties) {
-    return {
-        type: 'Feature',
-        properties: properties || {},
-        geometry: geometry
-    };
-}
-
-module.exports.feature = feature;
-
-/**
- * Takes coordinates and properties (optional) and returns a new {@link Point} feature.
- *
- * @name point
- * @param {number[]} coordinates longitude, latitude position (each in decimal degrees)
- * @param {Object=} properties an Object that is used as the {@link Feature}'s
- * properties
- * @returns {Feature<Point>} a Point feature
- * @example
- * var pt1 = turf.point([-75.343, 39.984]);
- *
- * //=pt1
- */
-module.exports.point = function (coordinates, properties) {
-    if (!Array.isArray(coordinates)) throw new Error('Coordinates must be an array');
-    if (coordinates.length < 2) throw new Error('Coordinates must be at least 2 numbers long');
-    return feature({
-        type: 'Point',
-        coordinates: coordinates.slice()
-    }, properties);
-};
-
-/**
- * Takes an array of LinearRings and optionally an {@link Object} with properties and returns a {@link Polygon} feature.
- *
- * @name polygon
- * @param {Array<Array<Array<number>>>} coordinates an array of LinearRings
- * @param {Object=} properties a properties object
- * @returns {Feature<Polygon>} a Polygon feature
- * @throws {Error} throw an error if a LinearRing of the polygon has too few positions
- * or if a LinearRing of the Polygon does not have matching Positions at the
- * beginning & end.
- * @example
- * var polygon = turf.polygon([[
- *  [-2.275543, 53.464547],
- *  [-2.275543, 53.489271],
- *  [-2.215118, 53.489271],
- *  [-2.215118, 53.464547],
- *  [-2.275543, 53.464547]
- * ]], { name: 'poly1', population: 400});
- *
- * //=polygon
- */
-module.exports.polygon = function (coordinates, properties) {
-
-    if (!coordinates) throw new Error('No coordinates passed');
-
-    for (var i = 0; i < coordinates.length; i++) {
-        var ring = coordinates[i];
-        if (ring.length < 4) {
-            throw new Error('Each LinearRing of a Polygon must have 4 or more Positions.');
-        }
-        for (var j = 0; j < ring[ring.length - 1].length; j++) {
-            if (ring[ring.length - 1][j] !== ring[0][j]) {
-                throw new Error('First and last Position are not equivalent.');
-            }
-        }
-    }
-
-    return feature({
-        type: 'Polygon',
-        coordinates: coordinates
-    }, properties);
-};
-
-/**
- * Creates a {@link LineString} based on a
- * coordinate array. Properties can be added optionally.
- *
- * @name lineString
- * @param {Array<Array<number>>} coordinates an array of Positions
- * @param {Object=} properties an Object of key-value pairs to add as properties
- * @returns {Feature<LineString>} a LineString feature
- * @throws {Error} if no coordinates are passed
- * @example
- * var linestring1 = turf.lineString([
- *	[-21.964416, 64.148203],
- *	[-21.956176, 64.141316],
- *	[-21.93901, 64.135924],
- *	[-21.927337, 64.136673]
- * ]);
- * var linestring2 = turf.lineString([
- *	[-21.929054, 64.127985],
- *	[-21.912918, 64.134726],
- *	[-21.916007, 64.141016],
- * 	[-21.930084, 64.14446]
- * ], {name: 'line 1', distance: 145});
- *
- * //=linestring1
- *
- * //=linestring2
- */
-module.exports.lineString = function (coordinates, properties) {
-    if (!coordinates) {
-        throw new Error('No coordinates passed');
-    }
-    return feature({
-        type: 'LineString',
-        coordinates: coordinates
-    }, properties);
-};
-
-/**
- * Takes one or more {@link Feature|Features} and creates a {@link FeatureCollection}.
- *
- * @name featureCollection
- * @param {Feature[]} features input features
- * @returns {FeatureCollection} a FeatureCollection of input features
- * @example
- * var features = [
- *  turf.point([-75.343, 39.984], {name: 'Location A'}),
- *  turf.point([-75.833, 39.284], {name: 'Location B'}),
- *  turf.point([-75.534, 39.123], {name: 'Location C'})
- * ];
- *
- * var fc = turf.featureCollection(features);
- *
- * //=fc
- */
-module.exports.featureCollection = function (features) {
-    return {
-        type: 'FeatureCollection',
-        features: features
-    };
-};
-
-/**
- * Creates a {@link Feature<MultiLineString>} based on a
- * coordinate array. Properties can be added optionally.
- *
- * @name multiLineString
- * @param {Array<Array<Array<number>>>} coordinates an array of LineStrings
- * @param {Object=} properties an Object of key-value pairs to add as properties
- * @returns {Feature<MultiLineString>} a MultiLineString feature
- * @throws {Error} if no coordinates are passed
- * @example
- * var multiLine = turf.multiLineString([[[0,0],[10,10]]]);
- *
- * //=multiLine
- *
- */
-module.exports.multiLineString = function (coordinates, properties) {
-    if (!coordinates) {
-        throw new Error('No coordinates passed');
-    }
-    return feature({
-        type: 'MultiLineString',
-        coordinates: coordinates
-    }, properties);
-};
-
-/**
- * Creates a {@link Feature<MultiPoint>} based on a
- * coordinate array. Properties can be added optionally.
- *
- * @name multiPoint
- * @param {Array<Array<number>>} coordinates an array of Positions
- * @param {Object=} properties an Object of key-value pairs to add as properties
- * @returns {Feature<MultiPoint>} a MultiPoint feature
- * @throws {Error} if no coordinates are passed
- * @example
- * var multiPt = turf.multiPoint([[0,0],[10,10]]);
- *
- * //=multiPt
- *
- */
-module.exports.multiPoint = function (coordinates, properties) {
-    if (!coordinates) {
-        throw new Error('No coordinates passed');
-    }
-    return feature({
-        type: 'MultiPoint',
-        coordinates: coordinates
-    }, properties);
-};
-
-
-/**
- * Creates a {@link Feature<MultiPolygon>} based on a
- * coordinate array. Properties can be added optionally.
- *
- * @name multiPolygon
- * @param {Array<Array<Array<Array<number>>>>} coordinates an array of Polygons
- * @param {Object=} properties an Object of key-value pairs to add as properties
- * @returns {Feature<MultiPolygon>} a multipolygon feature
- * @throws {Error} if no coordinates are passed
- * @example
- * var multiPoly = turf.multiPolygon([[[[0,0],[0,10],[10,10],[10,0],[0,0]]]);
- *
- * //=multiPoly
- *
- */
-module.exports.multiPolygon = function (coordinates, properties) {
-    if (!coordinates) {
-        throw new Error('No coordinates passed');
-    }
-    return feature({
-        type: 'MultiPolygon',
-        coordinates: coordinates
-    }, properties);
-};
-
-/**
- * Creates a {@link Feature<GeometryCollection>} based on a
- * coordinate array. Properties can be added optionally.
- *
- * @name geometryCollection
- * @param {Array<{Geometry}>} geometries an array of GeoJSON Geometries
- * @param {Object=} properties an Object of key-value pairs to add as properties
- * @returns {Feature<GeometryCollection>} a geometrycollection feature
- * @example
- * var pt = {
- *     "type": "Point",
- *       "coordinates": [100, 0]
- *     };
- * var line = {
- *     "type": "LineString",
- *     "coordinates": [ [101, 0], [102, 1] ]
- *   };
- * var collection = turf.geometrycollection([[0,0],[10,10]]);
- *
- * //=collection
- */
-module.exports.geometryCollection = function (geometries, properties) {
-    return feature({
-        type: 'GeometryCollection',
-        geometries: geometries
-    }, properties);
-};
-
-var factors = {
-    miles: 3960,
-    nauticalmiles: 3441.145,
-    degrees: 57.2957795,
-    radians: 1,
-    inches: 250905600,
-    yards: 6969600,
-    meters: 6373000,
-    metres: 6373000,
-    kilometers: 6373,
-    kilometres: 6373
-};
-
-/*
- * Convert a distance measurement from radians to a more friendly unit.
- *
- * @name radiansToDistance
- * @param {number} distance in radians across the sphere
- * @param {string=kilometers} units: one of miles, nauticalmiles, degrees, radians,
- * inches, yards, metres, meters, kilometres, kilometers.
- * @returns {number} distance
- */
-module.exports.radiansToDistance = function (radians, units) {
-    var factor = factors[units || 'kilometers'];
-    if (factor === undefined) {
-        throw new Error('Invalid unit');
-    }
-    return radians * factor;
-};
-
-/*
- * Convert a distance measurement from a real-world unit into radians
- *
- * @name distanceToRadians
- * @param {number} distance in real units
- * @param {string=kilometers} units: one of miles, nauticalmiles, degrees, radians,
- * inches, yards, metres, meters, kilometres, kilometers.
- * @returns {number} radians
- */
-module.exports.distanceToRadians = function (distance, units) {
-    var factor = factors[units || 'kilometers'];
-    if (factor === undefined) {
-        throw new Error('Invalid unit');
-    }
-    return distance / factor;
-};
-
-/*
- * Convert a distance measurement from a real-world unit into degrees
- *
- * @name distanceToRadians
- * @param {number} distance in real units
- * @param {string=kilometers} units: one of miles, nauticalmiles, degrees, radians,
- * inches, yards, metres, meters, kilometres, kilometers.
- * @returns {number} degrees
- */
-module.exports.distanceToDegrees = function (distance, units) {
-    var factor = factors[units || 'kilometers'];
-    if (factor === undefined) {
-        throw new Error('Invalid unit');
-    }
-    return (distance / factor) * 57.2958;
-};
-
-
-/***/ }),
-/* 243 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var getCoord = __webpack_require__(249).getCoord;
-var radiansToDistance = __webpack_require__(242).radiansToDistance;
-//http://en.wikipedia.org/wiki/Haversine_formula
-//http://www.movable-type.co.uk/scripts/latlong.html
-
-/**
- * Calculates the distance between two {@link Point|points} in degrees, radians,
- * miles, or kilometers. This uses the
- * [Haversine formula](http://en.wikipedia.org/wiki/Haversine_formula)
- * to account for global curvature.
- *
- * @name distance
- * @param {Feature<Point>} from origin point
- * @param {Feature<Point>} to destination point
- * @param {String} [units=kilometers] can be degrees, radians, miles, or kilometers
- * @return {Number} distance between the two points
- * @example
- * var from = {
- *   "type": "Feature",
- *   "properties": {},
- *   "geometry": {
- *     "type": "Point",
- *     "coordinates": [-75.343, 39.984]
- *   }
- * };
- * var to = {
- *   "type": "Feature",
- *   "properties": {},
- *   "geometry": {
- *     "type": "Point",
- *     "coordinates": [-75.534, 39.123]
- *   }
- * };
- * var units = "miles";
- *
- * var points = {
- *   "type": "FeatureCollection",
- *   "features": [from, to]
- * };
- *
- * //=points
- *
- * var distance = turf.distance(from, to, units);
- *
- * //=distance
- */
-module.exports = function (from, to, units) {
-    var degrees2radians = Math.PI / 180;
-    var coordinates1 = getCoord(from);
-    var coordinates2 = getCoord(to);
-    var dLat = degrees2radians * (coordinates2[1] - coordinates1[1]);
-    var dLon = degrees2radians * (coordinates2[0] - coordinates1[0]);
-    var lat1 = degrees2radians * coordinates1[1];
-    var lat2 = degrees2radians * coordinates2[1];
-
-    var a = Math.pow(Math.sin(dLat / 2), 2) +
-          Math.pow(Math.sin(dLon / 2), 2) * Math.cos(lat1) * Math.cos(lat2);
-
-    return radiansToDistance(2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)), units);
-};
-
-
-/***/ }),
-/* 244 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var invariant = __webpack_require__(249);
-
-// http://en.wikipedia.org/wiki/Even%E2%80%93odd_rule
-// modified from: https://github.com/substack/point-in-polygon/blob/master/index.js
-// which was modified from http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-
-/**
- * Takes a {@link Point} and a {@link Polygon} or {@link MultiPolygon} and determines if the point resides inside the polygon. The polygon can
- * be convex or concave. The function accounts for holes.
- *
- * @name inside
- * @param {Feature<Point>} point input point
- * @param {Feature<(Polygon|MultiPolygon)>} polygon input polygon or multipolygon
- * @return {Boolean} `true` if the Point is inside the Polygon; `false` if the Point is not inside the Polygon
- * @example
- * var pt1 = {
- *   "type": "Feature",
- *   "properties": {
- *     "marker-color": "#f00"
- *   },
- *   "geometry": {
- *     "type": "Point",
- *     "coordinates": [-111.467285, 40.75766]
- *   }
- * };
- * var pt2 = {
- *   "type": "Feature",
- *   "properties": {
- *     "marker-color": "#0f0"
- *   },
- *   "geometry": {
- *     "type": "Point",
- *     "coordinates": [-111.873779, 40.647303]
- *   }
- * };
- * var poly = {
- *   "type": "Feature",
- *   "properties": {},
- *   "geometry": {
- *     "type": "Polygon",
- *     "coordinates": [[
- *       [-112.074279, 40.52215],
- *       [-112.074279, 40.853293],
- *       [-111.610107, 40.853293],
- *       [-111.610107, 40.52215],
- *       [-112.074279, 40.52215]
- *     ]]
- *   }
- * };
- *
- * var features = {
- *   "type": "FeatureCollection",
- *   "features": [pt1, pt2, poly]
- * };
- *
- * //=features
- *
- * var isInside1 = turf.inside(pt1, poly);
- * //=isInside1
- *
- * var isInside2 = turf.inside(pt2, poly);
- * //=isInside2
- */
-module.exports = function input(point, polygon) {
-    var pt = invariant.getCoord(point);
-    var polys = polygon.geometry.coordinates;
-    // normalize to multipolygon
-    if (polygon.geometry.type === 'Polygon') polys = [polys];
-
-    for (var i = 0, insidePoly = false; i < polys.length && !insidePoly; i++) {
-        // check if it is in the outer ring first
-        if (inRing(pt, polys[i][0])) {
-            var inHole = false;
-            var k = 1;
-            // check for the point in any of the holes
-            while (k < polys[i].length && !inHole) {
-                if (inRing(pt, polys[i][k])) {
-                    inHole = true;
-                }
-                k++;
-            }
-            if (!inHole) insidePoly = true;
-        }
-    }
-    return insidePoly;
-};
-
-// pt is [x,y] and ring is [[x,y], [x,y],..]
-function inRing(pt, ring) {
-    var isInside = false;
-    for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-        var xi = ring[i][0], yi = ring[i][1];
-        var xj = ring[j][0], yj = ring[j][1];
-        var intersect = ((yi > pt[1]) !== (yj > pt[1])) &&
-        (pt[0] < (xj - xi) * (pt[1] - yi) / (yj - yi) + xi);
-        if (intersect) isInside = !isInside;
-    }
-    return isInside;
-}
-
-
-/***/ }),
-/* 245 */
-/***/ (function(module, exports) {
-
-/**
- * Iterate over coordinates in any GeoJSON object, similar to
- * Array.forEach.
- *
- * @param {Object} layer any GeoJSON object
- * @param {Function} callback a method that takes (value)
- * @param {boolean=} excludeWrapCoord whether or not to include
- * the final coordinate of LinearRings that wraps the ring in its iteration.
- * @example
- * var point = { type: 'Point', coordinates: [0, 0] };
- * coordEach(point, function(coords) {
- *   // coords is equal to [0, 0]
- * });
- */
-function coordEach(layer, callback, excludeWrapCoord) {
-    var i, j, k, g, l, geometry, stopG, coords,
-        geometryMaybeCollection,
-        wrapShrink = 0,
-        isGeometryCollection,
-        isFeatureCollection = layer.type === 'FeatureCollection',
-        isFeature = layer.type === 'Feature',
-        stop = isFeatureCollection ? layer.features.length : 1;
-
-  // This logic may look a little weird. The reason why it is that way
-  // is because it's trying to be fast. GeoJSON supports multiple kinds
-  // of objects at its root: FeatureCollection, Features, Geometries.
-  // This function has the responsibility of handling all of them, and that
-  // means that some of the `for` loops you see below actually just don't apply
-  // to certain inputs. For instance, if you give this just a
-  // Point geometry, then both loops are short-circuited and all we do
-  // is gradually rename the input until it's called 'geometry'.
-  //
-  // This also aims to allocate as few resources as possible: just a
-  // few numbers and booleans, rather than any temporary arrays as would
-  // be required with the normalization approach.
-    for (i = 0; i < stop; i++) {
-
-        geometryMaybeCollection = (isFeatureCollection ? layer.features[i].geometry :
-        (isFeature ? layer.geometry : layer));
-        isGeometryCollection = geometryMaybeCollection.type === 'GeometryCollection';
-        stopG = isGeometryCollection ? geometryMaybeCollection.geometries.length : 1;
-
-        for (g = 0; g < stopG; g++) {
-            geometry = isGeometryCollection ?
-            geometryMaybeCollection.geometries[g] : geometryMaybeCollection;
-            coords = geometry.coordinates;
-
-            wrapShrink = (excludeWrapCoord &&
-                (geometry.type === 'Polygon' || geometry.type === 'MultiPolygon')) ?
-                1 : 0;
-
-            if (geometry.type === 'Point') {
-                callback(coords);
-            } else if (geometry.type === 'LineString' || geometry.type === 'MultiPoint') {
-                for (j = 0; j < coords.length; j++) callback(coords[j]);
-            } else if (geometry.type === 'Polygon' || geometry.type === 'MultiLineString') {
-                for (j = 0; j < coords.length; j++)
-                    for (k = 0; k < coords[j].length - wrapShrink; k++)
-                        callback(coords[j][k]);
-            } else if (geometry.type === 'MultiPolygon') {
-                for (j = 0; j < coords.length; j++)
-                    for (k = 0; k < coords[j].length; k++)
-                        for (l = 0; l < coords[j][k].length - wrapShrink; l++)
-                            callback(coords[j][k][l]);
-            } else {
-                throw new Error('Unknown Geometry Type');
-            }
-        }
-    }
-}
-module.exports.coordEach = coordEach;
-
-/**
- * Reduce coordinates in any GeoJSON object into a single value,
- * similar to how Array.reduce works. However, in this case we lazily run
- * the reduction, so an array of all coordinates is unnecessary.
- *
- * @param {Object} layer any GeoJSON object
- * @param {Function} callback a method that takes (memo, value) and returns
- * a new memo
- * @param {*} memo the starting value of memo: can be any type.
- * @param {boolean=} excludeWrapCoord whether or not to include
- * the final coordinate of LinearRings that wraps the ring in its iteration.
- * @return {*} combined value
- */
-function coordReduce(layer, callback, memo, excludeWrapCoord) {
-    coordEach(layer, function (coord) {
-        memo = callback(memo, coord);
-    }, excludeWrapCoord);
-    return memo;
-}
-module.exports.coordReduce = coordReduce;
-
-/**
- * Iterate over property objects in any GeoJSON object, similar to
- * Array.forEach.
- *
- * @param {Object} layer any GeoJSON object
- * @param {Function} callback a method that takes (value)
- * @example
- * var point = { type: 'Feature', geometry: null, properties: { foo: 1 } };
- * propEach(point, function(props) {
- *   // props is equal to { foo: 1}
- * });
- */
-function propEach(layer, callback) {
-    var i;
-    switch (layer.type) {
-    case 'FeatureCollection':
-        for (i = 0; i < layer.features.length; i++) {
-            callback(layer.features[i].properties);
-        }
-        break;
-    case 'Feature':
-        callback(layer.properties);
-        break;
-    }
-}
-module.exports.propEach = propEach;
-
-/**
- * Reduce properties in any GeoJSON object into a single value,
- * similar to how Array.reduce works. However, in this case we lazily run
- * the reduction, so an array of all properties is unnecessary.
- *
- * @param {Object} layer any GeoJSON object
- * @param {Function} callback a method that takes (memo, coord) and returns
- * a new memo
- * @param {*} memo the starting value of memo: can be any type.
- * @return {*} combined value
- */
-function propReduce(layer, callback, memo) {
-    propEach(layer, function (prop) {
-        memo = callback(memo, prop);
-    });
-    return memo;
-}
-module.exports.propReduce = propReduce;
-
-/**
- * Iterate over features in any GeoJSON object, similar to
- * Array.forEach.
- *
- * @param {Object} layer any GeoJSON object
- * @param {Function} callback a method that takes (value)
- * @example
- * var feature = { type: 'Feature', geometry: null, properties: {} };
- * featureEach(feature, function(feature) {
- *   // feature == feature
- * });
- */
-function featureEach(layer, callback) {
-    if (layer.type === 'Feature') {
-        callback(layer);
-    } else if (layer.type === 'FeatureCollection') {
-        for (var i = 0; i < layer.features.length; i++) {
-            callback(layer.features[i]);
-        }
-    }
-}
-module.exports.featureEach = featureEach;
-
-/**
- * Get all coordinates from any GeoJSON object, returning an array of coordinate
- * arrays.
- * @param {Object} layer any GeoJSON object
- * @return {Array<Array<Number>>} coordinate position array
- */
-function coordAll(layer) {
-    var coords = [];
-    coordEach(layer, function (coord) {
-        coords.push(coord);
-    });
-    return coords;
-}
-module.exports.coordAll = coordAll;
-
-
-/***/ }),
-/* 246 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var each = __webpack_require__(245).coordEach;
-
-/**
- * Takes a set of features, calculates the bbox of all input features, and returns a bounding box.
- *
- * @name bbox
- * @param {(Feature|FeatureCollection)} geojson input features
- * @return {Array<number>} the bounding box of `input` given
- * as an array in WSEN order (west, south, east, north)
- * @example
- * var input = {
- *   "type": "FeatureCollection",
- *   "features": [
- *     {
- *       "type": "Feature",
- *       "properties": {},
- *       "geometry": {
- *         "type": "Point",
- *         "coordinates": [114.175329, 22.2524]
- *       }
- *     }, {
- *       "type": "Feature",
- *       "properties": {},
- *       "geometry": {
- *         "type": "Point",
- *         "coordinates": [114.170007, 22.267969]
- *       }
- *     }, {
- *       "type": "Feature",
- *       "properties": {},
- *       "geometry": {
- *         "type": "Point",
- *         "coordinates": [114.200649, 22.274641]
- *       }
- *     }, {
- *       "type": "Feature",
- *       "properties": {},
- *       "geometry": {
- *         "type": "Point",
- *         "coordinates": [114.186744, 22.265745]
- *       }
- *     }
- *   ]
- * };
- *
- * var bbox = turf.bbox(input);
- *
- * var bboxPolygon = turf.bboxPolygon(bbox);
- *
- * var resultFeatures = input.features.concat(bboxPolygon);
- * var result = {
- *   "type": "FeatureCollection",
- *   "features": resultFeatures
- * };
- *
- * //=result
- */
-module.exports = function (geojson) {
-    var bbox = [Infinity, Infinity, -Infinity, -Infinity];
-    each(geojson, function (coord) {
-        if (bbox[0] > coord[0]) bbox[0] = coord[0];
-        if (bbox[1] > coord[1]) bbox[1] = coord[1];
-        if (bbox[2] < coord[0]) bbox[2] = coord[0];
-        if (bbox[3] < coord[1]) bbox[3] = coord[1];
-    });
-    return bbox;
-};
-
-
-/***/ }),
-/* 247 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var getCoord = __webpack_require__(249).getCoord;
-//http://en.wikipedia.org/wiki/Haversine_formula
-//http://www.movable-type.co.uk/scripts/latlong.html
-
-/**
- * Takes two {@link Point|points} and finds the geographic bearing between them.
- *
- * @name bearing
- * @param {Feature<Point>} start starting Point
- * @param {Feature<Point>} end ending Point
- * @returns {Number} bearing in decimal degrees
- * @example
- * var point1 = {
- *   "type": "Feature",
- *   "properties": {
- *     "marker-color": '#f00'
- *   },
- *   "geometry": {
- *     "type": "Point",
- *     "coordinates": [-75.343, 39.984]
- *   }
- * };
- * var point2 = {
- *   "type": "Feature",
- *   "properties": {
- *     "marker-color": '#0f0'
- *   },
- *   "geometry": {
- *     "type": "Point",
- *     "coordinates": [-75.534, 39.123]
- *   }
- * };
- *
- * var points = {
- *   "type": "FeatureCollection",
- *   "features": [point1, point2]
- * };
- *
- * //=points
- *
- * var bearing = turf.bearing(point1, point2);
- *
- * //=bearing
- */
-module.exports = function (start, end) {
-    var degrees2radians = Math.PI / 180;
-    var radians2degrees = 180 / Math.PI;
-    var coordinates1 = getCoord(start);
-    var coordinates2 = getCoord(end);
-
-    var lon1 = degrees2radians * coordinates1[0];
-    var lon2 = degrees2radians * coordinates2[0];
-    var lat1 = degrees2radians * coordinates1[1];
-    var lat2 = degrees2radians * coordinates2[1];
-    var a = Math.sin(lon2 - lon1) * Math.cos(lat2);
-    var b = Math.cos(lat1) * Math.sin(lat2) -
-        Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
-
-    var bearing = radians2degrees * Math.atan2(a, b);
-
-    return bearing;
-};
-
-
-/***/ }),
-/* 248 */
-/***/ (function(module, exports, __webpack_require__) {
-
-//http://en.wikipedia.org/wiki/Haversine_formula
-//http://www.movable-type.co.uk/scripts/latlong.html
-var getCoord = __webpack_require__(249).getCoord;
-var helpers = __webpack_require__(242);
-var point = helpers.point;
-var distanceToRadians = helpers.distanceToRadians;
-
-/**
- * Takes a {@link Point} and calculates the location of a destination point given a distance in degrees, radians, miles, or kilometers; and bearing in degrees. This uses the [Haversine formula](http://en.wikipedia.org/wiki/Haversine_formula) to account for global curvature.
- *
- * @name destination
- * @param {Feature<Point>} from starting point
- * @param {number} distance distance from the starting point
- * @param {number} bearing ranging from -180 to 180
- * @param {String} [units=kilometers] miles, kilometers, degrees, or radians
- * @returns {Feature<Point>} destination point
- * @example
- * var point = {
- *   "type": "Feature",
- *   "properties": {
- *     "marker-color": "#0f0"
- *   },
- *   "geometry": {
- *     "type": "Point",
- *     "coordinates": [-75.343, 39.984]
- *   }
- * };
- * var distance = 50;
- * var bearing = 90;
- * var units = 'miles';
- *
- * var destination = turf.destination(point, distance, bearing, units);
- * destination.properties['marker-color'] = '#f00';
- *
- * var result = {
- *   "type": "FeatureCollection",
- *   "features": [point, destination]
- * };
- *
- * //=result
- */
-module.exports = function (from, distance, bearing, units) {
-    var degrees2radians = Math.PI / 180;
-    var radians2degrees = 180 / Math.PI;
-    var coordinates1 = getCoord(from);
-    var longitude1 = degrees2radians * coordinates1[0];
-    var latitude1 = degrees2radians * coordinates1[1];
-    var bearing_rad = degrees2radians * bearing;
-
-    var radians = distanceToRadians(distance, units);
-
-    var latitude2 = Math.asin(Math.sin(latitude1) * Math.cos(radians) +
-        Math.cos(latitude1) * Math.sin(radians) * Math.cos(bearing_rad));
-    var longitude2 = longitude1 + Math.atan2(Math.sin(bearing_rad) *
-        Math.sin(radians) * Math.cos(latitude1),
-        Math.cos(radians) - Math.sin(latitude1) * Math.sin(latitude2));
-
-    return point([radians2degrees * longitude2, radians2degrees * latitude2]);
-};
-
-
-/***/ }),
-/* 249 */
-/***/ (function(module, exports) {
-
-/**
- * Unwrap a coordinate from a Feature with a Point geometry, a Point
- * geometry, or a single coordinate.
- *
- * @param {*} obj any value
- * @returns {Array<number>} a coordinate
- */
-function getCoord(obj) {
-    if (Array.isArray(obj) &&
-        typeof obj[0] === 'number' &&
-        typeof obj[1] === 'number') {
-        return obj;
-    } else if (obj) {
-        if (obj.type === 'Feature' &&
-            obj.geometry &&
-            obj.geometry.type === 'Point' &&
-            Array.isArray(obj.geometry.coordinates)) {
-            return obj.geometry.coordinates;
-        } else if (obj.type === 'Point' &&
-            Array.isArray(obj.coordinates)) {
-            return obj.coordinates;
-        }
-    }
-    throw new Error('A coordinate, feature, or point geometry is required');
-}
-
-/**
- * Enforce expectations about types of GeoJSON objects for Turf.
- *
- * @alias geojsonType
- * @param {GeoJSON} value any GeoJSON object
- * @param {string} type expected GeoJSON type
- * @param {string} name name of calling function
- * @throws {Error} if value is not the expected type.
- */
-function geojsonType(value, type, name) {
-    if (!type || !name) throw new Error('type and name required');
-
-    if (!value || value.type !== type) {
-        throw new Error('Invalid input to ' + name + ': must be a ' + type + ', given ' + value.type);
-    }
-}
-
-/**
- * Enforce expectations about types of {@link Feature} inputs for Turf.
- * Internally this uses {@link geojsonType} to judge geometry types.
- *
- * @alias featureOf
- * @param {Feature} feature a feature with an expected geometry type
- * @param {string} type expected GeoJSON type
- * @param {string} name name of calling function
- * @throws {Error} error if value is not the expected type.
- */
-function featureOf(feature, type, name) {
-    if (!name) throw new Error('.featureOf() requires a name');
-    if (!feature || feature.type !== 'Feature' || !feature.geometry) {
-        throw new Error('Invalid input to ' + name + ', Feature with geometry required');
-    }
-    if (!feature.geometry || feature.geometry.type !== type) {
-        throw new Error('Invalid input to ' + name + ': must be a ' + type + ', given ' + feature.geometry.type);
-    }
-}
-
-/**
- * Enforce expectations about types of {@link FeatureCollection} inputs for Turf.
- * Internally this uses {@link geojsonType} to judge geometry types.
- *
- * @alias collectionOf
- * @param {FeatureCollection} featurecollection a featurecollection for which features will be judged
- * @param {string} type expected GeoJSON type
- * @param {string} name name of calling function
- * @throws {Error} if value is not the expected type.
- */
-function collectionOf(featurecollection, type, name) {
-    if (!name) throw new Error('.collectionOf() requires a name');
-    if (!featurecollection || featurecollection.type !== 'FeatureCollection') {
-        throw new Error('Invalid input to ' + name + ', FeatureCollection required');
-    }
-    for (var i = 0; i < featurecollection.features.length; i++) {
-        var feature = featurecollection.features[i];
-        if (!feature || feature.type !== 'Feature' || !feature.geometry) {
-            throw new Error('Invalid input to ' + name + ', Feature with geometry required');
-        }
-        if (!feature.geometry || feature.geometry.type !== type) {
-            throw new Error('Invalid input to ' + name + ': must be a ' + type + ', given ' + feature.geometry.type);
-        }
-    }
-}
-
-module.exports.geojsonType = geojsonType;
-module.exports.collectionOf = collectionOf;
-module.exports.featureOf = featureOf;
-module.exports.getCoord = getCoord;
-
-
-/***/ }),
-/* 250 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var twoProduct = __webpack_require__(259)
-var robustSum = __webpack_require__(273)
-var robustScale = __webpack_require__(271)
-var robustSubtract = __webpack_require__(272)
-
-var NUM_EXPAND = 5
-
-var EPSILON     = 1.1102230246251565e-16
-var ERRBOUND3   = (3.0 + 16.0 * EPSILON) * EPSILON
-var ERRBOUND4   = (7.0 + 56.0 * EPSILON) * EPSILON
-
-function cofactor(m, c) {
-  var result = new Array(m.length-1)
-  for(var i=1; i<m.length; ++i) {
-    var r = result[i-1] = new Array(m.length-1)
-    for(var j=0,k=0; j<m.length; ++j) {
-      if(j === c) {
-        continue
-      }
-      r[k++] = m[i][j]
-    }
-  }
-  return result
-}
-
-function matrix(n) {
-  var result = new Array(n)
-  for(var i=0; i<n; ++i) {
-    result[i] = new Array(n)
-    for(var j=0; j<n; ++j) {
-      result[i][j] = ["m", j, "[", (n-i-1), "]"].join("")
-    }
-  }
-  return result
-}
-
-function sign(n) {
-  if(n & 1) {
-    return "-"
-  }
-  return ""
-}
-
-function generateSum(expr) {
-  if(expr.length === 1) {
-    return expr[0]
-  } else if(expr.length === 2) {
-    return ["sum(", expr[0], ",", expr[1], ")"].join("")
-  } else {
-    var m = expr.length>>1
-    return ["sum(", generateSum(expr.slice(0, m)), ",", generateSum(expr.slice(m)), ")"].join("")
-  }
-}
-
-function determinant(m) {
-  if(m.length === 2) {
-    return [["sum(prod(", m[0][0], ",", m[1][1], "),prod(-", m[0][1], ",", m[1][0], "))"].join("")]
-  } else {
-    var expr = []
-    for(var i=0; i<m.length; ++i) {
-      expr.push(["scale(", generateSum(determinant(cofactor(m, i))), ",", sign(i), m[0][i], ")"].join(""))
-    }
-    return expr
-  }
-}
-
-function orientation(n) {
-  var pos = []
-  var neg = []
-  var m = matrix(n)
-  var args = []
-  for(var i=0; i<n; ++i) {
-    if((i&1)===0) {
-      pos.push.apply(pos, determinant(cofactor(m, i)))
-    } else {
-      neg.push.apply(neg, determinant(cofactor(m, i)))
-    }
-    args.push("m" + i)
-  }
-  var posExpr = generateSum(pos)
-  var negExpr = generateSum(neg)
-  var funcName = "orientation" + n + "Exact"
-  var code = ["function ", funcName, "(", args.join(), "){var p=", posExpr, ",n=", negExpr, ",d=sub(p,n);\
-return d[d.length-1];};return ", funcName].join("")
-  var proc = new Function("sum", "prod", "scale", "sub", code)
-  return proc(robustSum, twoProduct, robustScale, robustSubtract)
-}
-
-var orientation3Exact = orientation(3)
-var orientation4Exact = orientation(4)
-
-var CACHED = [
-  function orientation0() { return 0 },
-  function orientation1() { return 0 },
-  function orientation2(a, b) { 
-    return b[0] - a[0]
-  },
-  function orientation3(a, b, c) {
-    var l = (a[1] - c[1]) * (b[0] - c[0])
-    var r = (a[0] - c[0]) * (b[1] - c[1])
-    var det = l - r
-    var s
-    if(l > 0) {
-      if(r <= 0) {
-        return det
-      } else {
-        s = l + r
-      }
-    } else if(l < 0) {
-      if(r >= 0) {
-        return det
-      } else {
-        s = -(l + r)
-      }
-    } else {
-      return det
-    }
-    var tol = ERRBOUND3 * s
-    if(det >= tol || det <= -tol) {
-      return det
-    }
-    return orientation3Exact(a, b, c)
-  },
-  function orientation4(a,b,c,d) {
-    var adx = a[0] - d[0]
-    var bdx = b[0] - d[0]
-    var cdx = c[0] - d[0]
-    var ady = a[1] - d[1]
-    var bdy = b[1] - d[1]
-    var cdy = c[1] - d[1]
-    var adz = a[2] - d[2]
-    var bdz = b[2] - d[2]
-    var cdz = c[2] - d[2]
-    var bdxcdy = bdx * cdy
-    var cdxbdy = cdx * bdy
-    var cdxady = cdx * ady
-    var adxcdy = adx * cdy
-    var adxbdy = adx * bdy
-    var bdxady = bdx * ady
-    var det = adz * (bdxcdy - cdxbdy) 
-            + bdz * (cdxady - adxcdy)
-            + cdz * (adxbdy - bdxady)
-    var permanent = (Math.abs(bdxcdy) + Math.abs(cdxbdy)) * Math.abs(adz)
-                  + (Math.abs(cdxady) + Math.abs(adxcdy)) * Math.abs(bdz)
-                  + (Math.abs(adxbdy) + Math.abs(bdxady)) * Math.abs(cdz)
-    var tol = ERRBOUND4 * permanent
-    if ((det > tol) || (-det > tol)) {
-      return det
-    }
-    return orientation4Exact(a,b,c,d)
-  }
-]
-
-function slowOrient(args) {
-  var proc = CACHED[args.length]
-  if(!proc) {
-    proc = CACHED[args.length] = orientation(args.length)
-  }
-  return proc.apply(undefined, args)
-}
-
-function generateOrientationProc() {
-  while(CACHED.length <= NUM_EXPAND) {
-    CACHED.push(orientation(CACHED.length))
-  }
-  var args = []
-  var procArgs = ["slow"]
-  for(var i=0; i<=NUM_EXPAND; ++i) {
-    args.push("a" + i)
-    procArgs.push("o" + i)
-  }
-  var code = [
-    "function getOrientation(", args.join(), "){switch(arguments.length){case 0:case 1:return 0;"
-  ]
-  for(var i=2; i<=NUM_EXPAND; ++i) {
-    code.push("case ", i, ":return o", i, "(", args.slice(0, i).join(), ");")
-  }
-  code.push("}var s=new Array(arguments.length);for(var i=0;i<arguments.length;++i){s[i]=arguments[i]};return slow(s);}return getOrientation")
-  procArgs.push(code.join(""))
-
-  var proc = Function.apply(undefined, procArgs)
-  module.exports = proc.apply(undefined, [slowOrient].concat(CACHED))
-  for(var i=0; i<=NUM_EXPAND; ++i) {
-    module.exports[i] = CACHED[i]
-  }
-}
-
-generateOrientationProc()
-
-/***/ }),
-/* 251 */
-/***/ (function(module, exports, __webpack_require__) {
-
-//http://en.wikipedia.org/wiki/Delaunay_triangulation
-//https://github.com/ironwallaby/delaunay
-var polygon = __webpack_require__(242).polygon;
-var featurecollection = __webpack_require__(242).featureCollection;
-
-/**
- * Takes a set of {@link Point|points} and the name of a z-value property and
- * creates a [Triangulated Irregular Network](http://en.wikipedia.org/wiki/Triangulated_irregular_network),
- * or a TIN for short, returned as a collection of Polygons. These are often used
- * for developing elevation contour maps or stepped heat visualizations.
- *
- * This triangulates the points, as well as adds properties called `a`, `b`,
- * and `c` representing the value of the given `propertyName` at each of
- * the points that represent the corners of the triangle.
- *
- * @name tin
- * @param {FeatureCollection<Point>} points input points
- * @param {String=} z name of the property from which to pull z values
- * This is optional: if not given, then there will be no extra data added to the derived triangles.
- * @return {FeatureCollection<Polygon>} TIN output
- * @example
- * // generate some random point data
- * var points = turf.random('points', 30, {
- *   bbox: [50, 30, 70, 50]
- * });
- * //=points
- * // add a random property to each point between 0 and 9
- * for (var i = 0; i < points.features.length; i++) {
- *   points.features[i].properties.z = ~~(Math.random() * 9);
- * }
- * var tin = turf.tin(points, 'z')
- * for (var i = 0; i < tin.features.length; i++) {
- *   var properties  = tin.features[i].properties;
- *   // roughly turn the properties of each
- *   // triangle into a fill color
- *   // so we can visualize the result
- *   properties.fill = '#' + properties.a +
- *     properties.b + properties.c;
- * }
- * //=tin
- */
-module.exports = function (points, z) {
-    //break down points
-    return featurecollection(triangulate(points.features.map(function (p) {
-        var point = {
-            x: p.geometry.coordinates[0],
-            y: p.geometry.coordinates[1]
-        };
-        if (z) point.z = p.properties[z];
-        return point;
-    })).map(function (triangle) {
-        return polygon([[
-        [triangle.a.x, triangle.a.y],
-        [triangle.b.x, triangle.b.y],
-        [triangle.c.x, triangle.c.y],
-        [triangle.a.x, triangle.a.y]
-        ]], {
-            a: triangle.a.z,
-            b: triangle.b.z,
-            c: triangle.c.z
-        });
-    }));
-};
-
-function Triangle(a, b, c) {
-    this.a = a;
-    this.b = b;
-    this.c = c;
-
-    var A = b.x - a.x,
-        B = b.y - a.y,
-        C = c.x - a.x,
-        D = c.y - a.y,
-        E = A * (a.x + b.x) + B * (a.y + b.y),
-        F = C * (a.x + c.x) + D * (a.y + c.y),
-        G = 2 * (A * (c.y - b.y) - B * (c.x - b.x)),
-        minx, miny, dx, dy;
-
-    // If the points of the triangle are collinear, then just find the
-    // extremes and use the midpoint as the center of the circumcircle.
-    if (Math.abs(G) < 0.000001) {
-        minx = Math.min(a.x, b.x, c.x);
-        miny = Math.min(a.y, b.y, c.y);
-        dx = (Math.max(a.x, b.x, c.x) - minx) * 0.5;
-        dy = (Math.max(a.y, b.y, c.y) - miny) * 0.5;
-
-        this.x = minx + dx;
-        this.y = miny + dy;
-        this.r = dx * dx + dy * dy;
-    } else {
-        this.x = (D * E - B * F) / G;
-        this.y = (A * F - C * E) / G;
-        dx = this.x - a.x;
-        dy = this.y - a.y;
-        this.r = dx * dx + dy * dy;
-    }
-}
-
-function byX(a, b) {
-    return b.x - a.x;
-}
-
-function dedup(edges) {
-    var j = edges.length,
-        a, b, i, m, n;
-
-    outer:
-  while (j) {
-      b = edges[--j];
-      a = edges[--j];
-      i = j;
-      while (i) {
-          n = edges[--i];
-          m = edges[--i];
-          if ((a === m && b === n) || (a === n && b === m)) {
-              edges.splice(j, 2);
-              edges.splice(i, 2);
-              j -= 2;
-              continue outer;
-          }
-      }
-  }
-}
-
-function triangulate(vertices) {
-    // Bail if there aren't enough vertices to form any triangles.
-    if (vertices.length < 3)
-        return [];
-
-    // Ensure the vertex array is in order of descending X coordinate
-    // (which is needed to ensure a subquadratic runtime), and then find
-    // the bounding box around the points.
-    vertices.sort(byX);
-
-    var i = vertices.length - 1,
-        xmin = vertices[i].x,
-        xmax = vertices[0].x,
-        ymin = vertices[i].y,
-        ymax = ymin;
-
-    while (i--) {
-        if (vertices[i].y < ymin)
-            ymin = vertices[i].y;
-        if (vertices[i].y > ymax)
-            ymax = vertices[i].y;
-    }
-
-    //Find a supertriangle, which is a triangle that surrounds all the
-    //vertices. This is used like something of a sentinel value to remove
-    //cases in the main algorithm, and is removed before we return any
-    // results.
-
-    // Once found, put it in the "open" list. (The "open" list is for
-    // triangles who may still need to be considered; the "closed" list is
-    // for triangles which do not.)
-    var dx = xmax - xmin,
-        dy = ymax - ymin,
-        dmax = (dx > dy) ? dx : dy,
-        xmid = (xmax + xmin) * 0.5,
-        ymid = (ymax + ymin) * 0.5,
-        open = [
-            new Triangle({
-                x: xmid - 20 * dmax,
-                y: ymid - dmax,
-                __sentinel: true
-            }, {
-                x: xmid,
-                y: ymid + 20 * dmax,
-                __sentinel: true
-            }, {
-                x: xmid + 20 * dmax,
-                y: ymid - dmax,
-                __sentinel: true
-            }
-        )],
-        closed = [],
-        edges = [],
-        j, a, b;
-
-    // Incrementally add each vertex to the mesh.
-    i = vertices.length;
-    while (i--) {
-        // For each open triangle, check to see if the current point is
-        // inside it's circumcircle. If it is, remove the triangle and add
-        // it's edges to an edge list.
-        edges.length = 0;
-        j = open.length;
-        while (j--) {
-            // If this point is to the right of this triangle's circumcircle,
-            // then this triangle should never get checked again. Remove it
-            // from the open list, add it to the closed list, and skip.
-            dx = vertices[i].x - open[j].x;
-            if (dx > 0 && dx * dx > open[j].r) {
-                closed.push(open[j]);
-                open.splice(j, 1);
-                continue;
-            }
-
-            // If not, skip this triangle.
-            dy = vertices[i].y - open[j].y;
-            if (dx * dx + dy * dy > open[j].r)
-                continue;
-
-            // Remove the triangle and add it's edges to the edge list.
-            edges.push(
-        open[j].a, open[j].b,
-        open[j].b, open[j].c,
-        open[j].c, open[j].a
-      );
-            open.splice(j, 1);
-        }
-
-        // Remove any doubled edges.
-        dedup(edges);
-
-        // Add a new triangle for each edge.
-        j = edges.length;
-        while (j) {
-            b = edges[--j];
-            a = edges[--j];
-            open.push(new Triangle(a, b, vertices[i]));
-        }
-    }
-
-    // Copy any remaining open triangles to the closed list, and then
-    // remove any triangles that share a vertex with the supertriangle.
-    Array.prototype.push.apply(closed, open);
-
-    i = closed.length;
-    while (i--)
-        if (closed[i].a.__sentinel ||
-      closed[i].b.__sentinel ||
-      closed[i].c.__sentinel)
-            closed.splice(i, 1);
-
-    return closed;
-}
-
-
-/***/ }),
-/* 252 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var polygon = __webpack_require__(242).polygon;
-
-/**
- * Takes a bbox and returns an equivalent {@link Polygon|polygon}.
- *
- * @name bboxPolygon
- * @param {Array<number>} bbox an Array of bounding box coordinates in the form: ```[xLow, yLow, xHigh, yHigh]```
- * @return {Feature<Polygon>} a Polygon representation of the bounding box
- * @example
- * var bbox = [0, 0, 10, 10];
- *
- * var poly = turf.bboxPolygon(bbox);
- *
- * //=poly
- */
-
-module.exports = function (bbox) {
-    var lowLeft = [bbox[0], bbox[1]];
-    var topLeft = [bbox[0], bbox[3]];
-    var topRight = [bbox[2], bbox[3]];
-    var lowRight = [bbox[2], bbox[1]];
-
-    return polygon([[
-        lowLeft,
-        lowRight,
-        topRight,
-        topLeft,
-        lowLeft
-    ]]);
-};
-
-
-/***/ }),
-/* 253 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var bbox = __webpack_require__(246),
-    point = __webpack_require__(242).point;
-
-/**
- * Takes a {@link FeatureCollection} and returns the absolute center point of all features.
- *
- * @name center
- * @param {FeatureCollection} features input features
- * @return {Feature<Point>} a Point feature at the
- * absolute center point of all input features
- * @example
- * var features = {
- *   "type": "FeatureCollection",
- *   "features": [
- *     {
- *       "type": "Feature",
- *       "properties": {},
- *       "geometry": {
- *         "type": "Point",
- *         "coordinates": [-97.522259, 35.4691]
- *       }
- *     }, {
- *       "type": "Feature",
- *       "properties": {},
- *       "geometry": {
- *         "type": "Point",
- *         "coordinates": [-97.502754, 35.463455]
- *       }
- *     }, {
- *       "type": "Feature",
- *       "properties": {},
- *       "geometry": {
- *         "type": "Point",
- *         "coordinates": [-97.508269, 35.463245]
- *       }
- *     }, {
- *       "type": "Feature",
- *       "properties": {},
- *       "geometry": {
- *         "type": "Point",
- *         "coordinates": [-97.516809, 35.465779]
- *       }
- *     }, {
- *       "type": "Feature",
- *       "properties": {},
- *       "geometry": {
- *         "type": "Point",
- *         "coordinates": [-97.515372, 35.467072]
- *       }
- *     }, {
- *       "type": "Feature",
- *       "properties": {},
- *       "geometry": {
- *         "type": "Point",
- *         "coordinates": [-97.509363, 35.463053]
- *       }
- *     }, {
- *       "type": "Feature",
- *       "properties": {},
- *       "geometry": {
- *         "type": "Point",
- *         "coordinates": [-97.511123, 35.466601]
- *       }
- *     }, {
- *       "type": "Feature",
- *       "properties": {},
- *       "geometry": {
- *         "type": "Point",
- *         "coordinates": [-97.518547, 35.469327]
- *       }
- *     }, {
- *       "type": "Feature",
- *       "properties": {},
- *       "geometry": {
- *         "type": "Point",
- *         "coordinates": [-97.519706, 35.469659]
- *       }
- *     }, {
- *       "type": "Feature",
- *       "properties": {},
- *       "geometry": {
- *         "type": "Point",
- *         "coordinates": [-97.517839, 35.466998]
- *       }
- *     }, {
- *       "type": "Feature",
- *       "properties": {},
- *       "geometry": {
- *         "type": "Point",
- *         "coordinates": [-97.508678, 35.464942]
- *       }
- *     }, {
- *       "type": "Feature",
- *       "properties": {},
- *       "geometry": {
- *         "type": "Point",
- *         "coordinates": [-97.514914, 35.463453]
- *       }
- *     }
- *   ]
- * };
- *
- * var centerPt = turf.center(features);
- * centerPt.properties['marker-size'] = 'large';
- * centerPt.properties['marker-color'] = '#000';
- *
- * var resultFeatures = features.features.concat(centerPt);
- * var result = {
- *   "type": "FeatureCollection",
- *   "features": resultFeatures
- * };
- *
- * //=result
- */
-
-module.exports = function (layer) {
-    var ext = bbox(layer);
-    var x = (ext[0] + ext[2]) / 2;
-    var y = (ext[1] + ext[3]) / 2;
-    return point([x, y]);
-};
-
-
-/***/ }),
-/* 254 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var featureCollection = __webpack_require__(242).featureCollection;
-var each = __webpack_require__(245).coordEach;
-var point = __webpack_require__(242).point;
-
-/**
- * Takes a feature or set of features and returns all positions as
- * {@link Point|points}.
- *
- * @name explode
- * @param {(Feature|FeatureCollection)} geojson input features
- * @return {FeatureCollection<point>} points representing the exploded input features
- * @throws {Error} if it encounters an unknown geometry type
- * @example
- * var poly = {
- *   "type": "Feature",
- *   "properties": {},
- *   "geometry": {
- *     "type": "Polygon",
- *     "coordinates": [[
- *       [177.434692, -17.77517],
- *       [177.402076, -17.779093],
- *       [177.38079, -17.803937],
- *       [177.40242, -17.826164],
- *       [177.438468, -17.824857],
- *       [177.454948, -17.796746],
- *       [177.434692, -17.77517]
- *     ]]
- *   }
- * };
- *
- * var points = turf.explode(poly);
- *
- * //=poly
- *
- * //=points
- */
-module.exports = function (geojson) {
-    var points = [];
-    each(geojson, function (coord) {
-        points.push(point(coord));
-    });
-    return featureCollection(points);
-};
-
-
-/***/ }),
-/* 255 */
-/***/ (function(module, exports) {
-
-/**
- * Takes a triangular plane as a {@link Polygon}
- * and a {@link Point} within that triangle and returns the z-value
- * at that point. The Polygon needs to have properties `a`, `b`, and `c`
- * that define the values at its three corners.
- *
- * @name planepoint
- * @param {Feature<Point>} point the Point for which a z-value will be calculated
- * @param {Feature<Polygon>} triangle a Polygon feature with three vertices
- * @return {Number} the z-value for `interpolatedPoint`
- * @example
- * var point = {
- *   "type": "Feature",
- *   "properties": {},
- *   "geometry": {
- *     "type": "Point",
- *     "coordinates": [-75.3221, 39.529]
- *   }
- * };
- * var point = turf.point([-75.3221, 39.529]);
- * // triangle is a polygon with "a", "b",
- * // and "c" values representing
- * // the values of the coordinates in order.
- * var triangle = {
- *   "type": "Feature",
- *   "properties": {
- *     "a": 11,
- *     "b": 122,
- *     "c": 44
- *   },
- *   "geometry": {
- *     "type": "Polygon",
- *     "coordinates": [[
- *       [-75.1221, 39.57],
- *       [-75.58, 39.18],
- *       [-75.97, 39.86],
- *       [-75.1221, 39.57]
- *     ]]
- *   }
- * };
- *
- * var features = {
- *   "type": "FeatureCollection",
- *   "features": [triangle, point]
- * };
- *
- * var zValue = turf.planepoint(point, triangle);
- *
- * //=features
- *
- * //=zValue
- */
-module.exports = function (point, triangle) {
-    var x = point.geometry.coordinates[0],
-        y = point.geometry.coordinates[1],
-        x1 = triangle.geometry.coordinates[0][0][0],
-        y1 = triangle.geometry.coordinates[0][0][1],
-        z1 = triangle.properties.a,
-        x2 = triangle.geometry.coordinates[0][1][0],
-        y2 = triangle.geometry.coordinates[0][1][1],
-        z2 = triangle.properties.b,
-        x3 = triangle.geometry.coordinates[0][2][0],
-        y3 = triangle.geometry.coordinates[0][2][1],
-        z3 = triangle.properties.c;
-
-    var z = (z3 * (x - x1) * (y - y2) + z1 * (x - x2) * (y - y3) + z2 * (x - x3) * (y - y1) -
-      z2 * (x - x1) * (y - y3) - z3 * (x - x2) * (y - y1) - z1 * (x - x3) * (y - y2)) /
-      ((x - x1) * (y - y2) + (x - x2) * (y - y3) + (x - x3) * (y - y1) -
-       (x - x1) * (y - y3) - (x - x2) * (y - y1) - (x - x3) * (y - y2));
-
-    return z;
-};
-
-
-/***/ }),
-/* 256 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var distance = __webpack_require__(243);
-var point = __webpack_require__(242).point;
-var bearing = __webpack_require__(247);
-var destination = __webpack_require__(248);
-
-/**
- * Takes a {@link Point} and a {@link LineString} and calculates the closest Point on the LineString.
- *
- * @name pointOnLine
- * @param {Feature<LineString>} line line to snap to
- * @param {Feature<Point>} point point to snap from
- * @return {Feature<Point>} closest point on the `line` to `point`
- * @example
- * var line = {
- *   "type": "Feature",
- *   "properties": {},
- *   "geometry": {
- *     "type": "LineString",
- *     "coordinates": [
- *       [-77.031669, 38.878605],
- *       [-77.029609, 38.881946],
- *       [-77.020339, 38.884084],
- *       [-77.025661, 38.885821],
- *       [-77.021884, 38.889563],
- *       [-77.019824, 38.892368]
- *     ]
- *   }
- * };
- * var pt = {
- *   "type": "Feature",
- *   "properties": {},
- *   "geometry": {
- *     "type": "Point",
- *     "coordinates": [-77.037076, 38.884017]
- *   }
- * };
- *
- * var snapped = turf.pointOnLine(line, pt);
- * snapped.properties['marker-color'] = '#00f'
- *
- * var result = {
- *   "type": "FeatureCollection",
- *   "features": [line, pt, snapped]
- * };
- *
- * //=result
- */
-
-module.exports = function (line, pt) {
-    var coords;
-    if (line.type === 'Feature') {
-        coords = line.geometry.coordinates;
-    } else if (line.type === 'LineString') {
-        coords = line.coordinates;
-    } else {
-        throw new Error('input must be a LineString Feature or Geometry');
-    }
-
-    return pointOnLine(pt, coords);
-};
-
-function pointOnLine(pt, coords) {
-    var units = 'miles';
-    var closestPt = point([Infinity, Infinity], {
-        dist: Infinity
-    });
-    for (var i = 0; i < coords.length - 1; i++) {
-        var start = point(coords[i]);
-        var stop = point(coords[i + 1]);
-        //start
-        start.properties.dist = distance(pt, start, units);
-        //stop
-        stop.properties.dist = distance(pt, stop, units);
-        //perpendicular
-        var heightDistance = Math.max(start.properties.dist, stop.properties.dist);
-        var direction = bearing(start, stop);
-        var perpendicularPt1 = destination(pt, heightDistance, direction + 90, units);
-        var perpendicularPt2 = destination(pt, heightDistance, direction - 90, units);
-        var intersect = lineIntersects(
-        perpendicularPt1.geometry.coordinates[0],
-        perpendicularPt1.geometry.coordinates[1],
-        perpendicularPt2.geometry.coordinates[0],
-        perpendicularPt2.geometry.coordinates[1],
-        start.geometry.coordinates[0],
-        start.geometry.coordinates[1],
-        stop.geometry.coordinates[0],
-        stop.geometry.coordinates[1]
-        );
-        var intersectPt;
-        if (intersect) {
-            intersectPt = point(intersect);
-            intersectPt.properties.dist = distance(pt, intersectPt, units);
-        }
-
-        if (start.properties.dist < closestPt.properties.dist) {
-            closestPt = start;
-            closestPt.properties.index = i;
-        }
-        if (stop.properties.dist < closestPt.properties.dist) {
-            closestPt = stop;
-            closestPt.properties.index = i;
-        }
-        if (intersectPt && intersectPt.properties.dist < closestPt.properties.dist) {
-            closestPt = intersectPt;
-            closestPt.properties.index = i;
-        }
-    }
-
-    return closestPt;
-}
-
-// modified from http://jsfiddle.net/justin_c_rounds/Gd2S2/light/
-function lineIntersects(line1StartX, line1StartY, line1EndX, line1EndY, line2StartX, line2StartY, line2EndX, line2EndY) {
-    // if the lines intersect, the result contains the x and y of the intersection (treating the lines as infinite) and booleans for whether line segment 1 or line segment 2 contain the point
-    var denominator, a, b, numerator1, numerator2;
-    var result = {
-        x: null,
-        y: null,
-        onLine1: false,
-        onLine2: false
-    };
-    denominator = ((line2EndY - line2StartY) * (line1EndX - line1StartX)) - ((line2EndX - line2StartX) * (line1EndY - line1StartY));
-    if (denominator === 0) {
-        if (result.x !== null && result.y !== null) {
-            return result;
-        } else {
-            return false;
-        }
-    }
-    a = line1StartY - line2StartY;
-    b = line1StartX - line2StartX;
-    numerator1 = ((line2EndX - line2StartX) * a) - ((line2EndY - line2StartY) * b);
-    numerator2 = ((line1EndX - line1StartX) * a) - ((line1EndY - line1StartY) * b);
-    a = numerator1 / denominator;
-    b = numerator2 / denominator;
-
-    // if we cast these lines infinitely in both directions, they intersect here:
-    result.x = line1StartX + (a * (line1EndX - line1StartX));
-    result.y = line1StartY + (a * (line1EndY - line1StartY));
-
-    // if line1 is a segment and line2 is infinite, they intersect if:
-    if (a > 0 && a < 1) {
-        result.onLine1 = true;
-    }
-    // if line2 is a segment and line1 is infinite, they intersect if:
-    if (b > 0 && b < 1) {
-        result.onLine2 = true;
-    }
-    // if line1 and line2 are segments, they intersect if both of the above are true
-    if (result.onLine1 && result.onLine2) {
-        return [result.x, result.y];
-    } else {
-        return false;
-    }
-}
-
-
-/***/ }),
-/* 257 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var distance = __webpack_require__(243);
-
-/**
- * Takes a bounding box and calculates the minimum square bounding box that
- * would contain the input.
- *
- * @name square
- * @param {Array<number>} bbox a bounding box
- * @return {Array<number>} a square surrounding `bbox`
- * @example
- * var bbox = [-20,-20,-15,0];
- *
- * var squared = turf.square(bbox);
- *
- * var features = {
- *   "type": "FeatureCollection",
- *   "features": [
- *     turf.bboxPolygon(bbox),
- *     turf.bboxPolygon(squared)
- *   ]
- * };
- *
- * //=features
- */
-module.exports = function (bbox) {
-    var horizontalDistance = distance(bbox.slice(0, 2), [bbox[2], bbox[1]], 'miles');
-    var verticalDistance = distance(bbox.slice(0, 2), [bbox[0], bbox[3]], 'miles');
-    if (horizontalDistance >= verticalDistance) {
-        var verticalMidpoint = (bbox[1] + bbox[3]) / 2;
-        return [
-            bbox[0],
-            verticalMidpoint - ((bbox[2] - bbox[0]) / 2),
-            bbox[2],
-            verticalMidpoint + ((bbox[2] - bbox[0]) / 2)
-        ];
-    } else {
-        var horizontalMidpoint = (bbox[0] + bbox[2]) / 2;
-        return [
-            horizontalMidpoint - ((bbox[3] - bbox[1]) / 2),
-            bbox[1],
-            horizontalMidpoint + ((bbox[3] - bbox[1]) / 2),
-            bbox[3]
-        ];
-    }
-};
-
-
-/***/ }),
-/* 258 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// look here for help http://svn.osgeo.org/grass/grass/branches/releasebranch_6_4/vector/v.overlay/main.c
-//must be array of polygons
-
-// depend on jsts for now https://github.com/bjornharrtell/jsts/blob/master/examples/overlay.html
-
-var jsts = __webpack_require__(313);
-
-/**
- * Takes two {@link Polygon|polygons} and returns a combined polygon. If the input polygons are not contiguous, this function returns a {@link MultiPolygon} feature.
- *
- * @name union
- * @param {Feature<Polygon>} poly1 input polygon
- * @param {Feature<Polygon>} poly2 another input polygon
- * @return {Feature<(Polygon|MultiPolygon)>} a combined {@link Polygon} or {@link MultiPolygon} feature
- * @example
- * var poly1 = {
- *   "type": "Feature",
- *   "properties": {
- *     "fill": "#0f0"
- *   },
- *   "geometry": {
- *     "type": "Polygon",
- *     "coordinates": [[
- *       [-82.574787, 35.594087],
- *       [-82.574787, 35.615581],
- *       [-82.545261, 35.615581],
- *       [-82.545261, 35.594087],
- *       [-82.574787, 35.594087]
- *     ]]
- *   }
- * };
- * var poly2 = {
- *   "type": "Feature",
- *   "properties": {
- *     "fill": "#00f"
- *   },
- *   "geometry": {
- *     "type": "Polygon",
- *     "coordinates": [[
- *       [-82.560024, 35.585153],
- *       [-82.560024, 35.602602],
- *       [-82.52964, 35.602602],
- *       [-82.52964, 35.585153],
- *       [-82.560024, 35.585153]
- *     ]]
- *   }
- * };
- * var polygons = {
- *   "type": "FeatureCollection",
- *   "features": [poly1, poly2]
- * };
- *
- * var union = turf.union(poly1, poly2);
- *
- * //=polygons
- *
- * //=union
- */
-module.exports = function (poly1, poly2) {
-    var reader = new jsts.io.GeoJSONReader();
-    var a = reader.read(JSON.stringify(poly1.geometry));
-    var b = reader.read(JSON.stringify(poly2.geometry));
-    var union = a.union(b);
-    var writer = new jsts.io.GeoJSONWriter();
-
-    union = writer.write(union);
-    return {
-        type: 'Feature',
-        geometry: union,
-        properties: poly1.properties
-    };
-};
-
-
-/***/ }),
-/* 259 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = twoProduct
-
-var SPLITTER = +(Math.pow(2, 27) + 1.0)
-
-function twoProduct(a, b, result) {
-  var x = a * b
-
-  var c = SPLITTER * a
-  var abig = c - a
-  var ahi = c - abig
-  var alo = a - ahi
-
-  var d = SPLITTER * b
-  var bbig = d - b
-  var bhi = d - bbig
-  var blo = b - bhi
-
-  var err1 = x - (ahi * bhi)
-  var err2 = err1 - (alo * bhi)
-  var err3 = err2 - (ahi * blo)
-
-  var y = alo * blo - err3
-
-  if(result) {
-    result[0] = y
-    result[1] = x
-    return result
-  }
-
-  return [ y, x ]
-}
-
-/***/ }),
-/* 260 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = affineHull
-
-var orient = __webpack_require__(250)
-
-function linearlyIndependent(points, d) {
-  var nhull = new Array(d+1)
-  for(var i=0; i<points.length; ++i) {
-    nhull[i] = points[i]
-  }
-  for(var i=0; i<=points.length; ++i) {
-    for(var j=points.length; j<=d; ++j) {
-      var x = new Array(d)
-      for(var k=0; k<d; ++k) {
-        x[k] = Math.pow(j+1-i, k)
-      }
-      nhull[j] = x
-    }
-    var o = orient.apply(void 0, nhull)
-    if(o) {
-      return true
-    }
-  }
-  return false
-}
-
-function affineHull(points) {
-  var n = points.length
-  if(n === 0) {
-    return []
-  }
-  if(n === 1) {
-    return [0]
-  }
-  var d = points[0].length
-  var frame = [ points[0] ]
-  var index = [ 0 ]
-  for(var i=1; i<n; ++i) {
-    frame.push(points[i])
-    if(!linearlyIndependent(frame, d)) {
-      frame.pop()
-      continue
-    }
-    index.push(i)
-    if(index.length === d+1) {
-      return index
-    }
-  }
-  return index
-}
-
-/***/ }),
-/* 261 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/**
- * Bit twiddling hacks for JavaScript.
- *
- * Author: Mikola Lysenko
- *
- * Ported from Stanford bit twiddling hack library:
- *    http://graphics.stanford.edu/~seander/bithacks.html
- */
-
- "use restrict";
-
-//Number of bits in an integer
-var INT_BITS = 32;
-
-//Constants
-exports.INT_BITS  = INT_BITS;
-exports.INT_MAX   =  0x7fffffff;
-exports.INT_MIN   = -1<<(INT_BITS-1);
-
-//Returns -1, 0, +1 depending on sign of x
-exports.sign = function(v) {
-  return (v > 0) - (v < 0);
-}
-
-//Computes absolute value of integer
-exports.abs = function(v) {
-  var mask = v >> (INT_BITS-1);
-  return (v ^ mask) - mask;
-}
-
-//Computes minimum of integers x and y
-exports.min = function(x, y) {
-  return y ^ ((x ^ y) & -(x < y));
-}
-
-//Computes maximum of integers x and y
-exports.max = function(x, y) {
-  return x ^ ((x ^ y) & -(x < y));
-}
-
-//Checks if a number is a power of two
-exports.isPow2 = function(v) {
-  return !(v & (v-1)) && (!!v);
-}
-
-//Computes log base 2 of v
-exports.log2 = function(v) {
-  var r, shift;
-  r =     (v > 0xFFFF) << 4; v >>>= r;
-  shift = (v > 0xFF  ) << 3; v >>>= shift; r |= shift;
-  shift = (v > 0xF   ) << 2; v >>>= shift; r |= shift;
-  shift = (v > 0x3   ) << 1; v >>>= shift; r |= shift;
-  return r | (v >> 1);
-}
-
-//Computes log base 10 of v
-exports.log10 = function(v) {
-  return  (v >= 1000000000) ? 9 : (v >= 100000000) ? 8 : (v >= 10000000) ? 7 :
-          (v >= 1000000) ? 6 : (v >= 100000) ? 5 : (v >= 10000) ? 4 :
-          (v >= 1000) ? 3 : (v >= 100) ? 2 : (v >= 10) ? 1 : 0;
-}
-
-//Counts number of bits
-exports.popCount = function(v) {
-  v = v - ((v >>> 1) & 0x55555555);
-  v = (v & 0x33333333) + ((v >>> 2) & 0x33333333);
-  return ((v + (v >>> 4) & 0xF0F0F0F) * 0x1010101) >>> 24;
-}
-
-//Counts number of trailing zeros
-function countTrailingZeros(v) {
-  var c = 32;
-  v &= -v;
-  if (v) c--;
-  if (v & 0x0000FFFF) c -= 16;
-  if (v & 0x00FF00FF) c -= 8;
-  if (v & 0x0F0F0F0F) c -= 4;
-  if (v & 0x33333333) c -= 2;
-  if (v & 0x55555555) c -= 1;
-  return c;
-}
-exports.countTrailingZeros = countTrailingZeros;
-
-//Rounds to next power of 2
-exports.nextPow2 = function(v) {
-  v += v === 0;
-  --v;
-  v |= v >>> 1;
-  v |= v >>> 2;
-  v |= v >>> 4;
-  v |= v >>> 8;
-  v |= v >>> 16;
-  return v + 1;
-}
-
-//Rounds down to previous power of 2
-exports.prevPow2 = function(v) {
-  v |= v >>> 1;
-  v |= v >>> 2;
-  v |= v >>> 4;
-  v |= v >>> 8;
-  v |= v >>> 16;
-  return v - (v>>>1);
-}
-
-//Computes parity of word
-exports.parity = function(v) {
-  v ^= v >>> 16;
-  v ^= v >>> 8;
-  v ^= v >>> 4;
-  v &= 0xf;
-  return (0x6996 >>> v) & 1;
-}
-
-var REVERSE_TABLE = new Array(256);
-
-(function(tab) {
-  for(var i=0; i<256; ++i) {
-    var v = i, r = i, s = 7;
-    for (v >>>= 1; v; v >>>= 1) {
-      r <<= 1;
-      r |= v & 1;
-      --s;
-    }
-    tab[i] = (r << s) & 0xff;
-  }
-})(REVERSE_TABLE);
-
-//Reverse bits in a 32 bit word
-exports.reverse = function(v) {
-  return  (REVERSE_TABLE[ v         & 0xff] << 24) |
-          (REVERSE_TABLE[(v >>> 8)  & 0xff] << 16) |
-          (REVERSE_TABLE[(v >>> 16) & 0xff] << 8)  |
-           REVERSE_TABLE[(v >>> 24) & 0xff];
-}
-
-//Interleave bits of 2 coordinates with 16 bits.  Useful for fast quadtree codes
-exports.interleave2 = function(x, y) {
-  x &= 0xFFFF;
-  x = (x | (x << 8)) & 0x00FF00FF;
-  x = (x | (x << 4)) & 0x0F0F0F0F;
-  x = (x | (x << 2)) & 0x33333333;
-  x = (x | (x << 1)) & 0x55555555;
-
-  y &= 0xFFFF;
-  y = (y | (y << 8)) & 0x00FF00FF;
-  y = (y | (y << 4)) & 0x0F0F0F0F;
-  y = (y | (y << 2)) & 0x33333333;
-  y = (y | (y << 1)) & 0x55555555;
-
-  return x | (y << 1);
-}
-
-//Extracts the nth interleaved component
-exports.deinterleave2 = function(v, n) {
-  v = (v >>> n) & 0x55555555;
-  v = (v | (v >>> 1))  & 0x33333333;
-  v = (v | (v >>> 2))  & 0x0F0F0F0F;
-  v = (v | (v >>> 4))  & 0x00FF00FF;
-  v = (v | (v >>> 16)) & 0x000FFFF;
-  return (v << 16) >> 16;
-}
-
-
-//Interleave bits of 3 coordinates, each with 10 bits.  Useful for fast octree codes
-exports.interleave3 = function(x, y, z) {
-  x &= 0x3FF;
-  x  = (x | (x<<16)) & 4278190335;
-  x  = (x | (x<<8))  & 251719695;
-  x  = (x | (x<<4))  & 3272356035;
-  x  = (x | (x<<2))  & 1227133513;
-
-  y &= 0x3FF;
-  y  = (y | (y<<16)) & 4278190335;
-  y  = (y | (y<<8))  & 251719695;
-  y  = (y | (y<<4))  & 3272356035;
-  y  = (y | (y<<2))  & 1227133513;
-  x |= (y << 1);
-  
-  z &= 0x3FF;
-  z  = (z | (z<<16)) & 4278190335;
-  z  = (z | (z<<8))  & 251719695;
-  z  = (z | (z<<4))  & 3272356035;
-  z  = (z | (z<<2))  & 1227133513;
-  
-  return x | (z << 2);
-}
-
-//Extracts nth interleaved component of a 3-tuple
-exports.deinterleave3 = function(v, n) {
-  v = (v >>> n)       & 1227133513;
-  v = (v | (v>>>2))   & 3272356035;
-  v = (v | (v>>>4))   & 251719695;
-  v = (v | (v>>>8))   & 4278190335;
-  v = (v | (v>>>16))  & 0x3FF;
-  return (v<<22)>>22;
-}
-
-//Computes next combination in colexicographic order (this is mistakenly called nextPermutation on the bit twiddling hacks page)
-exports.nextCombination = function(v) {
-  var t = v | (v - 1);
-  return (t + 1) | (((~t & -~t) - 1) >>> (countTrailingZeros(v) + 1));
-}
-
-
-
-/***/ }),
-/* 262 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var convexHull1d = __webpack_require__(263)
-var convexHull2d = __webpack_require__(264)
-var convexHullnd = __webpack_require__(265)
-
-module.exports = convexHull
-
-function convexHull(points) {
-  var n = points.length
-  if(n === 0) {
-    return []
-  } else if(n === 1) {
-    return [[0]]
-  }
-  var d = points[0].length
-  if(d === 0) {
-    return []
-  } else if(d === 1) {
-    return convexHull1d(points)
-  } else if(d === 2) {
-    return convexHull2d(points)
-  }
-  return convexHullnd(points, d)
-}
-
-/***/ }),
-/* 263 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = convexHull1d
-
-function convexHull1d(points) {
-  var lo = 0
-  var hi = 0
-  for(var i=1; i<points.length; ++i) {
-    if(points[i][0] < points[lo][0]) {
-      lo = i
-    }
-    if(points[i][0] > points[hi][0]) {
-      hi = i
-    }
-  }
-  if(lo < hi) {
-    return [[lo], [hi]]
-  } else if(lo > hi) {
-    return [[hi], [lo]]
-  } else {
-    return [[lo]]
-  }
-}
-
-/***/ }),
 /* 264 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-module.exports = convexHull2D
-
-var monotoneHull = __webpack_require__(270)
-
-function convexHull2D(points) {
-  var hull = monotoneHull(points)
-  var h = hull.length
-  if(h <= 2) {
-    return []
-  }
-  var edges = new Array(h)
-  var a = hull[h-1]
-  for(var i=0; i<h; ++i) {
-    var b = hull[i]
-    edges[i] = [a,b]
-    a = b
-  }
-  return edges
-}
-
-
-/***/ }),
-/* 265 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = convexHullnD
-
-var ich = __webpack_require__(269)
-var aff = __webpack_require__(260)
-
-function permute(points, front) {
-  var n = points.length
-  var npoints = new Array(n)
-  for(var i=0; i<front.length; ++i) {
-    npoints[i] = points[front[i]]
-  }
-  var ptr = front.length
-  for(var i=0; i<n; ++i) {
-    if(front.indexOf(i) < 0) {
-      npoints[ptr++] = points[i]
-    }
-  }
-  return npoints
-}
-
-function invPermute(cells, front) {
-  var nc = cells.length
-  var nf = front.length
-  for(var i=0; i<nc; ++i) {
-    var c = cells[i]
-    for(var j=0; j<c.length; ++j) {
-      var x = c[j]
-      if(x < nf) {
-        c[j] = front[x]
-      } else {
-        x = x - nf
-        for(var k=0; k<nf; ++k) {
-          if(x >= front[k]) {
-            x += 1
-          }
-        }
-        c[j] = x
-      }
-    }
-  }
-  return cells
-}
-
-function convexHullnD(points, d) {
-  try {
-    return ich(points, true)
-  } catch(e) {
-    //If point set is degenerate, try to find a basis and rerun it
-    var ah = aff(points)
-    if(ah.length <= d) {
-      //No basis, no try
-      return []
-    }
-    var npoints = permute(points, ah)
-    var nhull   = ich(npoints, true)
-    return invPermute(nhull, ah)
-  }
-}
-
-/***/ }),
-/* 266 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = earcut;
-
-function earcut(data, holeIndices, dim) {
-
-    dim = dim || 2;
-
-    var hasHoles = holeIndices && holeIndices.length,
-        outerLen = hasHoles ? holeIndices[0] * dim : data.length,
-        outerNode = linkedList(data, 0, outerLen, dim, true),
-        triangles = [];
-
-    if (!outerNode) return triangles;
-
-    var minX, minY, maxX, maxY, x, y, size;
-
-    if (hasHoles) outerNode = eliminateHoles(data, holeIndices, outerNode, dim);
-
-    // if the shape is not too simple, we'll use z-order curve hash later; calculate polygon bbox
-    if (data.length > 80 * dim) {
-        minX = maxX = data[0];
-        minY = maxY = data[1];
-
-        for (var i = dim; i < outerLen; i += dim) {
-            x = data[i];
-            y = data[i + 1];
-            if (x < minX) minX = x;
-            if (y < minY) minY = y;
-            if (x > maxX) maxX = x;
-            if (y > maxY) maxY = y;
-        }
-
-        // minX, minY and size are later used to transform coords into integers for z-order calculation
-        size = Math.max(maxX - minX, maxY - minY);
-    }
-
-    earcutLinked(outerNode, triangles, dim, minX, minY, size);
-
-    return triangles;
-}
-
-// create a circular doubly linked list from polygon points in the specified winding order
-function linkedList(data, start, end, dim, clockwise) {
-    var i, last;
-
-    if (clockwise === (signedArea(data, start, end, dim) > 0)) {
-        for (i = start; i < end; i += dim) last = insertNode(i, data[i], data[i + 1], last);
-    } else {
-        for (i = end - dim; i >= start; i -= dim) last = insertNode(i, data[i], data[i + 1], last);
-    }
-
-    if (last && equals(last, last.next)) {
-        removeNode(last);
-        last = last.next;
-    }
-
-    return last;
-}
-
-// eliminate colinear or duplicate points
-function filterPoints(start, end) {
-    if (!start) return start;
-    if (!end) end = start;
-
-    var p = start,
-        again;
-    do {
-        again = false;
-
-        if (!p.steiner && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
-            removeNode(p);
-            p = end = p.prev;
-            if (p === p.next) return null;
-            again = true;
-
-        } else {
-            p = p.next;
-        }
-    } while (again || p !== end);
-
-    return end;
-}
-
-// main ear slicing loop which triangulates a polygon (given as a linked list)
-function earcutLinked(ear, triangles, dim, minX, minY, size, pass) {
-    if (!ear) return;
-
-    // interlink polygon nodes in z-order
-    if (!pass && size) indexCurve(ear, minX, minY, size);
-
-    var stop = ear,
-        prev, next;
-
-    // iterate through ears, slicing them one by one
-    while (ear.prev !== ear.next) {
-        prev = ear.prev;
-        next = ear.next;
-
-        if (size ? isEarHashed(ear, minX, minY, size) : isEar(ear)) {
-            // cut off the triangle
-            triangles.push(prev.i / dim);
-            triangles.push(ear.i / dim);
-            triangles.push(next.i / dim);
-
-            removeNode(ear);
-
-            // skipping the next vertice leads to less sliver triangles
-            ear = next.next;
-            stop = next.next;
-
-            continue;
-        }
-
-        ear = next;
-
-        // if we looped through the whole remaining polygon and can't find any more ears
-        if (ear === stop) {
-            // try filtering points and slicing again
-            if (!pass) {
-                earcutLinked(filterPoints(ear), triangles, dim, minX, minY, size, 1);
-
-            // if this didn't work, try curing all small self-intersections locally
-            } else if (pass === 1) {
-                ear = cureLocalIntersections(ear, triangles, dim);
-                earcutLinked(ear, triangles, dim, minX, minY, size, 2);
-
-            // as a last resort, try splitting the remaining polygon into two
-            } else if (pass === 2) {
-                splitEarcut(ear, triangles, dim, minX, minY, size);
-            }
-
-            break;
-        }
-    }
-}
-
-// check whether a polygon node forms a valid ear with adjacent nodes
-function isEar(ear) {
-    var a = ear.prev,
-        b = ear,
-        c = ear.next;
-
-    if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
-
-    // now make sure we don't have other points inside the potential ear
-    var p = ear.next.next;
-
-    while (p !== ear.prev) {
-        if (pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
-            area(p.prev, p, p.next) >= 0) return false;
-        p = p.next;
-    }
-
-    return true;
-}
-
-function isEarHashed(ear, minX, minY, size) {
-    var a = ear.prev,
-        b = ear,
-        c = ear.next;
-
-    if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
-
-    // triangle bbox; min & max are calculated like this for speed
-    var minTX = a.x < b.x ? (a.x < c.x ? a.x : c.x) : (b.x < c.x ? b.x : c.x),
-        minTY = a.y < b.y ? (a.y < c.y ? a.y : c.y) : (b.y < c.y ? b.y : c.y),
-        maxTX = a.x > b.x ? (a.x > c.x ? a.x : c.x) : (b.x > c.x ? b.x : c.x),
-        maxTY = a.y > b.y ? (a.y > c.y ? a.y : c.y) : (b.y > c.y ? b.y : c.y);
-
-    // z-order range for the current triangle bbox;
-    var minZ = zOrder(minTX, minTY, minX, minY, size),
-        maxZ = zOrder(maxTX, maxTY, minX, minY, size);
-
-    // first look for points inside the triangle in increasing z-order
-    var p = ear.nextZ;
-
-    while (p && p.z <= maxZ) {
-        if (p !== ear.prev && p !== ear.next &&
-            pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
-            area(p.prev, p, p.next) >= 0) return false;
-        p = p.nextZ;
-    }
-
-    // then look for points in decreasing z-order
-    p = ear.prevZ;
-
-    while (p && p.z >= minZ) {
-        if (p !== ear.prev && p !== ear.next &&
-            pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
-            area(p.prev, p, p.next) >= 0) return false;
-        p = p.prevZ;
-    }
-
-    return true;
-}
-
-// go through all polygon nodes and cure small local self-intersections
-function cureLocalIntersections(start, triangles, dim) {
-    var p = start;
-    do {
-        var a = p.prev,
-            b = p.next.next;
-
-        if (!equals(a, b) && intersects(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
-
-            triangles.push(a.i / dim);
-            triangles.push(p.i / dim);
-            triangles.push(b.i / dim);
-
-            // remove two nodes involved
-            removeNode(p);
-            removeNode(p.next);
-
-            p = start = b;
-        }
-        p = p.next;
-    } while (p !== start);
-
-    return p;
-}
-
-// try splitting polygon into two and triangulate them independently
-function splitEarcut(start, triangles, dim, minX, minY, size) {
-    // look for a valid diagonal that divides the polygon into two
-    var a = start;
-    do {
-        var b = a.next.next;
-        while (b !== a.prev) {
-            if (a.i !== b.i && isValidDiagonal(a, b)) {
-                // split the polygon in two by the diagonal
-                var c = splitPolygon(a, b);
-
-                // filter colinear points around the cuts
-                a = filterPoints(a, a.next);
-                c = filterPoints(c, c.next);
-
-                // run earcut on each half
-                earcutLinked(a, triangles, dim, minX, minY, size);
-                earcutLinked(c, triangles, dim, minX, minY, size);
-                return;
-            }
-            b = b.next;
-        }
-        a = a.next;
-    } while (a !== start);
-}
-
-// link every hole into the outer loop, producing a single-ring polygon without holes
-function eliminateHoles(data, holeIndices, outerNode, dim) {
-    var queue = [],
-        i, len, start, end, list;
-
-    for (i = 0, len = holeIndices.length; i < len; i++) {
-        start = holeIndices[i] * dim;
-        end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
-        list = linkedList(data, start, end, dim, false);
-        if (list === list.next) list.steiner = true;
-        queue.push(getLeftmost(list));
-    }
-
-    queue.sort(compareX);
-
-    // process holes from left to right
-    for (i = 0; i < queue.length; i++) {
-        eliminateHole(queue[i], outerNode);
-        outerNode = filterPoints(outerNode, outerNode.next);
-    }
-
-    return outerNode;
-}
-
-function compareX(a, b) {
-    return a.x - b.x;
-}
-
-// find a bridge between vertices that connects hole with an outer ring and and link it
-function eliminateHole(hole, outerNode) {
-    outerNode = findHoleBridge(hole, outerNode);
-    if (outerNode) {
-        var b = splitPolygon(outerNode, hole);
-        filterPoints(b, b.next);
-    }
-}
-
-// David Eberly's algorithm for finding a bridge between hole and outer polygon
-function findHoleBridge(hole, outerNode) {
-    var p = outerNode,
-        hx = hole.x,
-        hy = hole.y,
-        qx = -Infinity,
-        m;
-
-    // find a segment intersected by a ray from the hole's leftmost point to the left;
-    // segment's endpoint with lesser x will be potential connection point
-    do {
-        if (hy <= p.y && hy >= p.next.y) {
-            var x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
-            if (x <= hx && x > qx) {
-                qx = x;
-                if (x === hx) {
-                    if (hy === p.y) return p;
-                    if (hy === p.next.y) return p.next;
-                }
-                m = p.x < p.next.x ? p : p.next;
-            }
-        }
-        p = p.next;
-    } while (p !== outerNode);
-
-    if (!m) return null;
-
-    if (hx === qx) return m.prev; // hole touches outer segment; pick lower endpoint
-
-    // look for points inside the triangle of hole point, segment intersection and endpoint;
-    // if there are no points found, we have a valid connection;
-    // otherwise choose the point of the minimum angle with the ray as connection point
-
-    var stop = m,
-        mx = m.x,
-        my = m.y,
-        tanMin = Infinity,
-        tan;
-
-    p = m.next;
-
-    while (p !== stop) {
-        if (hx >= p.x && p.x >= mx &&
-                pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
-
-            tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
-
-            if ((tan < tanMin || (tan === tanMin && p.x > m.x)) && locallyInside(p, hole)) {
-                m = p;
-                tanMin = tan;
-            }
-        }
-
-        p = p.next;
-    }
-
-    return m;
-}
-
-// interlink polygon nodes in z-order
-function indexCurve(start, minX, minY, size) {
-    var p = start;
-    do {
-        if (p.z === null) p.z = zOrder(p.x, p.y, minX, minY, size);
-        p.prevZ = p.prev;
-        p.nextZ = p.next;
-        p = p.next;
-    } while (p !== start);
-
-    p.prevZ.nextZ = null;
-    p.prevZ = null;
-
-    sortLinked(p);
-}
-
-// Simon Tatham's linked list merge sort algorithm
-// http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
-function sortLinked(list) {
-    var i, p, q, e, tail, numMerges, pSize, qSize,
-        inSize = 1;
-
-    do {
-        p = list;
-        list = null;
-        tail = null;
-        numMerges = 0;
-
-        while (p) {
-            numMerges++;
-            q = p;
-            pSize = 0;
-            for (i = 0; i < inSize; i++) {
-                pSize++;
-                q = q.nextZ;
-                if (!q) break;
-            }
-
-            qSize = inSize;
-
-            while (pSize > 0 || (qSize > 0 && q)) {
-
-                if (pSize === 0) {
-                    e = q;
-                    q = q.nextZ;
-                    qSize--;
-                } else if (qSize === 0 || !q) {
-                    e = p;
-                    p = p.nextZ;
-                    pSize--;
-                } else if (p.z <= q.z) {
-                    e = p;
-                    p = p.nextZ;
-                    pSize--;
-                } else {
-                    e = q;
-                    q = q.nextZ;
-                    qSize--;
-                }
-
-                if (tail) tail.nextZ = e;
-                else list = e;
-
-                e.prevZ = tail;
-                tail = e;
-            }
-
-            p = q;
-        }
-
-        tail.nextZ = null;
-        inSize *= 2;
-
-    } while (numMerges > 1);
-
-    return list;
-}
-
-// z-order of a point given coords and size of the data bounding box
-function zOrder(x, y, minX, minY, size) {
-    // coords are transformed into non-negative 15-bit integer range
-    x = 32767 * (x - minX) / size;
-    y = 32767 * (y - minY) / size;
-
-    x = (x | (x << 8)) & 0x00FF00FF;
-    x = (x | (x << 4)) & 0x0F0F0F0F;
-    x = (x | (x << 2)) & 0x33333333;
-    x = (x | (x << 1)) & 0x55555555;
-
-    y = (y | (y << 8)) & 0x00FF00FF;
-    y = (y | (y << 4)) & 0x0F0F0F0F;
-    y = (y | (y << 2)) & 0x33333333;
-    y = (y | (y << 1)) & 0x55555555;
-
-    return x | (y << 1);
-}
-
-// find the leftmost node of a polygon ring
-function getLeftmost(start) {
-    var p = start,
-        leftmost = start;
-    do {
-        if (p.x < leftmost.x) leftmost = p;
-        p = p.next;
-    } while (p !== start);
-
-    return leftmost;
-}
-
-// check if a point lies within a convex triangle
-function pointInTriangle(ax, ay, bx, by, cx, cy, px, py) {
-    return (cx - px) * (ay - py) - (ax - px) * (cy - py) >= 0 &&
-           (ax - px) * (by - py) - (bx - px) * (ay - py) >= 0 &&
-           (bx - px) * (cy - py) - (cx - px) * (by - py) >= 0;
-}
-
-// check if a diagonal between two polygon nodes is valid (lies in polygon interior)
-function isValidDiagonal(a, b) {
-    return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) &&
-           locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b);
-}
-
-// signed area of a triangle
-function area(p, q, r) {
-    return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
-}
-
-// check if two points are equal
-function equals(p1, p2) {
-    return p1.x === p2.x && p1.y === p2.y;
-}
-
-// check if two segments intersect
-function intersects(p1, q1, p2, q2) {
-    if ((equals(p1, q1) && equals(p2, q2)) ||
-        (equals(p1, q2) && equals(p2, q1))) return true;
-    return area(p1, q1, p2) > 0 !== area(p1, q1, q2) > 0 &&
-           area(p2, q2, p1) > 0 !== area(p2, q2, q1) > 0;
-}
-
-// check if a polygon diagonal intersects any polygon segments
-function intersectsPolygon(a, b) {
-    var p = a;
-    do {
-        if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i &&
-                intersects(p, p.next, a, b)) return true;
-        p = p.next;
-    } while (p !== a);
-
-    return false;
-}
-
-// check if a polygon diagonal is locally inside the polygon
-function locallyInside(a, b) {
-    return area(a.prev, a, a.next) < 0 ?
-        area(a, b, a.next) >= 0 && area(a, a.prev, b) >= 0 :
-        area(a, b, a.prev) < 0 || area(a, a.next, b) < 0;
-}
-
-// check if the middle point of a polygon diagonal is inside the polygon
-function middleInside(a, b) {
-    var p = a,
-        inside = false,
-        px = (a.x + b.x) / 2,
-        py = (a.y + b.y) / 2;
-    do {
-        if (((p.y > py) !== (p.next.y > py)) && (px < (p.next.x - p.x) * (py - p.y) / (p.next.y - p.y) + p.x))
-            inside = !inside;
-        p = p.next;
-    } while (p !== a);
-
-    return inside;
-}
-
-// link two polygon vertices with a bridge; if the vertices belong to the same ring, it splits polygon into two;
-// if one belongs to the outer ring and another to a hole, it merges it into a single ring
-function splitPolygon(a, b) {
-    var a2 = new Node(a.i, a.x, a.y),
-        b2 = new Node(b.i, b.x, b.y),
-        an = a.next,
-        bp = b.prev;
-
-    a.next = b;
-    b.prev = a;
-
-    a2.next = an;
-    an.prev = a2;
-
-    b2.next = a2;
-    a2.prev = b2;
-
-    bp.next = b2;
-    b2.prev = bp;
-
-    return b2;
-}
-
-// create a node and optionally link it with previous one (in a circular doubly linked list)
-function insertNode(i, x, y, last) {
-    var p = new Node(i, x, y);
-
-    if (!last) {
-        p.prev = p;
-        p.next = p;
-
-    } else {
-        p.next = last.next;
-        p.prev = last;
-        last.next.prev = p;
-        last.next = p;
-    }
-    return p;
-}
-
-function removeNode(p) {
-    p.next.prev = p.prev;
-    p.prev.next = p.next;
-
-    if (p.prevZ) p.prevZ.nextZ = p.nextZ;
-    if (p.nextZ) p.nextZ.prevZ = p.prevZ;
-}
-
-function Node(i, x, y) {
-    // vertice index in coordinates array
-    this.i = i;
-
-    // vertex coordinates
-    this.x = x;
-    this.y = y;
-
-    // previous and next vertice nodes in a polygon ring
-    this.prev = null;
-    this.next = null;
-
-    // z-order curve value
-    this.z = null;
-
-    // previous and next nodes in z-order
-    this.prevZ = null;
-    this.nextZ = null;
-
-    // indicates whether this is a steiner point
-    this.steiner = false;
-}
-
-// return a percentage difference between the polygon area and its triangulation area;
-// used to verify correctness of triangulation
-earcut.deviation = function (data, holeIndices, dim, triangles) {
-    var hasHoles = holeIndices && holeIndices.length;
-    var outerLen = hasHoles ? holeIndices[0] * dim : data.length;
-
-    var polygonArea = Math.abs(signedArea(data, 0, outerLen, dim));
-    if (hasHoles) {
-        for (var i = 0, len = holeIndices.length; i < len; i++) {
-            var start = holeIndices[i] * dim;
-            var end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
-            polygonArea -= Math.abs(signedArea(data, start, end, dim));
-        }
-    }
-
-    var trianglesArea = 0;
-    for (i = 0; i < triangles.length; i += 3) {
-        var a = triangles[i] * dim;
-        var b = triangles[i + 1] * dim;
-        var c = triangles[i + 2] * dim;
-        trianglesArea += Math.abs(
-            (data[a] - data[c]) * (data[b + 1] - data[a + 1]) -
-            (data[a] - data[b]) * (data[c + 1] - data[a + 1]));
-    }
-
-    return polygonArea === 0 && trianglesArea === 0 ? 0 :
-        Math.abs((trianglesArea - polygonArea) / polygonArea);
-};
-
-function signedArea(data, start, end, dim) {
-    var sum = 0;
-    for (var i = start, j = end - dim; i < end; i += dim) {
-        sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
-        j = i;
-    }
-    return sum;
-}
-
-// turn a polygon in a multi-dimensional array form (e.g. as in GeoJSON) into a form Earcut accepts
-earcut.flatten = function (data) {
-    var dim = data[0][0].length,
-        result = {vertices: [], holes: [], dimensions: dim},
-        holeIndex = 0;
-
-    for (var i = 0; i < data.length; i++) {
-        for (var j = 0; j < data[i].length; j++) {
-            for (var d = 0; d < dim; d++) result.vertices.push(data[i][j][d]);
-        }
-        if (i > 0) {
-            holeIndex += data[i - 1].length;
-            result.holes.push(holeIndex);
-        }
-    }
-    return result;
-};
-
-
-/***/ }),
-/* 267 */
-/***/ (function(module, exports) {
-
-module.exports = normalize;
-
-var types = {
-    Point: 'geometry',
-    MultiPoint: 'geometry',
-    LineString: 'geometry',
-    MultiLineString: 'geometry',
-    Polygon: 'geometry',
-    MultiPolygon: 'geometry',
-    GeometryCollection: 'geometry',
-    Feature: 'feature',
-    FeatureCollection: 'featurecollection'
-};
-
-/**
- * Normalize a GeoJSON feature into a FeatureCollection.
- *
- * @param {object} gj geojson data
- * @returns {object} normalized geojson data
- */
-function normalize(gj) {
-    if (!gj || !gj.type) return null;
-    var type = types[gj.type];
-    if (!type) return null;
-
-    if (type === 'geometry') {
-        return {
-            type: 'FeatureCollection',
-            features: [{
-                type: 'Feature',
-                properties: {},
-                geometry: gj
-            }]
-        };
-    } else if (type === 'feature') {
-        return {
-            type: 'FeatureCollection',
-            features: [gj]
-        };
-    } else if (type === 'featurecollection') {
-        return gj;
-    }
-}
-
-
-/***/ }),
-/* 268 */
-/***/ (function(module, exports) {
-
-module.exports = function() {
-    throw new Error('call .point() or .polygon() instead');
-};
-
-function position(bbox) {
-    if (bbox) return coordInBBBOX(bbox);
-    else return [lon(), lat()];
-}
-
-module.exports.position = position;
-
-module.exports.point = function(count, bbox) {
-    var features = [];
-    for (i = 0; i < count; i++) {
-        features.push(feature(bbox ? point(position(bbox)) : point()));
-    }
-    return collection(features);
-};
-
-module.exports.polygon = function(count, num_vertices, max_radial_length, bbox) {
-    if (typeof num_vertices !== 'number') num_vertices = 10;
-    if (typeof max_radial_length !== 'number') max_radial_length = 10;
-    var features = [];
-    for (i = 0; i < count; i++) {
-        var vertices = [],
-            circle_offsets = Array.apply(null,
-                new Array(num_vertices + 1)).map(Math.random);
-
-        circle_offsets.forEach(sumOffsets);
-        circle_offsets.forEach(scaleOffsets);
-        vertices[vertices.length - 1] = vertices[0]; // close the ring
-
-        // center the polygon around something
-        vertices = vertices.map(vertexToCoordinate(position(bbox)));
-        features.push(feature(polygon([vertices])));
-    }
-
-    function sumOffsets(cur, index, arr) {
-        arr[index] = (index > 0) ? cur + arr[index - 1] : cur;
-    }
-
-    function scaleOffsets(cur, index) {
-        cur = cur * 2 * Math.PI / circle_offsets[circle_offsets.length - 1];
-        var radial_scaler = Math.random();
-        vertices.push([
-            radial_scaler * max_radial_length * Math.sin(cur),
-            radial_scaler * max_radial_length * Math.cos(cur)
-        ]);
-    }
-
-    return collection(features);
-};
-
-
-function vertexToCoordinate(hub) {
-    return function(cur, index) { return [cur[0] + hub[0], cur[1] + hub[1]]; };
-}
-
-function rnd() { return Math.random() - 0.5; }
-function lon() { return rnd() * 360; }
-function lat() { return rnd() * 180; }
-
-function point(coordinates) {
-    return {
-        type: 'Point',
-        coordinates: coordinates || [lon(), lat()]
-    };
-}
-
-function coordInBBBOX(bbox) {
-    return [
-        (Math.random() * (bbox[2] - bbox[0])) + bbox[0],
-        (Math.random() * (bbox[3] - bbox[1])) + bbox[1]];
-}
-
-function pointInBBBOX() {
-    return {
-        type: 'Point',
-        coordinates: [lon(), lat()]
-    };
-}
-
-function polygon(coordinates) {
-    return {
-        type: 'Polygon',
-        coordinates: coordinates
-    };
-}
-
-function feature(geom) {
-    return {
-        type: 'Feature',
-        geometry: geom,
-        properties: {}
-    };
-}
-
-function collection(f) {
-    return {
-        type: 'FeatureCollection',
-        features: f
-    };
-}
-
-
-/***/ }),
-/* 269 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-//High level idea:
-// 1. Use Clarkson's incremental construction to find convex hull
-// 2. Point location in triangulation by jump and walk
-
-module.exports = incrementalConvexHull
-
-var orient = __webpack_require__(250)
-var compareCell = __webpack_require__(274).compareCells
-
-function compareInt(a, b) {
-  return a - b
-}
-
-function Simplex(vertices, adjacent, boundary) {
-  this.vertices = vertices
-  this.adjacent = adjacent
-  this.boundary = boundary
-  this.lastVisited = -1
-}
-
-Simplex.prototype.flip = function() {
-  var t = this.vertices[0]
-  this.vertices[0] = this.vertices[1]
-  this.vertices[1] = t
-  var u = this.adjacent[0]
-  this.adjacent[0] = this.adjacent[1]
-  this.adjacent[1] = u
-}
-
-function GlueFacet(vertices, cell, index) {
-  this.vertices = vertices
-  this.cell = cell
-  this.index = index
-}
-
-function compareGlue(a, b) {
-  return compareCell(a.vertices, b.vertices)
-}
-
-function bakeOrient(d) {
-  var code = ["function orient(){var tuple=this.tuple;return test("]
-  for(var i=0; i<=d; ++i) {
-    if(i > 0) {
-      code.push(",")
-    }
-    code.push("tuple[", i, "]")
-  }
-  code.push(")}return orient")
-  var proc = new Function("test", code.join(""))
-  var test = orient[d+1]
-  if(!test) {
-    test = orient
-  }
-  return proc(test)
-}
-
-var BAKED = []
-
-function Triangulation(dimension, vertices, simplices) {
-  this.dimension = dimension
-  this.vertices = vertices
-  this.simplices = simplices
-  this.interior = simplices.filter(function(c) {
-    return !c.boundary
-  })
-
-  this.tuple = new Array(dimension+1)
-  for(var i=0; i<=dimension; ++i) {
-    this.tuple[i] = this.vertices[i]
-  }
-
-  var o = BAKED[dimension]
-  if(!o) {
-    o = BAKED[dimension] = bakeOrient(dimension)
-  }
-  this.orient = o
-}
-
-var proto = Triangulation.prototype
-
-//Degenerate situation where we are on boundary, but coplanar to face
-proto.handleBoundaryDegeneracy = function(cell, point) {
-  var d = this.dimension
-  var n = this.vertices.length - 1
-  var tuple = this.tuple
-  var verts = this.vertices
-
-  //Dumb solution: Just do dfs from boundary cell until we find any peak, or terminate
-  var toVisit = [ cell ]
-  cell.lastVisited = -n
-  while(toVisit.length > 0) {
-    cell = toVisit.pop()
-    var cellVerts = cell.vertices
-    var cellAdj = cell.adjacent
-    for(var i=0; i<=d; ++i) {
-      var neighbor = cellAdj[i]
-      if(!neighbor.boundary || neighbor.lastVisited <= -n) {
-        continue
-      }
-      var nv = neighbor.vertices
-      for(var j=0; j<=d; ++j) {
-        var vv = nv[j]
-        if(vv < 0) {
-          tuple[j] = point
-        } else {
-          tuple[j] = verts[vv]
-        }
-      }
-      var o = this.orient()
-      if(o > 0) {
-        return neighbor
-      }
-      neighbor.lastVisited = -n
-      if(o === 0) {
-        toVisit.push(neighbor)
-      }
-    }
-  }
-  return null
-}
-
-proto.walk = function(point, random) {
-  //Alias local properties
-  var n = this.vertices.length - 1
-  var d = this.dimension
-  var verts = this.vertices
-  var tuple = this.tuple
-
-  //Compute initial jump cell
-  var initIndex = random ? (this.interior.length * Math.random())|0 : (this.interior.length-1)
-  var cell = this.interior[ initIndex ]
-
-  //Start walking
-outerLoop:
-  while(!cell.boundary) {
-    var cellVerts = cell.vertices
-    var cellAdj = cell.adjacent
-
-    for(var i=0; i<=d; ++i) {
-      tuple[i] = verts[cellVerts[i]]
-    }
-    cell.lastVisited = n
-
-    //Find farthest adjacent cell
-    for(var i=0; i<=d; ++i) {
-      var neighbor = cellAdj[i]
-      if(neighbor.lastVisited >= n) {
-        continue
-      }
-      var prev = tuple[i]
-      tuple[i] = point
-      var o = this.orient()
-      tuple[i] = prev
-      if(o < 0) {
-        cell = neighbor
-        continue outerLoop
-      } else {
-        if(!neighbor.boundary) {
-          neighbor.lastVisited = n
-        } else {
-          neighbor.lastVisited = -n
-        }
-      }
-    }
-    return
-  }
-
-  return cell
-}
-
-proto.addPeaks = function(point, cell) {
-  var n = this.vertices.length - 1
-  var d = this.dimension
-  var verts = this.vertices
-  var tuple = this.tuple
-  var interior = this.interior
-  var simplices = this.simplices
-
-  //Walking finished at boundary, time to add peaks
-  var tovisit = [ cell ]
-
-  //Stretch initial boundary cell into a peak
-  cell.lastVisited = n
-  cell.vertices[cell.vertices.indexOf(-1)] = n
-  cell.boundary = false
-  interior.push(cell)
-
-  //Record a list of all new boundaries created by added peaks so we can glue them together when we are all done
-  var glueFacets = []
-
-  //Do a traversal of the boundary walking outward from starting peak
-  while(tovisit.length > 0) {
-    //Pop off peak and walk over adjacent cells
-    var cell = tovisit.pop()
-    var cellVerts = cell.vertices
-    var cellAdj = cell.adjacent
-    var indexOfN = cellVerts.indexOf(n)
-    if(indexOfN < 0) {
-      continue
-    }
-
-    for(var i=0; i<=d; ++i) {
-      if(i === indexOfN) {
-        continue
-      }
-
-      //For each boundary neighbor of the cell
-      var neighbor = cellAdj[i]
-      if(!neighbor.boundary || neighbor.lastVisited >= n) {
-        continue
-      }
-
-      var nv = neighbor.vertices
-
-      //Test if neighbor is a peak
-      if(neighbor.lastVisited !== -n) {      
-        //Compute orientation of p relative to each boundary peak
-        var indexOfNeg1 = 0
-        for(var j=0; j<=d; ++j) {
-          if(nv[j] < 0) {
-            indexOfNeg1 = j
-            tuple[j] = point
-          } else {
-            tuple[j] = verts[nv[j]]
-          }
-        }
-        var o = this.orient()
-
-        //Test if neighbor cell is also a peak
-        if(o > 0) {
-          nv[indexOfNeg1] = n
-          neighbor.boundary = false
-          interior.push(neighbor)
-          tovisit.push(neighbor)
-          neighbor.lastVisited = n
-          continue
-        } else {
-          neighbor.lastVisited = -n
-        }
-      }
-
-      var na = neighbor.adjacent
-
-      //Otherwise, replace neighbor with new face
-      var vverts = cellVerts.slice()
-      var vadj = cellAdj.slice()
-      var ncell = new Simplex(vverts, vadj, true)
-      simplices.push(ncell)
-
-      //Connect to neighbor
-      var opposite = na.indexOf(cell)
-      if(opposite < 0) {
-        continue
-      }
-      na[opposite] = ncell
-      vadj[indexOfN] = neighbor
-
-      //Connect to cell
-      vverts[i] = -1
-      vadj[i] = cell
-      cellAdj[i] = ncell
-
-      //Flip facet
-      ncell.flip()
-
-      //Add to glue list
-      for(var j=0; j<=d; ++j) {
-        var uu = vverts[j]
-        if(uu < 0 || uu === n) {
-          continue
-        }
-        var nface = new Array(d-1)
-        var nptr = 0
-        for(var k=0; k<=d; ++k) {
-          var vv = vverts[k]
-          if(vv < 0 || k === j) {
-            continue
-          }
-          nface[nptr++] = vv
-        }
-        glueFacets.push(new GlueFacet(nface, ncell, j))
-      }
-    }
-  }
-
-  //Glue boundary facets together
-  glueFacets.sort(compareGlue)
-
-  for(var i=0; i+1<glueFacets.length; i+=2) {
-    var a = glueFacets[i]
-    var b = glueFacets[i+1]
-    var ai = a.index
-    var bi = b.index
-    if(ai < 0 || bi < 0) {
-      continue
-    }
-    a.cell.adjacent[a.index] = b.cell
-    b.cell.adjacent[b.index] = a.cell
-  }
-}
-
-proto.insert = function(point, random) {
-  //Add point
-  var verts = this.vertices
-  verts.push(point)
-
-  var cell = this.walk(point, random)
-  if(!cell) {
-    return
-  }
-
-  //Alias local properties
-  var d = this.dimension
-  var tuple = this.tuple
-
-  //Degenerate case: If point is coplanar to cell, then walk until we find a non-degenerate boundary
-  for(var i=0; i<=d; ++i) {
-    var vv = cell.vertices[i]
-    if(vv < 0) {
-      tuple[i] = point
-    } else {
-      tuple[i] = verts[vv]
-    }
-  }
-  var o = this.orient(tuple)
-  if(o < 0) {
-    return
-  } else if(o === 0) {
-    cell = this.handleBoundaryDegeneracy(cell, point)
-    if(!cell) {
-      return
-    }
-  }
-
-  //Add peaks
-  this.addPeaks(point, cell)
-}
-
-//Extract all boundary cells
-proto.boundary = function() {
-  var d = this.dimension
-  var boundary = []
-  var cells = this.simplices
-  var nc = cells.length
-  for(var i=0; i<nc; ++i) {
-    var c = cells[i]
-    if(c.boundary) {
-      var bcell = new Array(d)
-      var cv = c.vertices
-      var ptr = 0
-      var parity = 0
-      for(var j=0; j<=d; ++j) {
-        if(cv[j] >= 0) {
-          bcell[ptr++] = cv[j]
-        } else {
-          parity = j&1
-        }
-      }
-      if(parity === (d&1)) {
-        var t = bcell[0]
-        bcell[0] = bcell[1]
-        bcell[1] = t
-      }
-      boundary.push(bcell)
-    }
-  }
-  return boundary
-}
-
-function incrementalConvexHull(points, randomSearch) {
-  var n = points.length
-  if(n === 0) {
-    throw new Error("Must have at least d+1 points")
-  }
-  var d = points[0].length
-  if(n <= d) {
-    throw new Error("Must input at least d+1 points")
-  }
-
-  //FIXME: This could be degenerate, but need to select d+1 non-coplanar points to bootstrap process
-  var initialSimplex = points.slice(0, d+1)
-
-  //Make sure initial simplex is positively oriented
-  var o = orient.apply(void 0, initialSimplex)
-  if(o === 0) {
-    throw new Error("Input not in general position")
-  }
-  var initialCoords = new Array(d+1)
-  for(var i=0; i<=d; ++i) {
-    initialCoords[i] = i
-  }
-  if(o < 0) {
-    initialCoords[0] = 1
-    initialCoords[1] = 0
-  }
-
-  //Create initial topological index, glue pointers together (kind of messy)
-  var initialCell = new Simplex(initialCoords, new Array(d+1), false)
-  var boundary = initialCell.adjacent
-  var list = new Array(d+2)
-  for(var i=0; i<=d; ++i) {
-    var verts = initialCoords.slice()
-    for(var j=0; j<=d; ++j) {
-      if(j === i) {
-        verts[j] = -1
-      }
-    }
-    var t = verts[0]
-    verts[0] = verts[1]
-    verts[1] = t
-    var cell = new Simplex(verts, new Array(d+1), true)
-    boundary[i] = cell
-    list[i] = cell
-  }
-  list[d+1] = initialCell
-  for(var i=0; i<=d; ++i) {
-    var verts = boundary[i].vertices
-    var adj = boundary[i].adjacent
-    for(var j=0; j<=d; ++j) {
-      var v = verts[j]
-      if(v < 0) {
-        adj[j] = initialCell
-        continue
-      }
-      for(var k=0; k<=d; ++k) {
-        if(boundary[k].vertices.indexOf(v) < 0) {
-          adj[j] = boundary[k]
-        }
-      }
-    }
-  }
-
-  //Initialize triangles
-  var triangles = new Triangulation(d, initialSimplex, list)
-
-  //Insert remaining points
-  var useRandom = !!randomSearch
-  for(var i=d+1; i<n; ++i) {
-    triangles.insert(points[i], useRandom)
-  }
-  
-  //Extract boundary cells
-  return triangles.boundary()
-}
-
-/***/ }),
-/* 270 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = monotoneConvexHull2D
-
-var orient = __webpack_require__(250)[3]
-
-function monotoneConvexHull2D(points) {
-  var n = points.length
-
-  if(n < 3) {
-    var result = new Array(n)
-    for(var i=0; i<n; ++i) {
-      result[i] = i
-    }
-
-    if(n === 2 &&
-       points[0][0] === points[1][0] &&
-       points[0][1] === points[1][1]) {
-      return [0]
-    }
-
-    return result
-  }
-
-  //Sort point indices along x-axis
-  var sorted = new Array(n)
-  for(var i=0; i<n; ++i) {
-    sorted[i] = i
-  }
-  sorted.sort(function(a,b) {
-    var d = points[a][0]-points[b][0]
-    if(d) {
-      return d
-    }
-    return points[a][1] - points[b][1]
-  })
-
-  //Construct upper and lower hulls
-  var lower = [sorted[0], sorted[1]]
-  var upper = [sorted[0], sorted[1]]
-
-  for(var i=2; i<n; ++i) {
-    var idx = sorted[i]
-    var p   = points[idx]
-
-    //Insert into lower list
-    var m = lower.length
-    while(m > 1 && orient(
-        points[lower[m-2]], 
-        points[lower[m-1]], 
-        p) <= 0) {
-      m -= 1
-      lower.pop()
-    }
-    lower.push(idx)
-
-    //Insert into upper list
-    m = upper.length
-    while(m > 1 && orient(
-        points[upper[m-2]], 
-        points[upper[m-1]], 
-        p) >= 0) {
-      m -= 1
-      upper.pop()
-    }
-    upper.push(idx)
-  }
-
-  //Merge lists together
-  var result = new Array(upper.length + lower.length - 2)
-  var ptr    = 0
-  for(var i=0, nl=lower.length; i<nl; ++i) {
-    result[ptr++] = lower[i]
-  }
-  for(var j=upper.length-2; j>0; --j) {
-    result[ptr++] = upper[j]
-  }
-
-  //Return result
-  return result
-}
-
-/***/ }),
-/* 271 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var twoProduct = __webpack_require__(259)
-var twoSum = __webpack_require__(316)
+var twoProduct = __webpack_require__(116)
+var twoSum = __webpack_require__(311)
 
 module.exports = scaleLinearExpansion
 
@@ -29482,7 +29524,7 @@ function scaleLinearExpansion(e, scale) {
 }
 
 /***/ }),
-/* 272 */
+/* 265 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29644,7 +29686,7 @@ function robustSubtract(e, f) {
 }
 
 /***/ }),
-/* 273 */
+/* 266 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29806,14 +29848,14 @@ function linearExpansionSum(e, f) {
 }
 
 /***/ }),
-/* 274 */
+/* 267 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
  "use restrict";
 
-var bits      = __webpack_require__(261)
-  , UnionFind = __webpack_require__(317)
+var bits      = __webpack_require__(131)
+  , UnionFind = __webpack_require__(312)
 
 //Returns the dimension of a cell complex
 function dimension(cells) {
@@ -30155,7 +30197,7 @@ exports.connectedComponents = connectedComponents
 
 
 /***/ }),
-/* 275 */
+/* 268 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_RESULT__;/*
@@ -30293,13 +30335,85 @@ else window.simplify = simplify;
 
 
 /***/ }),
-/* 276 */
+/* 269 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var measureDistance = __webpack_require__(243);
-var point = __webpack_require__(242).point;
-var bearing = __webpack_require__(247);
-var destination = __webpack_require__(248);
+module.exports = __webpack_require__(270);
+
+
+/***/ }),
+/* 270 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(global, module) {
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _ponyfill = __webpack_require__(271);
+
+var _ponyfill2 = _interopRequireDefault(_ponyfill);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+var root; /* global window */
+
+
+if (typeof self !== 'undefined') {
+  root = self;
+} else if (typeof window !== 'undefined') {
+  root = window;
+} else if (typeof global !== 'undefined') {
+  root = global;
+} else if (true) {
+  root = module;
+} else {
+  root = Function('return this')();
+}
+
+var result = (0, _ponyfill2['default'])(root);
+exports['default'] = result;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(65), __webpack_require__(313)(module)))
+
+/***/ }),
+/* 271 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+exports['default'] = symbolObservablePonyfill;
+function symbolObservablePonyfill(root) {
+	var result;
+	var _Symbol = root.Symbol;
+
+	if (typeof _Symbol === 'function') {
+		if (_Symbol.observable) {
+			result = _Symbol.observable;
+		} else {
+			result = _Symbol('observable');
+			_Symbol.observable = result;
+		}
+	} else {
+		result = '@@observable';
+	}
+
+	return result;
+};
+
+/***/ }),
+/* 272 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var measureDistance = __webpack_require__(9);
+var point = __webpack_require__(3).point;
+var bearing = __webpack_require__(38);
+var destination = __webpack_require__(39);
 
 /**
  * Takes a {@link LineString|line} and returns a {@link Point|point} at a specified distance along the line.
@@ -30361,10 +30475,10 @@ module.exports = function (line, distance, units) {
 
 
 /***/ }),
-/* 277 */
+/* 273 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var geometryArea = __webpack_require__(278).geometry;
+var geometryArea = __webpack_require__(274).geometry;
 
 /**
  * Takes a one or more features and returns their area
@@ -30428,10 +30542,10 @@ module.exports = area;
 
 
 /***/ }),
-/* 278 */
+/* 274 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var wgs84 = __webpack_require__(318);
+var wgs84 = __webpack_require__(314);
 
 module.exports.geometry = geometry;
 module.exports.ring = ringArea;
@@ -30522,11 +30636,11 @@ function rad(_) {
 }
 
 /***/ }),
-/* 279 */
+/* 275 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var linestring = __webpack_require__(242).lineString;
-var Spline = __webpack_require__(280);
+var linestring = __webpack_require__(3).lineString;
+var Spline = __webpack_require__(276);
 
 /**
  * Takes a {@link LineString|line} and returns a curved version
@@ -30594,7 +30708,7 @@ module.exports = function (line, resolution, sharpness) {
 
 
 /***/ }),
-/* 280 */
+/* 276 */
 /***/ (function(module, exports) {
 
 /* eslint-disable */
@@ -30734,17 +30848,17 @@ module.exports = Spline;
 
 
 /***/ }),
-/* 281 */
+/* 277 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // http://stackoverflow.com/questions/839899/how-do-i-calculate-a-point-on-a-circles-circumference
 // radians = degrees * (pi/180)
 // https://github.com/bjornharrtell/jsts/blob/master/examples/buffer.html
 
-var helpers = __webpack_require__(242);
+var helpers = __webpack_require__(3);
 var featureCollection = helpers.featureCollection;
-var jsts = __webpack_require__(282);
-var normalize = __webpack_require__(267);
+var jsts = __webpack_require__(278);
+var normalize = __webpack_require__(151);
 
 /**
  * Calculates a buffer for input features for a given radius. Units supported are miles, kilometers, and degrees.
@@ -30800,7 +30914,7 @@ function bufferOp(feature, radius) {
 
 
 /***/ }),
-/* 282 */
+/* 278 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // JSTS. See https://github.com/bjornharrtell/jsts
@@ -30825,11 +30939,11 @@ return m},Rs.isInCircleNonRobust=function(t,e,n,i){var r=(t.x*t.x+t.y*t.y)*Rs.tr
 
 
 /***/ }),
-/* 283 */
+/* 279 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var each = __webpack_require__(245).coordEach;
-var point = __webpack_require__(242).point;
+var each = __webpack_require__(23).coordEach;
+var point = __webpack_require__(3).point;
 
 /**
  * Takes one or more features and calculates the centroid using
@@ -30877,10 +30991,10 @@ module.exports = function (features) {
 
 
 /***/ }),
-/* 284 */
+/* 280 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var inside = __webpack_require__(244);
+var inside = __webpack_require__(22);
 
 /**
  * Joins attributes FeatureCollection of polygons with a FeatureCollection of
@@ -30929,10 +31043,10 @@ module.exports = function collect(polygons, points, inProperty, outProperty) {
 
 
 /***/ }),
-/* 285 */
+/* 281 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var meta = __webpack_require__(245);
+var meta = __webpack_require__(23);
 
 /**
  * Combines a {@link FeatureCollection} of {@link Point},
@@ -31024,7 +31138,7 @@ module.exports = function (fc) {
 
 
 /***/ }),
-/* 286 */
+/* 282 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // 1. run tin on points
@@ -31032,9 +31146,9 @@ module.exports = function (fc) {
 // 3. remove triangles that fail the max length test
 // 4. buffer the results slightly
 // 5. merge the results
-var tin = __webpack_require__(251);
-var union = __webpack_require__(258);
-var distance = __webpack_require__(243);
+var tin = __webpack_require__(64);
+var union = __webpack_require__(115);
+var distance = __webpack_require__(9);
 
 /**
  * Takes a set of {@link Point|points} and returns a concave hull polygon.
@@ -31146,12 +31260,12 @@ module.exports = concave;
 
 
 /***/ }),
-/* 287 */
+/* 283 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var each = __webpack_require__(245).coordEach,
-    convexHull = __webpack_require__(262),
-    polygon = __webpack_require__(242).polygon;
+var each = __webpack_require__(23).coordEach,
+    convexHull = __webpack_require__(132),
+    polygon = __webpack_require__(3).polygon;
 
 /**
  * Takes a set of {@link Point|points} and returns a
@@ -31241,11 +31355,11 @@ module.exports = function (featurecollection) {
 
 
 /***/ }),
-/* 288 */
+/* 284 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // depend on jsts for now https://github.com/bjornharrtell/jsts/blob/master/examples/overlay.html
-var jsts = __webpack_require__(289);
+var jsts = __webpack_require__(285);
 
 /**
  * Finds the difference between two {@link Polygon|polygons} by clipping the second
@@ -31341,7 +31455,7 @@ module.exports = function (p1, p2) {
 
 
 /***/ }),
-/* 289 */
+/* 285 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // JSTS. See https://github.com/bjornharrtell/jsts
@@ -31366,11 +31480,11 @@ return m},Rs.isInCircleNonRobust=function(t,e,n,i){var r=(t.x*t.x+t.y*t.y)*Rs.tr
 
 
 /***/ }),
-/* 290 */
+/* 286 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var bbox = __webpack_require__(246);
-var bboxPolygon = __webpack_require__(252);
+var bbox = __webpack_require__(37);
+var bboxPolygon = __webpack_require__(109);
 
 /**
  * Takes any number of features and returns a rectangular {@link Polygon} that encompasses all vertices.
@@ -31430,10 +31544,10 @@ module.exports = function (features) {
 
 
 /***/ }),
-/* 291 */
+/* 287 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var coordEach = __webpack_require__(245).coordEach;
+var coordEach = __webpack_require__(23).coordEach;
 
 /**
  * Takes input features and flips all of their coordinates
@@ -31472,10 +31586,10 @@ module.exports = function flip(input) {
 
 
 /***/ }),
-/* 292 */
+/* 288 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var point = __webpack_require__(305);
+var point = __webpack_require__(301);
 
 /**
  * Takes a bounding box and a cell depth and returns a {@link FeatureCollection} of {@link Point} features in a grid.
@@ -31515,13 +31629,13 @@ module.exports = function(extents, depth) {
 
 
 /***/ }),
-/* 293 */
+/* 289 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var point = __webpack_require__(242).point;
-var polygon = __webpack_require__(242).polygon;
-var distance = __webpack_require__(243);
-var featurecollection = __webpack_require__(242).featureCollection;
+var point = __webpack_require__(3).point;
+var polygon = __webpack_require__(3).polygon;
+var distance = __webpack_require__(9);
+var featurecollection = __webpack_require__(3).featureCollection;
 
 //Precompute cosines and sines of angles used in hexagon creation
 // for performance gain
@@ -31651,11 +31765,11 @@ function hexTriangles(center, rx, ry) {
 
 
 /***/ }),
-/* 294 */
+/* 290 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // depend on jsts for now https://github.com/bjornharrtell/jsts/blob/master/examples/overlay.html
-var jsts = __webpack_require__(295);
+var jsts = __webpack_require__(291);
 
 /**
  * Takes two {@link Polygon|polygons} and finds their intersection. If they share a border, returns the border; if they don't intersect, returns undefined.
@@ -31739,7 +31853,7 @@ module.exports = function intersect(poly1, poly2) {
 
 
 /***/ }),
-/* 295 */
+/* 291 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // JSTS. See https://github.com/bjornharrtell/jsts
@@ -31764,7 +31878,7 @@ return m},Rs.isInCircleNonRobust=function(t,e,n,i){var r=(t.x*t.x+t.y*t.y)*Rs.tr
 
 
 /***/ }),
-/* 296 */
+/* 292 */
 /***/ (function(module, exports) {
 
 /* eslint-disable */
@@ -32287,20 +32401,20 @@ return m},Rs.isInCircleNonRobust=function(t,e,n,i){var r=(t.x*t.x+t.y*t.y)*Rs.tr
 
 
 /***/ }),
-/* 297 */
+/* 293 */
 /***/ (function(module, exports, __webpack_require__) {
 
 //https://github.com/jasondavies/conrec.js
 //http://stackoverflow.com/questions/263305/drawing-a-topographical-map
-var tin = __webpack_require__(251);
-var inside = __webpack_require__(244);
-var grid = __webpack_require__(292);
-var bbox = __webpack_require__(246);
-var planepoint = __webpack_require__(255);
-var featurecollection = __webpack_require__(242).featureCollection;
-var linestring = __webpack_require__(242).lineString;
-var square = __webpack_require__(257);
-var Conrec = __webpack_require__(296);
+var tin = __webpack_require__(64);
+var inside = __webpack_require__(22);
+var grid = __webpack_require__(288);
+var bbox = __webpack_require__(37);
+var planepoint = __webpack_require__(112);
+var featurecollection = __webpack_require__(3).featureCollection;
+var linestring = __webpack_require__(3).lineString;
+var square = __webpack_require__(114);
+var Conrec = __webpack_require__(292);
 
 /**
  * Takes {@link Point|points} with z-values and an array of
@@ -32389,7 +32503,7 @@ module.exports = function (points, z, resolution, breaks) {
 
 
 /***/ }),
-/* 298 */
+/* 294 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -32425,7 +32539,7 @@ module.exports = function (points, z, resolution, breaks) {
  * //=result
  */
 
-var point = __webpack_require__(242).point;
+var point = __webpack_require__(3).point;
 
 module.exports = function (polyIn) {
     var poly;
@@ -32507,11 +32621,11 @@ function lineIntersects(line1StartX, line1StartY, line1EndX, line1EndY, line2Sta
 
 
 /***/ }),
-/* 299 */
+/* 295 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var distance = __webpack_require__(243);
-var point = __webpack_require__(242).point;
+var distance = __webpack_require__(9);
+var point = __webpack_require__(3).point;
 
 /**
  * Takes a {@link LineString|line} and measures its length in the specified units.
@@ -32594,11 +32708,11 @@ function length(coords, units) {
 
 
 /***/ }),
-/* 300 */
+/* 296 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var linestring = __webpack_require__(242).lineString;
-var pointOnLine = __webpack_require__(256);
+var linestring = __webpack_require__(3).lineString;
+var pointOnLine = __webpack_require__(113);
 
 /**
  * Takes a {@link LineString|line}, a start {@link Point}, and a stop point
@@ -32680,12 +32794,12 @@ module.exports = function lineSlice(startPt, stopPt, line) {
 
 
 /***/ }),
-/* 301 */
+/* 297 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var bearing = __webpack_require__(247);
-var destination = __webpack_require__(248);
-var distance = __webpack_require__(243);
+var bearing = __webpack_require__(38);
+var destination = __webpack_require__(39);
+var distance = __webpack_require__(9);
 
 /**
  * Takes two {@link Point|points} and returns a point midway between them.
@@ -32734,10 +32848,10 @@ module.exports = function (from, to) {
 
 
 /***/ }),
-/* 302 */
+/* 298 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var distance = __webpack_require__(243);
+var distance = __webpack_require__(9);
 
 /**
  * Takes a reference {@link Point|point} and a FeatureCollection of Features
@@ -32813,12 +32927,12 @@ module.exports = function (targetPoint, points) {
 
 
 /***/ }),
-/* 303 */
+/* 299 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var point = __webpack_require__(242).point;
-var featurecollection = __webpack_require__(242).featureCollection;
-var distance = __webpack_require__(243);
+var point = __webpack_require__(3).point;
+var featurecollection = __webpack_require__(3).featureCollection;
+var distance = __webpack_require__(9);
 /**
  * Takes a bounding box and a cell depth and returns a set of {@link Point|points} in a grid.
  *
@@ -32859,14 +32973,14 @@ module.exports = function pointGrid(bbox, cellSize, units) {
 
 
 /***/ }),
-/* 304 */
+/* 300 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var featureCollection = __webpack_require__(242).featureCollection;
-var centroid = __webpack_require__(253);
-var distance = __webpack_require__(243);
-var inside = __webpack_require__(244);
-var explode = __webpack_require__(254);
+var featureCollection = __webpack_require__(3).featureCollection;
+var centroid = __webpack_require__(110);
+var distance = __webpack_require__(9);
+var inside = __webpack_require__(22);
+var explode = __webpack_require__(111);
 
 /**
  * Takes a feature and returns a {@link Point} guaranteed to be on the surface of the feature.
@@ -33013,7 +33127,7 @@ module.exports = pointOnSurface;
 
 
 /***/ }),
-/* 305 */
+/* 301 */
 /***/ (function(module, exports) {
 
 /**
@@ -33049,10 +33163,10 @@ module.exports = function(coordinates, properties) {
 
 
 /***/ }),
-/* 306 */
+/* 302 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var random = __webpack_require__(268);
+var random = __webpack_require__(152);
 
 /**
  * Generates random {@link GeoJSON} data, including {@link Point|Points} and {@link Polygon|Polygons}, for testing
@@ -33106,11 +33220,11 @@ module.exports = function (type, count, options) {
 
 
 /***/ }),
-/* 307 */
+/* 303 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // http://stackoverflow.com/questions/11935175/sampling-a-random-subset-from-an-array
-var featureCollection = __webpack_require__(242).featureCollection;
+var featureCollection = __webpack_require__(3).featureCollection;
 
 /**
  * Takes a {@link FeatureCollection} and returns a FeatureCollection with given number of {@link Feature|features} at random.
@@ -33146,10 +33260,10 @@ function getRandomSubarray(arr, size) {
 
 
 /***/ }),
-/* 308 */
+/* 304 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var simplify = __webpack_require__(275);
+var simplify = __webpack_require__(268);
 
 // supported GeoJSON geometries, used to check whether to wrap in simpleFeature()
 var supportedTypes = ['LineString', 'MultiLineString', 'Polygon', 'MultiPolygon'];
@@ -33333,13 +33447,13 @@ function simplifyPolygon(coordinates, tolerance, highQuality) {
 
 
 /***/ }),
-/* 309 */
+/* 305 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var featurecollection = __webpack_require__(242).featureCollection;
-var point = __webpack_require__(242).point;
-var polygon = __webpack_require__(242).polygon;
-var distance = __webpack_require__(243);
+var featurecollection = __webpack_require__(3).featureCollection;
+var point = __webpack_require__(3).point;
+var polygon = __webpack_require__(3).polygon;
+var distance = __webpack_require__(9);
 
 /**
  * Takes a bounding box and a cell depth and returns a set of square {@link Polygon|polygons} in a grid.
@@ -33388,10 +33502,10 @@ module.exports = function squareGrid(bbox, cellSize, units) {
 
 
 /***/ }),
-/* 310 */
+/* 306 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var inside = __webpack_require__(244);
+var inside = __webpack_require__(22);
 
 /**
  * Takes a set of {@link Point|points} and a set of {@link Polygon|polygons} and performs a spatial join.
@@ -33449,11 +33563,11 @@ module.exports = function (points, polygons, field, outField) {
 
 
 /***/ }),
-/* 311 */
+/* 307 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var polygon = __webpack_require__(242).polygon;
-var earcut = __webpack_require__(266);
+var polygon = __webpack_require__(3).polygon;
+var earcut = __webpack_require__(136);
 
 /**
  * Tesselates a {@link Feature<Polygon>} into a {@link FeatureCollection<Polygon>} of triangles
@@ -33530,12 +33644,12 @@ function flattenCoords(data) {
 
 
 /***/ }),
-/* 312 */
+/* 308 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var featurecollection = __webpack_require__(242).featureCollection;
-var polygon = __webpack_require__(242).polygon;
-var distance = __webpack_require__(243);
+var featurecollection = __webpack_require__(3).featureCollection;
+var polygon = __webpack_require__(3).polygon;
+var distance = __webpack_require__(9);
 
 /**
  * Takes a bounding box and a cell depth and returns a set of triangular {@link Polygon|polygons} in a grid.
@@ -33628,7 +33742,7 @@ module.exports = function (bbox, cellSize, units) {
 
 
 /***/ }),
-/* 313 */
+/* 309 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // JSTS. See https://github.com/bjornharrtell/jsts
@@ -33653,11 +33767,11 @@ return m},Rs.isInCircleNonRobust=function(t,e,n,i){var r=(t.x*t.x+t.y*t.y)*Rs.tr
 
 
 /***/ }),
-/* 314 */
+/* 310 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var inside = __webpack_require__(244);
-var featureCollection = __webpack_require__(242).featureCollection;
+var inside = __webpack_require__(22);
+var featureCollection = __webpack_require__(3).featureCollection;
 
 /**
  * Takes a set of {@link Point|points} and a set of {@link Polygon|polygons} and returns the points that fall within the polygons.
@@ -33753,79 +33867,7 @@ module.exports = function (points, polygons) {
 
 
 /***/ }),
-/* 315 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/*eslint global-require: 0*/
-
-/**
- * Turf is a modular geospatial analysis engine written in JavaScript. It performs geospatial
- * processing tasks with GeoJSON data and can be run on a server or in a browser.
- *
- * @module turf
- * @summary Geospatial analysis for JavaScript
- */
-module.exports = {
-    isolines: __webpack_require__(297),
-    convex: __webpack_require__(287),
-    within: __webpack_require__(314),
-    concave: __webpack_require__(286),
-    difference: __webpack_require__(288),
-    collect: __webpack_require__(284),
-    flip: __webpack_require__(291),
-    simplify: __webpack_require__(308),
-    bezier: __webpack_require__(279),
-    tag: __webpack_require__(310),
-    sample: __webpack_require__(307),
-    envelope: __webpack_require__(290),
-    square: __webpack_require__(257),
-    midpoint: __webpack_require__(301),
-    buffer: __webpack_require__(281),
-    center: __webpack_require__(253),
-    centroid: __webpack_require__(283),
-    combine: __webpack_require__(285),
-    distance: __webpack_require__(243),
-    explode: __webpack_require__(254),
-    bbox: __webpack_require__(246),
-    tesselate: __webpack_require__(311),
-    bboxPolygon: __webpack_require__(252),
-    inside: __webpack_require__(244),
-    intersect: __webpack_require__(294),
-    nearest: __webpack_require__(302),
-    planepoint: __webpack_require__(255),
-    random: __webpack_require__(306),
-    tin: __webpack_require__(251),
-    union: __webpack_require__(258),
-    bearing: __webpack_require__(247),
-    destination: __webpack_require__(248),
-    kinks: __webpack_require__(298),
-    pointOnSurface: __webpack_require__(304),
-    area: __webpack_require__(277),
-    along: __webpack_require__(276),
-    lineDistance: __webpack_require__(299),
-    lineSlice: __webpack_require__(300),
-    pointOnLine: __webpack_require__(256),
-    pointGrid: __webpack_require__(303),
-    squareGrid: __webpack_require__(309),
-    triangleGrid: __webpack_require__(312),
-    hexGrid: __webpack_require__(293)
-};
-
-var helpers = __webpack_require__(242);
-
-module.exports.point = helpers.point;
-module.exports.polygon = helpers.polygon;
-module.exports.lineString = helpers.lineString;
-module.exports.multiPoint = helpers.multiPoint;
-module.exports.multiPolygon = helpers.multiPolygon;
-module.exports.multiLineString = helpers.multiLineString;
-module.exports.feature = helpers.feature;
-module.exports.featureCollection = helpers.featureCollection;
-module.exports.geometryCollection = helpers.geometryCollection;
-
-
-/***/ }),
-/* 316 */
+/* 311 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -33848,7 +33890,7 @@ function fastTwoSum(a, b, result) {
 }
 
 /***/ }),
-/* 317 */
+/* 312 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -33916,61 +33958,41 @@ proto.link = function(x, y) {
 }
 
 /***/ }),
-/* 318 */
+/* 313 */
+/***/ (function(module, exports) {
+
+module.exports = function(module) {
+	if(!module.webpackPolyfill) {
+		module.deprecate = function() {};
+		module.paths = [];
+		// module.parent = undefined by default
+		if(!module.children) module.children = [];
+		Object.defineProperty(module, "loaded", {
+			enumerable: true,
+			get: function() {
+				return module.l;
+			}
+		});
+		Object.defineProperty(module, "id", {
+			enumerable: true,
+			get: function() {
+				return module.i;
+			}
+		});
+		module.webpackPolyfill = 1;
+	}
+	return module;
+};
+
+
+/***/ }),
+/* 314 */
 /***/ (function(module, exports) {
 
 module.exports.RADIUS = 6378137;
 module.exports.FLATTENING = 1/298.257223563;
 module.exports.POLAR_RADIUS = 6356752.3142;
 
-
-/***/ }),
-/* 319 */,
-/* 320 */,
-/* 321 */,
-/* 322 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.getBbox = getBbox;
-exports.countCrimes = countCrimes;
-
-var _turf = __webpack_require__(315);
-
-var _turf2 = _interopRequireDefault(_turf);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function getBbox(feature) {
-  var coords = _turf2.default.bbox(feature);
-  return [[coords[0], coords[1]], [coords[2], coords[3]]];
-}
-
-function countCrimes(crimes, neighborhood) {
-  var counts = {};
-  crimes.forEach(function (crime, idx) {
-    if (_turf2.default.inside(crime, neighborhood)) {
-      var crimeType = crime.properties.category;
-      counts[crimeType] = counts[crimeType] + 1 || 1;
-    }
-  });
-  return counts;
-}
-
-// export function mergeCrimes(hoods, crimes) {
-//   let collected, hCollection, cCollection;
-//   hCollection = { 'features': hoods };
-//   cCollection = { 'features': crimes };
-//   console.log('made it here...');
-//   collected = turf.collect(hCollection, cCollection, 'category', 'values');
-//   console.log('MADE IT OUT YEAH!');
-//   console.log(collected);
-// }
 
 /***/ })
 /******/ ]);

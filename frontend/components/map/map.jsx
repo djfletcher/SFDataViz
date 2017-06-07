@@ -82,15 +82,34 @@ class DataMap extends React.Component {
   }
 
   memoizeNeighborhood(name) {
-    let hoodGeometry = this.state.neighborhoodMemo[name];
-    if (hoodGeometry) {
-      console.log(hoodGeometry);
-      return hoodGeometry;
+    let existingMemo = this.state.neighborhoodMemo[name];
+    if (existingMemo) {
+      return existingMemo;
+    } else {
+      let counts = countCrimes(
+        this.props.crimes,
+        this.props.neighborhoods[name],
+        this.displayCounts,
+        name
+      );
+      this.setState({ neighborhoodMemo: { [name]: counts } });
+      return counts;
     }
-    let counts = countCrimes(this.props.crimes, this.props.neighborhoods[name]);
-    this.setState({ neighborhoodMemo: { [name]: counts } });
-    console.log(counts);
-    return counts;
+  }
+
+  displayCounts(counts, name) {
+    let overlay = document.getElementById('map-overlay');
+    let title = document.createElement('h1');
+    overlay.innerHTML = '';
+    title.innerHTML = name;
+    overlay.appendChild(title);
+    for (let category in counts) {
+      let row = document.createElement('li');
+      row.innerHTML = `${category}: ${counts[category]}`;
+      overlay.appendChild(row);
+    }
+    overlay.style.display = 'block';
+    return overlay;
   }
 
   addLayer(layer) {
