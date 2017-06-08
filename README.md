@@ -8,3 +8,4 @@ Geographic data visualization and analytics for San Francisco crime. In its curr
 + Creation of a Node/Express backend to handle the point-in-polygon logic that currently slows down the browser and disrupts UX.
 + Address search, including autocomplete.
 + Access user's geolocation and plot it on map.
++ Logic to find and visually emphasize "safe spots" of low density crime, and "hot spots" of high density crime.

@@ -12,17 +12,21 @@ class DataMap extends React.Component {
       statsDisplayed: {
         neighborhood: '',
         stats: {}
-      }
+      },
+      hoverEffects: true
     };
     this.requestData = this.requestData.bind(this);
     this.makeInteractive = this.makeInteractive.bind(this);
     this.addHoverEffects = this.addHoverEffects.bind(this);
+    this.colorNeighborhoodFill = this.colorNeighborhoodFill.bind(this);
+    this.clearNeighborhoodFill = this.clearNeighborhoodFill.bind(this);
     this.addClickEffects = this.addClickEffects.bind(this);
     this.getStats = this.getStats.bind(this);
     this.memoizeStats = this.memoizeStats.bind(this);
     this.updateStatsDisplayed = this.updateStatsDisplayed.bind(this);
     this.addLayer = this.addLayer.bind(this);
     this.handleToggle = this.handleToggle.bind(this);
+    this.toggleLayerVisibility = this.toggleLayerVisibility.bind(this);
   }
 
   componentDidMount() {
@@ -70,16 +74,25 @@ class DataMap extends React.Component {
   addHoverEffects() {
     // When the user moves their mouse over the neighborhood-fills, update the filter
     // to only show the matching neighborhood, thus making a hover effect.
-    this.map.on("mousemove", "neighborhoods", e => {
-      this.map.setFilter("neighborhood-fills", ["==", "name", e.features[0].properties.name]);
-      this.map.getCanvas().style.cursor = 'pointer';
-    });
+    this.map.on("mousemove", "neighborhoods", this.colorNeighborhoodFill);
 
     // Reset the neighborhoods's filter when the mouse leaves the layer.
-    this.map.on("mouseleave", "neighborhoods", () => {
-      this.map.setFilter("neighborhood-fills", ["==", "name", ""]);
-      this.map.getCanvas().style.cursor = '';
-    });
+    this.map.on("mouseleave", "neighborhoods", this.clearNeighborhoodFill);
+  }
+
+  removeHoverEffects() {
+    this.map.off("mousemove", "neighborhoods", this.colorNeighborhoodFill);
+    this.map.off("mouseleave", "neighborhoods", this.clearNeighborhoodFill);
+  }
+
+  colorNeighborhoodFill(e) {
+    this.map.setFilter("neighborhood-fills", ["==", "name", e.features[0].properties.name]);
+    this.map.getCanvas().style.cursor = 'pointer';
+  }
+
+  clearNeighborhoodFill() {
+    this.map.setFilter("neighborhood-fills", ["==", "name", ""]);
+    this.map.getCanvas().style.cursor = '';
   }
 
   addClickEffects() {
@@ -130,15 +143,32 @@ class DataMap extends React.Component {
     this.map.addLayer(layer, beneathLayer);
   }
 
-  handleToggle(layerId) {
-    let el = document.getElementById(layerId);
+  handleToggle(layer) {
+    let el = document.getElementById(layer);
+    if (el.className === 'active') {
+      el.className = '';
+    } else {
+      el.className = 'active';
+    }
+
+    if (layer === 'neighborhoods') {
+      this.toggleLayerVisibility('neighborhoods');
+      this.toggleLayerVisibility('neighborhood-outlines');
+      this.toggleLayerVisibility('neighborhood-fills');
+
+      this.state.hoverEffects ? this.removeHoverEffects() : this.addHoverEffects();
+      this.setState({ hoverEffects: !this.state.hoverEffects });
+    } else {
+      this.toggleLayerVisibility('crime');
+    }
+  }
+
+  toggleLayerVisibility(layerId) {
     let visibility = this.map.getLayoutProperty(layerId, 'visibility');
     if (visibility === 'visible') {
       this.map.setLayoutProperty(layerId, 'visibility', 'none');
-      el.className = '';
     } else {
       this.map.setLayoutProperty(layerId, 'visibility', 'visible');
-      el.className = 'active';
     }
   }
 
@@ -151,9 +181,9 @@ class DataMap extends React.Component {
           onClick={ () => this.handleToggle('crime') }>Crime
         </li>
         <li
-          id="neighborhood-outlines"
+          id="neighborhoods"
           className="active"
-          onClick={ () => this.handleToggle('neighborhood-outlines') }>Neighborhoods
+          onClick={ () => this.handleToggle('neighborhoods') }>Neighborhoods
         </li>
       </ul>
     );
