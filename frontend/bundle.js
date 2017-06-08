@@ -13470,6 +13470,7 @@ var DataMap = function (_React$Component) {
     _this.updateStatsDisplayed = _this.updateStatsDisplayed.bind(_this);
     _this.addLayer = _this.addLayer.bind(_this);
     _this.handleToggle = _this.handleToggle.bind(_this);
+    _this.toggleNeighborhoods = _this.toggleNeighborhoods.bind(_this);
     _this.toggleLayerVisibility = _this.toggleLayerVisibility.bind(_this);
     return _this;
   }
@@ -13610,15 +13611,32 @@ var DataMap = function (_React$Component) {
       }
 
       if (layer === 'neighborhoods') {
-        this.toggleLayerVisibility('neighborhoods');
-        this.toggleLayerVisibility('neighborhood-outlines');
-        this.toggleLayerVisibility('neighborhood-fills');
-
-        this.state.hoverEffects ? this.removeHoverEffects() : this.addHoverEffects();
-        this.setState({ hoverEffects: !this.state.hoverEffects });
+        this.toggleNeighborhoods();
       } else {
         this.toggleLayerVisibility('crime');
       }
+    }
+  }, {
+    key: 'toggleNeighborhoods',
+    value: function toggleNeighborhoods() {
+      var overlay = document.getElementById('map-overlay');
+
+      this.toggleLayerVisibility('neighborhoods');
+      this.toggleLayerVisibility('neighborhood-outlines');
+      this.toggleLayerVisibility('neighborhood-fills');
+
+      if (this.state.hoverEffects) {
+        this.removeHoverEffects();
+        if (overlay) {
+          overlay.style.display = 'none';
+        }
+      } else {
+        this.addHoverEffects();
+        if (overlay) {
+          overlay.style.display = 'block';
+        }
+      }
+      this.setState({ hoverEffects: !this.state.hoverEffects });
     }
   }, {
     key: 'toggleLayerVisibility',

@@ -26,6 +26,7 @@ class DataMap extends React.Component {
     this.updateStatsDisplayed = this.updateStatsDisplayed.bind(this);
     this.addLayer = this.addLayer.bind(this);
     this.handleToggle = this.handleToggle.bind(this);
+    this.toggleNeighborhoods = this.toggleNeighborhoods.bind(this);
     this.toggleLayerVisibility = this.toggleLayerVisibility.bind(this);
   }
 
@@ -152,15 +153,27 @@ class DataMap extends React.Component {
     }
 
     if (layer === 'neighborhoods') {
-      this.toggleLayerVisibility('neighborhoods');
-      this.toggleLayerVisibility('neighborhood-outlines');
-      this.toggleLayerVisibility('neighborhood-fills');
-
-      this.state.hoverEffects ? this.removeHoverEffects() : this.addHoverEffects();
-      this.setState({ hoverEffects: !this.state.hoverEffects });
+      this.toggleNeighborhoods();
     } else {
       this.toggleLayerVisibility('crime');
     }
+  }
+
+  toggleNeighborhoods() {
+    let overlay = document.getElementById('map-overlay');
+
+    this.toggleLayerVisibility('neighborhoods');
+    this.toggleLayerVisibility('neighborhood-outlines');
+    this.toggleLayerVisibility('neighborhood-fills');
+
+    if (this.state.hoverEffects) {
+      this.removeHoverEffects();
+      if (overlay) { overlay.style.display = 'none'; }
+    } else {
+      this.addHoverEffects();
+      if (overlay) { overlay.style.display = 'block'; }
+    }
+    this.setState({ hoverEffects: !this.state.hoverEffects });
   }
 
   toggleLayerVisibility(layerId) {
