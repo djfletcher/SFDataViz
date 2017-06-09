@@ -191,7 +191,7 @@ class DataMap extends React.Component {
         <li
           id="crime"
           className="active"
-          onClick={ () => this.handleToggle('crime') }>Crime
+          onClick={ () => this.handleToggle('crime') }>Crime Incidents
         </li>
         <li
           id="neighborhoods"

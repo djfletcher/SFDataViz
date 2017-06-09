@@ -13664,7 +13664,7 @@ var DataMap = function (_React$Component) {
             onClick: function onClick() {
               return _this3.handleToggle('crime');
             } },
-          'Crime'
+          'Crime Incidents'
         ),
         _react2.default.createElement(
           'li',
