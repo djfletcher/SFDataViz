@@ -13987,6 +13987,12 @@ var _turf2 = _interopRequireDefault(_turf);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+var roads = __webpack_require__(316);
+// import roads from '../san-francisco_california_roads.geojson';
+roads["features"].slice(0, 3).forEach(function (road) {
+  return console.log(road);
+});
+
 window.inside = _turf2.default.inside;
 
 window.addEventListener("DOMContentLoaded", function () {
@@ -34135,6 +34141,12 @@ module.exports.RADIUS = 6378137;
 module.exports.FLATTENING = 1/298.257223563;
 module.exports.POLAR_RADIUS = 6356752.3142;
 
+
+/***/ }),
+/* 316 */
+/***/ (function(module, exports) {
+
+throw new Error("Module parse failed: /Volumes/DATA/Daniel/AppAcademy/SFDataViz/san-francisco_california_roads.geojson Unexpected token (2:6)\nYou may need an appropriate loader to handle this file type.\n| {\n| \"type\": \"FeatureCollection\",\n| \"crs\": { \"type\": \"name\", \"properties\": { \"name\": \"urn:ogc:def:crs:OGC:1.3:CRS84\" } },\n|                                                                                 ");
 
 /***/ })
 /******/ ]);

@@ -3,6 +3,11 @@ import React from 'react';
 import configureStore from './store/store';
 import App from './components/app';
 
+// var roads = require('../san-francisco_california_roads.geojson');
+import {roads} from '../san-francisco_california_roads.js';
+roads["features"].slice(0, 3).forEach(road => console.log(road));
+
+
 import turf from 'turf';
 
 window.inside = turf.inside;
