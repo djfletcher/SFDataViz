@@ -5,7 +5,7 @@ roads = JSON.parse(file)['features']
 
 points = {}
 
-roads.each do |road|
+roads.each_with_index do |road|
   road['geometry']['coordinates'].each do |coord|
     if points[coord.to_s]
       points[coord.to_s] += 1

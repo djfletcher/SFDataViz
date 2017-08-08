@@ -1,2 +1,6 @@
 node_modules/
 san-francisco_california.imposm-geojson/
+san-francisco_california_roads.geojson
+points.txt
+intersections_hash.txt
+intersections_text.txt
