@@ -1,6 +1,8 @@
 import React from 'react';
 import mapboxgl from 'mapbox-gl/dist/mapbox-gl';
 import createLayer from './map_layer';
+import { intersectionPoints } from '../../../shorted_intersections';
+import createIntersectionsLayer from './intersections_testing';
 import { getBbox, countCrimes } from './gis_calculations';
 import mapOverlay from './map_overlay';
 
@@ -43,12 +45,17 @@ class DataMap extends React.Component {
 
     this.requestData();
     window.map = this.map;
+
+    // let layer = createIntersectionsLayer(intersectionPoints);
+    // debugger;
+    // this.addLayer(layer);
   }
 
   componentWillReceiveProps(nextProps) {
     let layer;
     if (nextProps.crimes.length > 5000 && nextProps.crimes.length !== this.props.crimes.length) {
       layer = createLayer('crime', nextProps.crimes);
+      debugger;
       this.addLayer(layer);
     }
     if (!$.isEmptyObject(nextProps.neighborhoods) && $.isEmptyObject(this.props.neighborhoods)) {
