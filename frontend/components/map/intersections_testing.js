@@ -1,7 +1,7 @@
-import { ints } from '../../../intersections_array_points';
+import { points } from '../../../intersections_array_points';
 
 function createLayer() {
-  return assembleLayerProperties('intersections', 'circle', ints);
+  return assembleLayerProperties('intersections', 'circle', points);
 }
 
 function convertToGeoJSONArray(dataset) {
@@ -27,7 +27,7 @@ const paintProperties = {
 };
 
 const layoutProperties = {
-  'crime': {
+  'intersections': {
     'visibility': 'visible'
   }
 };

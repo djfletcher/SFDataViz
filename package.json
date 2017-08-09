@@ -4,7 +4,8 @@
   "description": "Geographic data visualizations for San Francisco.",
   "main": "sf_data_viz.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "webpack-dev-server --inline"
   },
   "repository": {
     "type": "git",
@@ -29,6 +30,7 @@
     "react-router": "^4.1.1",
     "redux": "^3.6.0",
     "redux-thunk": "^2.2.0",
-    "webpack": "^2.6.0"
+    "webpack": "^2.6.0",
+    "webpack-dev-server": "^2.7.1"
   }
 }
