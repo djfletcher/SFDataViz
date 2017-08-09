@@ -3,11 +3,11 @@ import React from 'react';
 import configureStore from './store/store';
 import App from './components/app';
 
-import {fetchIntersections} from './util/intersections_api_util';
+import {requestIntersections} from './actions/intersections_actions';
 import turf from 'turf';
 
 window.inside = turf.inside;
-window.fetchIntersections = fetchIntersections;
+window.requestIntersections = requestIntersections;
 
 window.addEventListener("DOMContentLoaded", () => {
   const root = document.getElementById("root");

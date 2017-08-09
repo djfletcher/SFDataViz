@@ -14073,7 +14073,7 @@ var _app = __webpack_require__(117);
 
 var _app2 = _interopRequireDefault(_app);
 
-var _intersections_api_util = __webpack_require__(119);
+var _intersections_actions = __webpack_require__(319);
 
 var _turf = __webpack_require__(66);
 
@@ -14082,7 +14082,7 @@ var _turf2 = _interopRequireDefault(_turf);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 window.inside = _turf2.default.inside;
-window.fetchIntersections = _intersections_api_util.fetchIntersections;
+window.requestIntersections = _intersections_actions.requestIntersections;
 
 window.addEventListener("DOMContentLoaded", function () {
   var root = document.getElementById("root");
@@ -14236,11 +14236,16 @@ var _neighborhoods_reducer = __webpack_require__(130);
 
 var _neighborhoods_reducer2 = _interopRequireDefault(_neighborhoods_reducer);
 
+var _intersections_reducer = __webpack_require__(320);
+
+var _intersections_reducer2 = _interopRequireDefault(_intersections_reducer);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var RootReducer = (0, _redux.combineReducers)({
   crime: _crime_reducer2.default,
-  neighborhoods: _neighborhoods_reducer2.default
+  neighborhoods: _neighborhoods_reducer2.default,
+  intersections: _intersections_reducer2.default
 });
 
 exports.default = RootReducer;
@@ -34242,6 +34247,84 @@ module.exports.RADIUS = 6378137;
 module.exports.FLATTENING = 1/298.257223563;
 module.exports.POLAR_RADIUS = 6356752.3142;
 
+
+/***/ }),
+/* 319 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.requestIntersections = exports.receiveIntersections = exports.RECEIVE_INTERSECTIONS = undefined;
+
+var _intersections_api_util = __webpack_require__(119);
+
+var ApiUtil = _interopRequireWildcard(_intersections_api_util);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+var RECEIVE_INTERSECTIONS = exports.RECEIVE_INTERSECTIONS = 'RECEIVE_INTERSECTIONS';
+
+var receiveIntersections = exports.receiveIntersections = function receiveIntersections(intersections) {
+  return {
+    type: RECEIVE_INTERSECTIONS,
+    intersections: intersections
+  };
+};
+
+var requestIntersections = exports.requestIntersections = function requestIntersections() {
+  return function (dispatch) {
+    return ApiUtil.fetchIntersections().then(function (intersections) {
+      return dispatch(receiveIntersections(intersections));
+    });
+  };
+};
+
+/***/ }),
+/* 320 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _intersections_actions = __webpack_require__(319);
+
+var IntersectionsReducer = function IntersectionsReducer() {
+  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+  var action = arguments[1];
+
+  Object.freeze(state);
+
+  switch (action.type) {
+    case _intersections_actions.RECEIVE_INTERSECTIONS:
+      return convertToGeoJSON(action.intersections);
+    default:
+      return state;
+  }
+};
+
+function convertToGeoJSON(intersections) {
+  return intersections.map(function (point) {
+    var geoJSON = {};
+    var longitude = point['longitude'];
+    var latitude = point['latitude'];
+    geoJSON['type'] = 'Feature';
+    geoJSON['geometry'] = {
+      'type': 'Point',
+      'coordinates': [longitude, latitude]
+    };
+    return geoJSON;
+  });
+}
+
+exports.default = IntersectionsReducer;
 
 /***/ })
 /******/ ]);
