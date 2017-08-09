@@ -40,7 +40,7 @@ class DataMap extends React.Component {
       center: [-122.447303, 37.768874],
       zoom: 12,
       // maxBounds: [[-122.565169, 37.693269], [-122.171389, 37.859369]]
-      maxBounds: [[-123.255444, 37.291841], [-121.182195, 38.166895]]
+      // maxBounds: [[-123.255444, 37.291841], [-121.182195, 38.166895]]
     });
 
     this.requestData();
@@ -54,9 +54,12 @@ class DataMap extends React.Component {
   componentWillReceiveProps(nextProps) {
     let layer;
     if (nextProps.crimes.length > 5000 && nextProps.crimes.length !== this.props.crimes.length) {
-      layer = createLayer('crime', nextProps.crimes);
-      debugger;
-      this.addLayer(layer);
+      // layer = createLayer('crime', nextProps.crimes);
+      // this.addLayer(layer);
+
+          let intlayer = createIntersectionsLayer(intersectionPoints);
+          // debugger;
+          this.addLayer(intlayer);
     }
     if (!$.isEmptyObject(nextProps.neighborhoods) && $.isEmptyObject(this.props.neighborhoods)) {
       layer = createLayer('neighborhood-outlines', nextProps.neighborhoods);

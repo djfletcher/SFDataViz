@@ -13416,11 +13416,12 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 function createIntersectionsLayer(points) {
-  var data = convertToGeoJSONArray(points);
-  return assembleLayerProperties('intersections', 'circle', data);
+  // let data = convertToGeoJSONArray(points);
+  return assembleLayerProperties('intersections123', 'circle', points);
 }
 
 function convertToGeoJSONArray(dataset) {
+  // debugger;
   return dataset.map(function (point) {
     var geoJSON = {};
     geoJSON['type'] = 'Feature';
@@ -13433,17 +13434,17 @@ function convertToGeoJSONArray(dataset) {
 }
 
 var paintProperties = {
-  'intersections': {
+  'intersections123': {
     'circle-radius': {
       'base': 1.75,
       'stops': [[12, 3], [22, 180]]
     },
-    'circle-color': 'blue'
+    'circle-color': '#e55e5e'
   }
 };
 
 var layoutProperties = {
-  'intersections': {
+  'intersections123': {
     'visibility': 'visible'
   }
 };
@@ -13552,9 +13553,7 @@ var DataMap = function (_React$Component) {
         container: 'map',
         style: 'mapbox://styles/djfletcher/cj369eru100002rpkokn2981h',
         center: [-122.447303, 37.768874],
-        zoom: 12,
-        // maxBounds: [[-122.565169, 37.693269], [-122.171389, 37.859369]]
-        maxBounds: [[-123.255444, 37.291841], [-121.182195, 38.166895]]
+        zoom: 12
       });
 
       this.requestData();
@@ -13569,9 +13568,12 @@ var DataMap = function (_React$Component) {
     value: function componentWillReceiveProps(nextProps) {
       var layer = void 0;
       if (nextProps.crimes.length > 5000 && nextProps.crimes.length !== this.props.crimes.length) {
-        layer = (0, _map_layer2.default)('crime', nextProps.crimes);
-        debugger;
-        this.addLayer(layer);
+        // layer = createLayer('crime', nextProps.crimes);
+        // this.addLayer(layer);
+
+        var intlayer = (0, _intersections_testing2.default)(_shorted_intersections.intersectionPoints);
+        // debugger;
+        this.addLayer(intlayer);
       }
       if (!$.isEmptyObject(nextProps.neighborhoods) && $.isEmptyObject(this.props.neighborhoods)) {
         layer = (0, _map_layer2.default)('neighborhood-outlines', nextProps.neighborhoods);

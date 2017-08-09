@@ -1,10 +1,11 @@
 
 function createIntersectionsLayer(points) {
-  let data = convertToGeoJSONArray(points);
-  return assembleLayerProperties('intersections', 'circle', data);
+  // let data = convertToGeoJSONArray(points);
+  return assembleLayerProperties('intersections123', 'circle', points);
 }
 
 function convertToGeoJSONArray(dataset) {
+  // debugger;
   return dataset.map(point => {
     let geoJSON = {};
     geoJSON['type'] = 'Feature';
@@ -17,17 +18,17 @@ function convertToGeoJSONArray(dataset) {
 }
 
 const paintProperties = {
-  'intersections': {
+  'intersections123': {
     'circle-radius': {
       'base': 1.75,
       'stops': [[12, 3], [22, 180]]
     },
-    'circle-color': `blue`
+    'circle-color': `#e55e5e`
   }
 };
 
 const layoutProperties = {
-  'intersections': {
+  'intersections123': {
     'visibility': 'visible'
   }
 };
