@@ -1,6 +1,6 @@
 require 'json'
 
-file = File.read('/Volumes/DATA/Daniel/san-francisco_california.imposm-geojson/san-francisco_california_roads.geojson')
+file = File.read('../../Desktop/san-francisco_california.imposm-geojson/san-francisco_california_roads.geojson')
 roads = JSON.parse(file)['features']
 
 points = {}
