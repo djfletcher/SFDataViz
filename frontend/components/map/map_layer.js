@@ -9,6 +9,8 @@ function createLayer(layerId, geoJSON) {
       return assembleLayerProperties(layerId, 'fill', convertToArray(geoJSON));
     case 'neighborhood-outlines':
       return assembleLayerProperties(layerId, 'line', convertToArray(geoJSON));
+    case 'intersections':
+      return assembleLayerProperties(layerId, 'circle', geoJSON);
     default:
       console.log('Invalid layer id');
   }
@@ -59,6 +61,9 @@ const layoutProperties = {
     'visibility': 'visible',
     'line-cap': 'round',
     'line-join': 'round'
+  },
+  'intersections': {
+    'visibility': 'visible'
   }
 };
 
@@ -112,6 +117,13 @@ const paintProperties = {
     // neighborhoods should have fill color only when hovered
     'fill-opacity': 0.5,
     'fill-color': '#6699CC'
+  },
+  'intersections': {
+    'circle-radius': {
+      'base': 1.75,
+      'stops': [[12, 3], [22, 180]]
+    },
+    'circle-color': `#0a2b58`
   }
 };
 

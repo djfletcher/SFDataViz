@@ -1,7 +1,6 @@
 import React from 'react';
 import mapboxgl from 'mapbox-gl/dist/mapbox-gl';
 import createLayer from './map_layer';
-import createIntersectionsLayer from './intersections_testing';
 import { getBbox, countCrimes } from './gis_calculations';
 import mapOverlay from './map_overlay';
 
@@ -61,14 +60,14 @@ class DataMap extends React.Component {
       this.addLayer(layer);
       this.makeInteractive();
     }
-    if (nextProps.intersections.length > 100000) {
-      layer = createIntersectionsLayer(nextProps.intersections);
+    if (nextProps.intersections.length > 20000) {
+      layer = createLayer('intersections', nextProps.intersections);
       this.addLayer(layer);
     }
   }
 
   requestData() {
-    // this.props.requestCrimes();
+    this.props.requestCrimes();
     // this.props.requestNeighborhoods();
     this.props.requestIntersections();
   }
@@ -161,7 +160,7 @@ class DataMap extends React.Component {
     if (layer === 'neighborhoods') {
       this.toggleNeighborhoods();
     } else {
-      this.toggleLayerVisibility('crime');
+      this.toggleLayerVisibility(layer);
     }
   }
 
@@ -203,6 +202,11 @@ class DataMap extends React.Component {
           id="neighborhoods"
           className="active"
           onClick={ () => this.handleToggle('neighborhoods') }>Neighborhoods
+        </li>
+        <li
+          id="intersections"
+          className="active"
+          onClick={ () => this.handleToggle('intersections') }>Intersections
         </li>
       </ul>
     );

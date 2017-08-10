@@ -13421,57 +13421,7 @@ function findDuplicateCrimes(crimes, hoods) {
 // }
 
 /***/ }),
-/* 123 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-function createIntersectionsLayer(points) {
-  // let data = convertToGeoJSONArray(points);
-  return assembleLayerProperties('intersections123', 'circle', points);
-}
-
-var paintProperties = {
-  'intersections123': {
-    'circle-radius': {
-      'base': 1.75,
-      'stops': [[12, 3], [22, 180]]
-    },
-    'circle-color': '#0a2b58'
-  }
-};
-
-var layoutProperties = {
-  'intersections123': {
-    'visibility': 'visible'
-  }
-};
-
-function assembleLayerProperties(layerId, type, geoJSON) {
-  var properties = {
-    "id": layerId,
-    "type": type,
-    "source": {
-      "type": "geojson",
-      "data": {
-        "type": "FeatureCollection",
-        "features": geoJSON
-      }
-    },
-    "paint": paintProperties[layerId],
-    "layout": layoutProperties[layerId]
-  };
-  return properties;
-}
-
-exports.default = createIntersectionsLayer;
-
-/***/ }),
+/* 123 */,
 /* 124 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -13495,10 +13445,6 @@ var _mapboxGl2 = _interopRequireDefault(_mapboxGl);
 var _map_layer = __webpack_require__(126);
 
 var _map_layer2 = _interopRequireDefault(_map_layer);
-
-var _intersections_testing = __webpack_require__(123);
-
-var _intersections_testing2 = _interopRequireDefault(_intersections_testing);
 
 var _gis_calculations = __webpack_require__(122);
 
@@ -13577,15 +13523,15 @@ var DataMap = function (_React$Component) {
         this.addLayer(layer);
         this.makeInteractive();
       }
-      if (nextProps.intersections.length > 100000) {
-        layer = (0, _intersections_testing2.default)(nextProps.intersections);
+      if (nextProps.intersections.length > 20000) {
+        layer = (0, _map_layer2.default)('intersections', nextProps.intersections);
         this.addLayer(layer);
       }
     }
   }, {
     key: 'requestData',
     value: function requestData() {
-      // this.props.requestCrimes();
+      this.props.requestCrimes();
       // this.props.requestNeighborhoods();
       this.props.requestIntersections();
     }
@@ -13687,7 +13633,7 @@ var DataMap = function (_React$Component) {
       if (layer === 'neighborhoods') {
         this.toggleNeighborhoods();
       } else {
-        this.toggleLayerVisibility('crime');
+        this.toggleLayerVisibility(layer);
       }
     }
   }, {
@@ -13749,6 +13695,16 @@ var DataMap = function (_React$Component) {
               return _this3.handleToggle('neighborhoods');
             } },
           'Neighborhoods'
+        ),
+        _react2.default.createElement(
+          'li',
+          {
+            id: 'intersections',
+            className: 'active',
+            onClick: function onClick() {
+              return _this3.handleToggle('intersections');
+            } },
+          'Intersections'
         )
       );
 
@@ -13842,6 +13798,8 @@ function createLayer(layerId, geoJSON) {
       return assembleLayerProperties(layerId, 'fill', convertToArray(geoJSON));
     case 'neighborhood-outlines':
       return assembleLayerProperties(layerId, 'line', convertToArray(geoJSON));
+    case 'intersections':
+      return assembleLayerProperties(layerId, 'circle', geoJSON);
     default:
       console.log('Invalid layer id');
   }
@@ -13892,6 +13850,9 @@ var layoutProperties = {
     'visibility': 'visible',
     'line-cap': 'round',
     'line-join': 'round'
+  },
+  'intersections': {
+    'visibility': 'visible'
   }
 };
 
@@ -13945,6 +13906,13 @@ var paintProperties = {
     // neighborhoods should have fill color only when hovered
     'fill-opacity': 0.5,
     'fill-color': '#6699CC'
+  },
+  'intersections': {
+    'circle-radius': {
+      'base': 1.75,
+      'stops': [[12, 3], [22, 180]]
+    },
+    'circle-color': '#0a2b58'
   }
 };
 
