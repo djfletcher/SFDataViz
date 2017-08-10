@@ -67,9 +67,10 @@ class DataMap extends React.Component {
   }
 
   requestData() {
-    this.props.requestCrimes();
+    // this.props.requestCrimes();
     // this.props.requestNeighborhoods();
-    this.props.requestIntersections();
+    // this.props.requestIntersections();
+    this.props.requestRoadEdges();
   }
 
   makeInteractive() {
