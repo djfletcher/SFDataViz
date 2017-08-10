@@ -13531,7 +13531,7 @@ var DataMap = function (_React$Component) {
   }, {
     key: 'requestData',
     value: function requestData() {
-      this.props.requestCrimes();
+      // this.props.requestCrimes();
       // this.props.requestNeighborhoods();
       this.props.requestIntersections();
     }
