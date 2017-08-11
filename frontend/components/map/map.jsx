@@ -64,6 +64,10 @@ class DataMap extends React.Component {
       layer = createLayer('intersections', nextProps.intersections);
       this.addLayer(layer);
     }
+    if (nextProps.roadEdges.length > 100) {
+      layer = createLayer('road-edges', nextProps.roadEdges);
+      this.addLayer(layer);
+    }
   }
 
   requestData() {

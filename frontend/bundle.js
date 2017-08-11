@@ -13580,13 +13580,17 @@ var DataMap = function (_React$Component) {
         layer = (0, _map_layer2.default)('intersections', nextProps.intersections);
         this.addLayer(layer);
       }
+      if (nextProps.roadEdges.length > 100) {
+        layer = (0, _map_layer2.default)('road-edges', nextProps.roadEdges);
+        this.addLayer(layer);
+      }
     }
   }, {
     key: 'requestData',
     value: function requestData() {
       // this.props.requestCrimes();
       // this.props.requestNeighborhoods();
-      // this.props.requestIntersections();
+      this.props.requestIntersections();
       this.props.requestRoadEdges();
     }
   }, {
@@ -13859,6 +13863,8 @@ function createLayer(layerId, geoJSON) {
       return assembleLayerProperties(layerId, 'fill', convertToArray(geoJSON));
     case 'neighborhood-outlines':
       return assembleLayerProperties(layerId, 'line', convertToArray(geoJSON));
+    case 'road-edges':
+      return assembleLayerProperties(layerId, 'line', geoJSON);
     case 'intersections':
       return assembleLayerProperties(layerId, 'circle', geoJSON);
     default:
@@ -13908,6 +13914,11 @@ var layoutProperties = {
     'visibility': 'visible'
   },
   'neighborhood-outlines': {
+    'visibility': 'visible',
+    'line-cap': 'round',
+    'line-join': 'round'
+  },
+  'road-edges': {
     'visibility': 'visible',
     'line-cap': 'round',
     'line-join': 'round'
@@ -13974,6 +13985,13 @@ var paintProperties = {
       'stops': [[12, 3], [22, 180]]
     },
     'circle-color': '#0a2b58'
+  },
+  'road-edges': {
+    'line-opacity': 1,
+    'line-color': '#e55e5e',
+    'line-width': {
+      'stops': [[12, 2], [22, 10]]
+    }
   }
 };
 
@@ -14287,6 +14305,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
 var _road_edges_actions = __webpack_require__(70);
 
 var RoadEdgesReducer = function RoadEdgesReducer() {
@@ -14304,7 +14324,11 @@ var RoadEdgesReducer = function RoadEdgesReducer() {
 };
 
 function convertToGeoJSON(roadEdges) {
-  return roadEdges.map(function (intersection1, intersection2) {
+  return roadEdges.map(function (intersections) {
+    var _intersections = _slicedToArray(intersections, 2),
+        intersection1 = _intersections[0],
+        intersection2 = _intersections[1];
+
     var geoJSON = {};
     geoJSON['type'] = 'Feature';
     geoJSON['geometry'] = {

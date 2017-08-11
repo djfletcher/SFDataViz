@@ -9,6 +9,8 @@ function createLayer(layerId, geoJSON) {
       return assembleLayerProperties(layerId, 'fill', convertToArray(geoJSON));
     case 'neighborhood-outlines':
       return assembleLayerProperties(layerId, 'line', convertToArray(geoJSON));
+    case 'road-edges':
+      return assembleLayerProperties(layerId, 'line', geoJSON);
     case 'intersections':
       return assembleLayerProperties(layerId, 'circle', geoJSON);
     default:
@@ -58,6 +60,11 @@ const layoutProperties = {
     'visibility': 'visible'
   },
   'neighborhood-outlines': {
+    'visibility': 'visible',
+    'line-cap': 'round',
+    'line-join': 'round'
+  },
+  'road-edges': {
     'visibility': 'visible',
     'line-cap': 'round',
     'line-join': 'round'
@@ -124,6 +131,13 @@ const paintProperties = {
       'stops': [[12, 3], [22, 180]]
     },
     'circle-color': `#0a2b58`
+  },
+  'road-edges': {
+    'line-opacity': 1,
+    'line-color': '#e55e5e',
+    'line-width': {
+      'stops': [[12, 2], [22, 10]]
+    }
   }
 };
 

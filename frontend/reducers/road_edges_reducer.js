@@ -12,7 +12,8 @@ const RoadEdgesReducer = (state = [], action) => {
 };
 
 function convertToGeoJSON(roadEdges) {
-  return roadEdges.map((intersection1, intersection2) => {
+  return roadEdges.map(intersections => {
+    let [intersection1, intersection2] = intersections;
     let geoJSON = {};
     geoJSON['type'] = 'Feature';
     geoJSON['geometry'] = {
