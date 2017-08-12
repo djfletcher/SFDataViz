@@ -13580,7 +13580,7 @@ var DataMap = function (_React$Component) {
         layer = (0, _map_layer2.default)('intersections', nextProps.intersections);
         this.addLayer(layer);
       }
-      if (nextProps.roadEdges.length > 100) {
+      if (nextProps.roadEdges.length > 40000) {
         layer = (0, _map_layer2.default)('road-edges', nextProps.roadEdges);
         this.addLayer(layer);
       }
@@ -13590,7 +13590,7 @@ var DataMap = function (_React$Component) {
     value: function requestData() {
       // this.props.requestCrimes();
       // this.props.requestNeighborhoods();
-      this.props.requestIntersections();
+      // this.props.requestIntersections();
       this.props.requestRoadEdges();
     }
   }, {
@@ -13676,6 +13676,10 @@ var DataMap = function (_React$Component) {
       // second argument to addLayer is a layer on the map beneath which to insert the new layer
       // this ensures that our custom layers don't cover up street names and map labels
       var beneathLayer = this.map.getStyle().layers[110].id;
+      // let roadEdgesLayer = this.map.getLayer('road-edges');
+      // if (roadEdgesLayer) {
+      //   beneathLayer = roadEdgesLayer;
+      // }
       this.map.addLayer(layer, beneathLayer);
     }
   }, {
@@ -13763,6 +13767,16 @@ var DataMap = function (_React$Component) {
               return _this3.handleToggle('intersections');
             } },
           'Intersections'
+        ),
+        _react2.default.createElement(
+          'li',
+          {
+            id: 'road-edges',
+            className: 'active',
+            onClick: function onClick() {
+              return _this3.handleToggle('road-edges');
+            } },
+          'Connected Intersections'
         )
       );
 
@@ -13988,9 +14002,9 @@ var paintProperties = {
   },
   'road-edges': {
     'line-opacity': 1,
-    'line-color': '#e55e5e',
+    'line-color': '#ade6bb',
     'line-width': {
-      'stops': [[12, 2], [22, 10]]
+      'stops': [[12, 1], [22, 10]]
     }
   }
 };
@@ -14426,7 +14440,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 var fetchIntersections = exports.fetchIntersections = function fetchIntersections() {
   return $.ajax({
-    url: 'http://localhost:3000/intersections'
+    url: 'http://road-network-api.herokuapp.com/intersections'
   });
 };
 
@@ -14465,6 +14479,7 @@ Object.defineProperty(exports, "__esModule", {
 var fetchRoadEdges = exports.fetchRoadEdges = function fetchRoadEdges() {
   return $.ajax({
     url: 'http://localhost:3000/road_edges'
+    // url: 'http://road-network-api.herokuapp.com/road_edges'
   });
 };
 

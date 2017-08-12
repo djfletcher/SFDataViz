@@ -64,7 +64,7 @@ class DataMap extends React.Component {
       layer = createLayer('intersections', nextProps.intersections);
       this.addLayer(layer);
     }
-    if (nextProps.roadEdges.length > 100) {
+    if (nextProps.roadEdges.length > 40000) {
       layer = createLayer('road-edges', nextProps.roadEdges);
       this.addLayer(layer);
     }
@@ -151,6 +151,10 @@ class DataMap extends React.Component {
     // second argument to addLayer is a layer on the map beneath which to insert the new layer
     // this ensures that our custom layers don't cover up street names and map labels
     let beneathLayer = this.map.getStyle().layers[110].id;
+    // let roadEdgesLayer = this.map.getLayer('road-edges');
+    // if (roadEdgesLayer) {
+    //   beneathLayer = roadEdgesLayer;
+    // }
     this.map.addLayer(layer, beneathLayer);
   }
 
@@ -212,6 +216,11 @@ class DataMap extends React.Component {
           id="intersections"
           className="active"
           onClick={ () => this.handleToggle('intersections') }>Intersections
+        </li>
+        <li
+          id="road-edges"
+          className="active"
+          onClick={ () => this.handleToggle('road-edges') }>Connected Intersections
         </li>
       </ul>
     );
