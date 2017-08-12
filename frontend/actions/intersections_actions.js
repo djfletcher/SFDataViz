@@ -7,7 +7,9 @@ export const receiveIntersections = intersections => ({
   intersections
 });
 
-export const requestIntersections = () => dispatch => (
-  ApiUtil.fetchIntersections()
-         .then(intersections => dispatch(receiveIntersections(intersections)))
-);
+export const requestIntersections = () => dispatch => {
+  for (let i = 0; i < 6; i++) {
+  ApiUtil.fetchIntersections(i * 5000)
+         .then(intersections => dispatch(receiveIntersections(intersections)));
+  }
+};

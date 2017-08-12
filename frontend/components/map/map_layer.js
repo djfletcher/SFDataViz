@@ -12,7 +12,7 @@ function createLayer(layerId, geoJSON) {
     case 'road-edges':
       return assembleLayerProperties(layerId, 'line', geoJSON);
     case 'intersections':
-      return assembleLayerProperties(layerId, 'circle', geoJSON);
+      return assembleLayerProperties(layerId, 'circle', Object.values(geoJSON));
     default:
       console.log('Invalid layer id');
   }
@@ -76,36 +76,11 @@ const layoutProperties = {
 
 const paintProperties = {
   'crime': {
-    // 'fill-extrusion-height': 10,
-    // 'fill-extrusion-color': `#e55e5e`
-    //
     'circle-radius': {
       'base': 1.75,
       'stops': [[12, 3], [22, 180]]
     },
     'circle-color': `#e55e5e`
-    //
-    // 'circle-color': {
-    //   'property': 'category',
-    //   'type': 'categorical',
-    //   'default': `#e55e5e`,
-    //   'stops': [
-    //     ['ARSON', 'blue'],
-    //     ['ASSAULT', 'yellow'],
-    //     ['BURGLARY', 'green'],
-    //     ['DRIVING UNDER THE INFLUENCE', 'orange'],
-    //     ['DRUG/NARCOTIC', 'white'],
-    //     ['KIDNAPPING', 'black'],
-    //     ['LARCENY/THEFT', 'purple'],
-    //     ['PROSTITUTION', 'blue'],
-    //     ['ROBBERY', 'yellow'],
-    //     ['SEX OFFENSES, FORCIBLE', 'green'],
-    //     ['SEX OFFENSES, NON FORCIBLE', 'orange'],
-    //     ['STOLEN PROPERTY', 'white'],
-    //     ['VEHICLE THEFT', 'black'],
-    //     ['WEAPON LAWS', 'purple']
-    //   ]
-    // }
   },
   'neighborhood-outlines': {
     'line-opacity': 1,
@@ -142,24 +117,3 @@ const paintProperties = {
 };
 
 export default createLayer;
-
-
-// below is the beginnings of unfinished code to convert neighborhoods from an object
-//  with names as keys back into a feature collection array
-
-// function createLayer(layerId, dataset) {
-//   switch(layerId) {
-//     case 'crime':
-//       return assembleLayerProperties(layerId, 'circle', dataset);
-//     case 'neighborhoods':
-//       let neighborhoodsArray = [];
-//       for (let hood in dataset) {
-//         let geoJSON = {};
-//         console.log(hood);
-//         neighborhoodsArray.push();
-//       }
-//       return assembleLayerProperties(layerId, 'line', dataset);
-//     default:
-//       console.log('Invalid layer id');
-//   }
-// }

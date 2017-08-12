@@ -5,7 +5,7 @@ const RoadEdgesReducer = (state = [], action) => {
 
   switch(action.type) {
     case RECEIVE_ROAD_EDGES:
-      return convertToGeoJSON(action.roadEdges);
+      return state.concat(convertToGeoJSON(action.roadEdges));
     default:
       return state;
   }

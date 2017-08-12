@@ -60,7 +60,7 @@ class DataMap extends React.Component {
       this.addLayer(layer);
       this.makeInteractive();
     }
-    if (nextProps.intersections.length > 20000) {
+    if (Object.keys(nextProps.intersections).length > 20000) {
       layer = createLayer('intersections', nextProps.intersections);
       this.addLayer(layer);
     }
@@ -73,8 +73,8 @@ class DataMap extends React.Component {
   requestData() {
     // this.props.requestCrimes();
     // this.props.requestNeighborhoods();
-    // this.props.requestIntersections();
-    this.props.requestRoadEdges();
+    this.props.requestIntersections();
+    // this.props.requestRoadEdges();
   }
 
   makeInteractive() {

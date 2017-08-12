@@ -7,7 +7,9 @@ export const receiveRoadEdges = roadEdges => ({
   roadEdges
 });
 
-export const requestRoadEdges = () => dispatch => (
-  ApiUtil.fetchRoadEdges()
-         .then(roadEdges => dispatch(receiveRoadEdges(roadEdges)))
-);
+export const requestRoadEdges = () => dispatch => {
+  for (let i = 0; i < 9; i++) {
+  ApiUtil.fetchRoadEdges(i * 5000)
+         .then(roadEdges => dispatch(receiveRoadEdges(roadEdges)));
+  }
+};
