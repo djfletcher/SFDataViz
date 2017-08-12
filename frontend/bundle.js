@@ -13566,12 +13566,18 @@ var DataMap = function (_React$Component) {
   }, {
     key: 'componentWillReceiveProps',
     value: function componentWillReceiveProps(nextProps) {
+      var _arePropsLoaded = this.arePropsLoaded(nextProps),
+          crimesLoaded = _arePropsLoaded.crimesLoaded,
+          neighborhoodsLoaded = _arePropsLoaded.neighborhoodsLoaded,
+          intersectionsLoaded = _arePropsLoaded.intersectionsLoaded,
+          roadEdgesLoaded = _arePropsLoaded.roadEdgesLoaded;
+
       var layer = void 0;
-      if (nextProps.crimes.length > 5000 && nextProps.crimes.length !== this.props.crimes.length) {
+      if (crimesLoaded) {
         layer = (0, _map_layer2.default)('crime', nextProps.crimes);
         this.addLayer(layer);
       }
-      if (!$.isEmptyObject(nextProps.neighborhoods) && $.isEmptyObject(this.props.neighborhoods)) {
+      if (neighborhoodsLoaded) {
         layer = (0, _map_layer2.default)('neighborhood-outlines', nextProps.neighborhoods);
         this.addLayer(layer);
         layer = (0, _map_layer2.default)('neighborhoods', nextProps.neighborhoods);
@@ -13580,14 +13586,27 @@ var DataMap = function (_React$Component) {
         this.addLayer(layer);
         this.makeInteractive();
       }
-      if (Object.keys(nextProps.intersections).length > 20000) {
+      if (intersectionsLoaded) {
         layer = (0, _map_layer2.default)('intersections', nextProps.intersections);
         this.addLayer(layer);
       }
-      if (nextProps.roadEdges.length > 40000) {
+      if (intersectionsLoaded && roadEdgesLoaded) {
         layer = (0, _map_layer2.default)('road-edges', nextProps.roadEdges);
         this.addLayer(layer);
       }
+    }
+  }, {
+    key: 'arePropsLoaded',
+    value: function arePropsLoaded(nextProps) {
+      var crimesLoaded = void 0,
+          neighborhoodsLoaded = void 0,
+          intersectionsLoaded = void 0,
+          roadEdgesLoaded = void 0;
+      crimesLoaded = nextProps.crimes.length > 5000 && nextProps.crimes.length !== this.props.crimes.length;
+      neighborhoodsLoaded = !$.isEmptyObject(nextProps.neighborhoods) && $.isEmptyObject(this.props.neighborhoods);
+      intersectionsLoaded = Object.keys(nextProps.intersections).length > 20000;
+      roadEdgesLoaded = nextProps.roadEdges.length > 40000;
+      return { crimesLoaded: crimesLoaded, neighborhoodsLoaded: neighborhoodsLoaded, intersectionsLoaded: intersectionsLoaded, roadEdgesLoaded: roadEdgesLoaded };
     }
   }, {
     key: 'requestData',

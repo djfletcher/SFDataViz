@@ -46,12 +46,18 @@ class DataMap extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
+    let {
+      crimesLoaded,
+      neighborhoodsLoaded,
+      intersectionsLoaded,
+      roadEdgesLoaded
+    } = this.arePropsLoaded(nextProps);
     let layer;
-    if (nextProps.crimes.length > 5000 && nextProps.crimes.length !== this.props.crimes.length) {
+    if (crimesLoaded) {
       layer = createLayer('crime', nextProps.crimes);
       this.addLayer(layer);
     }
-    if (!$.isEmptyObject(nextProps.neighborhoods) && $.isEmptyObject(this.props.neighborhoods)) {
+    if (neighborhoodsLoaded) {
       layer = createLayer('neighborhood-outlines', nextProps.neighborhoods);
       this.addLayer(layer);
       layer = createLayer('neighborhoods', nextProps.neighborhoods);
@@ -60,14 +66,23 @@ class DataMap extends React.Component {
       this.addLayer(layer);
       this.makeInteractive();
     }
-    if (Object.keys(nextProps.intersections).length > 20000) {
+    if (intersectionsLoaded) {
       layer = createLayer('intersections', nextProps.intersections);
       this.addLayer(layer);
     }
-    if (nextProps.roadEdges.length > 40000) {
+    if (intersectionsLoaded && roadEdgesLoaded) {
       layer = createLayer('road-edges', nextProps.roadEdges);
       this.addLayer(layer);
     }
+  }
+
+  arePropsLoaded(nextProps) {
+    let crimesLoaded, neighborhoodsLoaded, intersectionsLoaded, roadEdgesLoaded;
+    crimesLoaded = nextProps.crimes.length > 5000 && nextProps.crimes.length !== this.props.crimes.length;
+    neighborhoodsLoaded = !$.isEmptyObject(nextProps.neighborhoods) && $.isEmptyObject(this.props.neighborhoods);
+    intersectionsLoaded = Object.keys(nextProps.intersections).length > 20000;
+    roadEdgesLoaded = nextProps.roadEdges.length > 40000;
+    return { crimesLoaded, neighborhoodsLoaded, intersectionsLoaded, roadEdgesLoaded };
   }
 
   requestData() {
