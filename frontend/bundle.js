@@ -13590,8 +13590,9 @@ var DataMap = function (_React$Component) {
         layer = (0, _map_layer2.default)('intersections', nextProps.intersections);
         this.addLayer(layer);
       }
-      if (intersectionsLoaded && roadEdgesLoaded) {
-        layer = (0, _map_layer2.default)('road-edges', nextProps.roadEdges);
+      if (roadEdgesLoaded) {
+        var roadEdges = this.getRoadEdgesAsGeoJSON(nextProps.roadEdges, nextProps.intersections);
+        layer = (0, _map_layer2.default)('road-edges', roadEdges);
         this.addLayer(layer);
       }
     }
@@ -13604,8 +13605,8 @@ var DataMap = function (_React$Component) {
           roadEdgesLoaded = void 0;
       crimesLoaded = nextProps.crimes.length > 5000 && nextProps.crimes.length !== this.props.crimes.length;
       neighborhoodsLoaded = !$.isEmptyObject(nextProps.neighborhoods) && $.isEmptyObject(this.props.neighborhoods);
-      intersectionsLoaded = Object.keys(nextProps.intersections).length > 20000;
-      roadEdgesLoaded = nextProps.roadEdges.length > 40000;
+      intersectionsLoaded = Object.keys(nextProps.intersections).length > 25000 && Object.keys(nextProps.intersections).length !== Object.keys(this.props.intersections).length;
+      roadEdgesLoaded = nextProps.roadEdges.length > 40000 && nextProps.roadEdges.length !== this.props.roadEdges.length;
       return { crimesLoaded: crimesLoaded, neighborhoodsLoaded: neighborhoodsLoaded, intersectionsLoaded: intersectionsLoaded, roadEdgesLoaded: roadEdgesLoaded };
     }
   }, {
@@ -13614,7 +13615,7 @@ var DataMap = function (_React$Component) {
       // this.props.requestCrimes();
       // this.props.requestNeighborhoods();
       this.props.requestIntersections();
-      // this.props.requestRoadEdges();
+      this.props.requestRoadEdges();
     }
   }, {
     key: 'makeInteractive',
@@ -13667,6 +13668,26 @@ var DataMap = function (_React$Component) {
       });
     }
   }, {
+    key: 'getRoadEdgesAsGeoJSON',
+    value: function getRoadEdgesAsGeoJSON(roadEdges, intersections) {
+      var _this3 = this;
+
+      return roadEdges.map(function (edge) {
+        var geoJSON = {};
+        geoJSON['type'] = 'Feature';
+        geoJSON['geometry'] = {
+          'type': 'LineString',
+          'coordinates': _this3.getIntersectionsFromRoadEdge(edge, intersections)
+        };
+        return geoJSON;
+      });
+    }
+  }, {
+    key: 'getIntersectionsFromRoadEdge',
+    value: function getIntersectionsFromRoadEdge(edge, intersections) {
+      return [intersections[edge['intersection1_id']]['geometry']['coordinates'], intersections[edge['intersection2_id']]['geometry']['coordinates']];
+    }
+  }, {
     key: 'getStats',
     value: function getStats(neighborhood) {
       var stats = void 0,
@@ -13699,10 +13720,6 @@ var DataMap = function (_React$Component) {
       // second argument to addLayer is a layer on the map beneath which to insert the new layer
       // this ensures that our custom layers don't cover up street names and map labels
       var beneathLayer = this.map.getStyle().layers[110].id;
-      // let roadEdgesLayer = this.map.getLayer('road-edges');
-      // if (roadEdgesLayer) {
-      //   beneathLayer = roadEdgesLayer;
-      // }
       this.map.addLayer(layer, beneathLayer);
     }
   }, {
@@ -13756,7 +13773,7 @@ var DataMap = function (_React$Component) {
   }, {
     key: 'render',
     value: function render() {
-      var _this3 = this;
+      var _this4 = this;
 
       var toggleableLayers = _react2.default.createElement(
         'ul',
@@ -13767,7 +13784,7 @@ var DataMap = function (_React$Component) {
             id: 'crime',
             className: 'active',
             onClick: function onClick() {
-              return _this3.handleToggle('crime');
+              return _this4.handleToggle('crime');
             } },
           'Crime Incidents'
         ),
@@ -13777,7 +13794,7 @@ var DataMap = function (_React$Component) {
             id: 'neighborhoods',
             className: 'active',
             onClick: function onClick() {
-              return _this3.handleToggle('neighborhoods');
+              return _this4.handleToggle('neighborhoods');
             } },
           'Neighborhoods'
         ),
@@ -13787,7 +13804,7 @@ var DataMap = function (_React$Component) {
             id: 'intersections',
             className: 'active',
             onClick: function onClick() {
-              return _this3.handleToggle('intersections');
+              return _this4.handleToggle('intersections');
             } },
           'Intersections'
         ),
@@ -13797,7 +13814,7 @@ var DataMap = function (_React$Component) {
             id: 'road-edges',
             className: 'active',
             onClick: function onClick() {
-              return _this3.handleToggle('road-edges');
+              return _this4.handleToggle('road-edges');
             } },
           'Connected Intersections'
         )
@@ -14000,9 +14017,9 @@ var paintProperties = {
   },
   'road-edges': {
     'line-opacity': 1,
-    'line-color': '#ade6bb',
+    'line-color': '#96e596',
     'line-width': {
-      'stops': [[12, 1], [22, 10]]
+      'stops': [[12, 1], [22, 5]]
     }
   }
 };
@@ -14323,7 +14340,7 @@ var RoadEdgesReducer = function RoadEdgesReducer() {
 
   switch (action.type) {
     case _road_edges_actions.RECEIVE_ROAD_EDGES:
-      return state.concat(convertToGeoJSON(action.roadEdges));
+      return state.concat(action.roadEdges);
     default:
       return state;
   }

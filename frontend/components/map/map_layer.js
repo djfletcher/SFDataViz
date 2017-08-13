@@ -109,9 +109,9 @@ const paintProperties = {
   },
   'road-edges': {
     'line-opacity': 1,
-    'line-color': '#ade6bb',
+    'line-color': '#96e596',
     'line-width': {
-      'stops': [[12, 1], [22, 10]]
+      'stops': [[12, 1], [22, 5]]
     }
   }
 };

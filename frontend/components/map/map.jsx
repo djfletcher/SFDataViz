@@ -67,11 +67,15 @@ class DataMap extends React.Component {
       this.makeInteractive();
     }
     if (intersectionsLoaded) {
-      layer = createLayer('intersections', nextProps.intersections);
-      this.addLayer(layer);
+     layer = createLayer('intersections', nextProps.intersections);
+     this.addLayer(layer);
     }
-    if (intersectionsLoaded && roadEdgesLoaded) {
-      layer = createLayer('road-edges', nextProps.roadEdges);
+    if (roadEdgesLoaded) {
+      let roadEdges = this.getRoadEdgesAsGeoJSON(
+        nextProps.roadEdges,
+        nextProps.intersections
+      );
+      layer = createLayer('road-edges', roadEdges);
       this.addLayer(layer);
     }
   }
@@ -80,8 +84,8 @@ class DataMap extends React.Component {
     let crimesLoaded, neighborhoodsLoaded, intersectionsLoaded, roadEdgesLoaded;
     crimesLoaded = nextProps.crimes.length > 5000 && nextProps.crimes.length !== this.props.crimes.length;
     neighborhoodsLoaded = !$.isEmptyObject(nextProps.neighborhoods) && $.isEmptyObject(this.props.neighborhoods);
-    intersectionsLoaded = Object.keys(nextProps.intersections).length > 20000;
-    roadEdgesLoaded = nextProps.roadEdges.length > 40000;
+    intersectionsLoaded = Object.keys(nextProps.intersections).length > 25000 && Object.keys(nextProps.intersections).length !== Object.keys(this.props.intersections).length;
+    roadEdgesLoaded = nextProps.roadEdges.length > 40000 && nextProps.roadEdges.length !== this.props.roadEdges.length;
     return { crimesLoaded, neighborhoodsLoaded, intersectionsLoaded, roadEdgesLoaded };
   }
 
@@ -89,7 +93,7 @@ class DataMap extends React.Component {
     // this.props.requestCrimes();
     // this.props.requestNeighborhoods();
     this.props.requestIntersections();
-    // this.props.requestRoadEdges();
+    this.props.requestRoadEdges();
   }
 
   makeInteractive() {
@@ -133,6 +137,25 @@ class DataMap extends React.Component {
     });
   }
 
+  getRoadEdgesAsGeoJSON(roadEdges, intersections) {
+    return roadEdges.map(edge => {
+      let geoJSON = {};
+      geoJSON['type'] = 'Feature';
+      geoJSON['geometry'] = {
+        'type': 'LineString',
+        'coordinates': this.getIntersectionsFromRoadEdge(edge, intersections)
+      };
+      return geoJSON;
+    });
+  }
+
+  getIntersectionsFromRoadEdge(edge, intersections) {
+    return [
+      intersections[edge['intersection1_id']]['geometry']['coordinates'],
+      intersections[edge['intersection2_id']]['geometry']['coordinates']
+    ];
+  }
+
   getStats(neighborhood) {
     let stats, statsMemo;
     stats = this.state.statsMemo[neighborhood];
@@ -166,10 +189,6 @@ class DataMap extends React.Component {
     // second argument to addLayer is a layer on the map beneath which to insert the new layer
     // this ensures that our custom layers don't cover up street names and map labels
     let beneathLayer = this.map.getStyle().layers[110].id;
-    // let roadEdgesLayer = this.map.getLayer('road-edges');
-    // if (roadEdgesLayer) {
-    //   beneathLayer = roadEdgesLayer;
-    // }
     this.map.addLayer(layer, beneathLayer);
   }
 
